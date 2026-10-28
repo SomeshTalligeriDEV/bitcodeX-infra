@@ -18,7 +18,11 @@ Read before every session: this file, `bitcodex-docs/00-research.md`, `bitcodex-
 
 ## 2. Hard safety rules (never break these)
 
-- **Networks:** localnet (`ghcr.io/raofoundation/subtensor-localnet:devnet`) and testnet only. **Mainnet is disabled** behind a build flag `BITCODEX_ENABLE_MAINNET=false` until an external security audit. Show mainnet in the UI as disabled with a tooltip.
+- **Networks:** localnet (`ghcr.io/raofoundation/subtensor-localnet:devnet`) and testnet only. **Mainnet is disabled** behind a build flag `BITCODEX_ENABLE_MAINNET=false` until an external security audit. Show mainnet in the UI as disabled with a tooltip. Never use real TAO for testing.
+- **Detect the network by genesis hash and `system_chainType`, never by name.** Localnet reports `system_chain = "Bittensor"`, the same as mainnet (verified 28 Oct 2026, `00-research.md`). Every code path that connects, signs or submits must:
+  1. Match `api.genesisHash` against a known allowlist of localnet/testnet genesis hashes (localnet genesis changes per fresh chain, so localnet is accepted only when `system_chainType` is `Local` or `Development` **and** the endpoint is the configured local one).
+  2. Refuse (do not sign, do not submit) when the genesis hash is mainnet's or unknown, unless `BITCODEX_ENABLE_MAINNET=true`, which is not allowed before the audit.
+  3. Run this check in the iframe on the payload's `genesisHash` before showing the confirm modal (X03), not only in the SDK.
 - **The full coldkey private key must never exist in one place.** No code path may combine the client share and server share. The only exception is the user-initiated **Export key** flow (X07), which runs inside the iframe, behind re-authentication, and never sends the result over the network.
 - **Key shares never leave their owner** except as BitcodeX already designs (SSS fragments to key share nodes, encrypted). Never log a key share, seed, mnemonic, signature nonce, JWT or OAuth token. Add a lint/grep check for this.
 - **Hotkeys are not coldkeys.** Hotkeys are normal sr25519 keys created on the machine that runs the miner or validator. BitcodeX only stores hotkey public addresses. Never generate a hotkey inside the threshold system.
