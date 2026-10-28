@@ -14,5 +14,6 @@ Localnet dev accounts (Alice is pre-funded); official testnet faucet availabilit
 3. Wallet widget "Get test TAO" and deposit modal QR.
 
 ## Acceptance checks
-- [ ] New user → Get test TAO → balance 1,000 TAO within 2 blocks.
-- [ ] Faucet route refuses when the chain is not localnet.
+- [x] New user → Get test TAO → balance 1,000 TAO within 2 blocks. (2026-10-28: fresh address 0 → 1000 TAO, included 1 block after the request, tx `0x66f480eb…c6a7ed`; second drip within 60 s → 429; bad address → 400.)
+- [x] Faucet route refuses when the chain is not localnet. (2026-10-28: endpoint `ws://0.0.0.0:9944` → `NETWORK_REFUSED`, no transfer; chainType and genesis rules covered by `@bitcodex/bittensor-chain` unit tests.)
+- [ ] Testnet: address + QR + official faucet link. QR is built; the testnet endpoint and faucet are not verified yet, so testnet funding stays off.
