@@ -1,0 +1,35 @@
+{
+  "name": "@bitcodex/bitcodex-admin-web",
+  "version": "0.1.1-alpha.7",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "create_env": "tsx ./src/bin/create_env.ts",
+    "dev": "tsx ./src/bin/launch.ts",
+    "build": "next build",
+    "start": "NODE_ENV=production tsx src/bin/launch.ts",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@bitcodex/bitcodex-common-ui": "workspace:*",
+    "@bitcodex/bitcodex-pg-interface": "workspace:*",
+    "@bitcodex/dotenv": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-table": "^8.21.3",
+    "next": "^16.1.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.65.0",
+    "react-intl": "^7.1.14",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "sass": "^1.94.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,537 @@
+import type {
+  BitcodeXApiErrorResponse,
+  BitcodeXApiResponse,
+  ErrorCode,
+} from "@bitcodex/bitcodex-types/api_response";
+import type { CommitRevealParams } from "@bitcodex/bitcodex-types/commit_reveal";
+import type {
+  AbortTssSessionBody,
+  AbortTssSessionResponse,
+  KeygenRequestBody,
+  KeygenRequestBodyV2,
+  PresignStep1Body,
+  PresignStep1Response,
+  PresignStep2Body,
+  PresignStep2Response,
+  PresignStep3Body,
+  PresignStep3Response,
+  SignStep1Body,
+  SignStep1Response,
+  SignStep2Body,
+  SignStep2Response,
+  TriplesStep1Body,
+  TriplesStep1Response,
+  TriplesStep2Body,
+  TriplesStep2Response,
+  TriplesStep3Body,
+  TriplesStep3Response,
+  TriplesStep4Body,
+  TriplesStep4Response,
+  TriplesStep5Body,
+  TriplesStep5Response,
+  TriplesStep6Body,
+  TriplesStep6Response,
+  TriplesStep7Body,
+  TriplesStep7Response,
+  TriplesStep8Body,
+  TriplesStep8Response,
+  TriplesStep9Body,
+  TriplesStep9Response,
+  TriplesStep10Body,
+  TriplesStep10Response,
+  TriplesStep11Body,
+  TriplesStep11Response,
+} from "@bitcodex/bitcodex-types/tss";
+import type {
+  SignInResponse,
+  SignInResponseV2,
+} from "@bitcodex/bitcodex-types/user";
+import type {
+  KeygenStep1Response,
+  KeygenStep1V2Request,
+  KeygenStep2Response,
+  KeygenStep2V2Request,
+  KeygenStep3Response,
+  KeygenStep3V2Request,
+  KeygenStep4Response,
+  KeygenStep4V2Request,
+  KeygenStep5Response,
+  KeygenStep5V2Request,
+} from "@bitcodex/tecdsa-interface";
+
+/* NOTE - The error type returned by the middleware is not compatible with BitcodeXApiErrorResponse.
+   So we use a separate function to handle it.
+   If the error type is modified in the middleware to be compatible with BitcodeXApiErrorResponse,
+   this code should be deleted @retto
+*/
+interface MiddlewareErrorResponse {
+  error: string;
+}
+
+function isMiddlewareError(response: any): response is MiddlewareErrorResponse {
+  return (
+    typeof response === "object" &&
+    response !== null &&
+    "error" in response &&
+    typeof response.error === "string" &&
+    !("success" in response)
+  );
+}
+
+function mapStatusToErrorCode(status: number): ErrorCode {
+  switch (status) {
+    case 401:
+      return "UNAUTHORIZED";
+    case 403:
+      return "AUTHENTICATION_FAILED";
+    case 404:
+      return "USER_NOT_FOUND";
+    case 500:
+      return "UNKNOWN_ERROR";
+    default:
+      return "UNKNOWN_ERROR";
+  }
+}
+
+function normalizeErrorResponse(
+  status: number,
+  responseBody: any,
+): BitcodeXApiErrorResponse {
+  if (isMiddlewareError(responseBody)) {
+    return {
+      success: false,
+      code: mapStatusToErrorCode(status),
+      msg: responseBody.error,
+    };
+  }
+
+  if (
+    responseBody &&
+    typeof responseBody === "object" &&
+    "success" in responseBody
+  ) {
+    return responseBody;
+  }
+
+  return {
+    success: false,
+    code: mapStatusToErrorCode(status),
+    msg: typeof responseBody === "string" ? responseBody : "Unknown error",
+  };
+}
+
+async function makePostRequest<T, R>(
+  endpoint: string,
+  path: string,
+  payload: T,
+  apiKey?: string,
+  authToken?: string,
+): Promise<R> {
+  const url = `${endpoint}/${path}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (apiKey) {
+    headers["x-api-key"] = apiKey;
+  }
+
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+
+  const ret = await fetch(url, {
+    headers,
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  // const newToken = ret.headers.get("X-New-Token");
+  //
+  // if (newToken) {
+  //   onAuthTokenRefresh(newToken);
+  // }
+
+  if (ret.status !== 200) {
+    try {
+      const error = await ret.json();
+
+      const errorResponse: BitcodeXApiErrorResponse = normalizeErrorResponse(
+        ret.status,
+        error,
+      );
+
+      return Promise.resolve(errorResponse as R);
+    } catch (err: any) {
+      console.error("err: %s", err);
+
+      return {
+        success: false,
+        code: "UNKNOWN_ERROR",
+        msg: err.toString(),
+      } as R;
+
+      // return normalizeErrorResponse(
+      //   ret.status,
+      //   "Failed to read error response",
+      // );
+    }
+  }
+
+  return ret.json();
+}
+
+export async function reqKeygen(
+  endpoint: string,
+  payload: KeygenRequestBody,
+  authToken: string,
+  apiKey?: string,
+) {
+  const resp: BitcodeXApiResponse<SignInResponse> = await makePostRequest(
+    endpoint,
+    "keygen",
+    payload,
+    apiKey,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqKeygenV2(
+  endpoint: string,
+  payload: KeygenRequestBodyV2,
+  authToken: string,
+  commitReveal: CommitRevealParams,
+  apiKey?: string,
+) {
+  const body = { ...payload, ...commitReveal };
+  const resp: BitcodeXApiResponse<SignInResponseV2> = await makePostRequest(
+    endpoint,
+    "keygen",
+    body,
+    apiKey,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep1(
+  endpoint: string,
+  payload: TriplesStep1Body,
+  apiKey: string,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep1Response> = await makePostRequest(
+    endpoint,
+    "triples/step1",
+    payload,
+    apiKey,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep2(
+  endpoint: string,
+  payload: TriplesStep2Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep2Response> = await makePostRequest(
+    endpoint,
+    "triples/step2",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep3(
+  endpoint: string,
+  payload: TriplesStep3Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep3Response> = await makePostRequest(
+    endpoint,
+    "triples/step3",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep4(
+  endpoint: string,
+  payload: TriplesStep4Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep4Response> = await makePostRequest(
+    endpoint,
+    "triples/step4",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep5(
+  endpoint: string,
+  payload: TriplesStep5Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep5Response> = await makePostRequest(
+    endpoint,
+    "triples/step5",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep6(
+  endpoint: string,
+  payload: TriplesStep6Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep6Response> = await makePostRequest(
+    endpoint,
+    "triples/step6",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep7(
+  endpoint: string,
+  payload: TriplesStep7Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep7Response> = await makePostRequest(
+    endpoint,
+    "triples/step7",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep8(
+  endpoint: string,
+  payload: TriplesStep8Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep8Response> = await makePostRequest(
+    endpoint,
+    "triples/step8",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep9(
+  endpoint: string,
+  payload: TriplesStep9Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep9Response> = await makePostRequest(
+    endpoint,
+    "triples/step9",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqTriplesStep10(
+  endpoint: string,
+  payload: TriplesStep10Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep10Response> =
+    await makePostRequest(
+      endpoint,
+      "triples/step10",
+      payload,
+      undefined,
+      authToken,
+    );
+  return resp;
+}
+
+export async function reqTriplesStep11(
+  endpoint: string,
+  payload: TriplesStep11Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<TriplesStep11Response> =
+    await makePostRequest(
+      endpoint,
+      "triples/step11",
+      payload,
+      undefined,
+      authToken,
+    );
+  return resp;
+}
+
+export async function reqPresignStep1(
+  endpoint: string,
+  payload: PresignStep1Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<PresignStep1Response> = await makePostRequest(
+    endpoint,
+    "presign/step1",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqPresignStep2(
+  endpoint: string,
+  payload: PresignStep2Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<PresignStep2Response> = await makePostRequest(
+    endpoint,
+    "presign/step2",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqPresignStep3(
+  endpoint: string,
+  payload: PresignStep3Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<PresignStep3Response> = await makePostRequest(
+    endpoint,
+    "presign/step3",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqSignStep1(
+  endpoint: string,
+  payload: SignStep1Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<SignStep1Response> = await makePostRequest(
+    endpoint,
+    "sign/step1",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+export async function reqSignStep2(
+  endpoint: string,
+  payload: SignStep2Body,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<SignStep2Response> = await makePostRequest(
+    endpoint,
+    "sign/step2",
+    payload,
+    undefined,
+    authToken,
+  );
+  return resp;
+}
+
+// legacy keygen api
+export async function reqKeygenStep1(
+  endpoint: string,
+  payload: KeygenStep1V2Request,
+) {
+  const resp: KeygenStep1Response = await makePostRequest(
+    endpoint,
+    "keygen_step_1",
+    payload,
+  );
+  return resp;
+}
+
+export async function reqKeygenStep2(
+  endpoint: string,
+  payload: KeygenStep2V2Request,
+) {
+  const resp: KeygenStep2Response = await makePostRequest(
+    endpoint,
+    "keygen_step_2",
+    payload,
+  );
+  return resp;
+}
+
+export async function reqKeygenStep3(
+  endpoint: string,
+  payload: KeygenStep3V2Request,
+) {
+  const resp: KeygenStep3Response = await makePostRequest(
+    endpoint,
+    "keygen_step_3",
+    payload,
+  );
+  return resp;
+}
+
+export async function reqKeygenStep4(
+  endpoint: string,
+  payload: KeygenStep4V2Request,
+) {
+  const resp: KeygenStep4Response = await makePostRequest(
+    endpoint,
+    "keygen_step_4",
+    payload,
+  );
+  return resp;
+}
+
+export async function reqKeygenStep5(
+  endpoint: string,
+  payload: KeygenStep5V2Request,
+) {
+  const resp: KeygenStep5Response = await makePostRequest(
+    endpoint,
+    "keygen_step_5",
+    payload,
+  );
+  return resp;
+}
+
+export async function reqAbortTssSession(
+  endpoint: string,
+  payload: AbortTssSessionBody,
+  authToken: string,
+) {
+  const resp: BitcodeXApiResponse<AbortTssSessionResponse> =
+    await makePostRequest(
+      endpoint,
+      "session/abort",
+      payload,
+      undefined,
+      authToken,
+    );
+  return resp;
+}

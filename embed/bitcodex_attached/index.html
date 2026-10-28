@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/bitcodex_favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="BitcodeX Attached" />
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0c0e12"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://localhost:3201" />
+    <meta property="og:title" content="BitcodeX Attached" />
+    <meta property="og:description" content="BitcodeX Attached" />
+    <meta property="og:site_name" content="BitcodeX Attached" />
+    <meta
+      property="og:image"
+      content="http://localhost:9000/bitcodex-assets/assets/bitcodex-og-image.png"
+    />
+    <title>Login - BitcodeX Wallet</title>
+    <script>
+      // Apply theme before first paint to prevent flash.
+      // SDK callers may pass ?theme=light|dark — honour it over OS preference.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var themeParam = params.get("theme");
+        var isDark =
+          themeParam === "dark" || themeParam === "light"
+            ? themeParam === "dark"
+            : window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+        var isPopup = window.parent === window;
+        if (isDark) {
+          document.documentElement.setAttribute("data-theme", "dark");
+          document.documentElement.style.backgroundColor = "#0c0e12";
+        } else {
+          document.documentElement.style.backgroundColor = "#ffffff";
+        }
+        // Set color-scheme for popup/standalone contexts so iOS Safari
+        // renders browser chrome (status bar, toolbar) in the correct theme.
+        // Skipped in iframe context to avoid the known black-background bug.
+        if (isPopup) {
+          document.documentElement.style.colorScheme = isDark
+            ? "dark"
+            : "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

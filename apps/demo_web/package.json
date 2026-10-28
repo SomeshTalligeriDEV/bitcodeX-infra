@@ -1,0 +1,38 @@
+{
+  "name": "@bitcodex/demo-web",
+  "version": "0.1.2-alpha.9",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "create_env": "tsx src/bin/create_env.ts",
+    "dev": "tsx src/bin/launch.ts",
+    "build": "next build",
+    "start": "NODE_ENV=production tsx src/bin/launch.ts",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^16.1.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@bitcodex/bitcodex-common-ui": "workspace:*",
+    "@bitcodex/bitcodex-sdk-core": "workspace:*",
+    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*",
+    "@bitcodex/bitcodex-sdk-eth": "workspace:*",
+    "@bitcodex/bitcodex-sdk-react": "workspace:*",
+    "@bitcodex/bitcodex-sdk-svm": "workspace:*",
+    "@bitcodex/dotenv": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "@cosmjs/proto-signing": "^0.33.1",
+    "@keplr-wallet/proto-types": "^0.12.250",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "dotenv": "^16.4.5",
+    "sass": "^1.94.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "zod": "^4.1.12"
+  }
+}

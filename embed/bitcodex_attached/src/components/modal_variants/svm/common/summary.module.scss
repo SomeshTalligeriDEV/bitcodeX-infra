@@ -1,0 +1,44 @@
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  justify-content: space-between;
+}
+
+.summaryHeaderRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  cursor: pointer;
+}
+
+.summaryHeaderRightIcon {
+  width: 16px;
+  height: 16px;
+  aspect-ratio: 1/1;
+}
+
+.rawSurface {
+  max-height: 230px;
+}
+
+// Mobile app mode: enlarge toggle text
+:global(html[data-mobile]) .summaryHeaderRight p {
+  font-size: var(--font-size-sm);
+  line-height: var(--font-line-height-sm);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border-primary);
+}

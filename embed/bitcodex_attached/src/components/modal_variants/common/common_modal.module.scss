@@ -1,0 +1,17 @@
+.modalContainer {
+  border-radius: var(--radius-2xl, 16px);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+  padding: 20px;
+
+  box-shadow: var(--shadow-xl);
+}
+
+// Mobile app mode: full-screen container, no decorations
+:global(html[data-mobile]) .modalContainer {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 32px 20px 16px;
+  height: 100%;
+}

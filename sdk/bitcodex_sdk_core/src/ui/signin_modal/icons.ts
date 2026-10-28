@@ -1,0 +1,4 @@
+const BRAND_LOGO =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNjAgOTYiPjxyZWN0IHdpZHRoPSIzNjAiIGhlaWdodD0iOTYiIHJ4PSIxNiIgZmlsbD0iIzEwMTgyNyIvPjx0ZXh0IHg9IjI0IiB5PSI2NCIgZmlsbD0iIzYyZjRiMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjU0IiBmb250LXdlaWdodD0iNzAwIj5CaXRjb2RlWDwvdGV4dD48L3N2Zz4=";
+export const S3_LOGO_URL = { light: BRAND_LOGO, dark: BRAND_LOGO };
+export const S3_LOGO_WITH_NAME_URL = { light: BRAND_LOGO, dark: BRAND_LOGO };

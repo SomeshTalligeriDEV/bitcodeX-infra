@@ -1,0 +1,55 @@
+{
+  "name": "@bitcodex/bitcodex-pg-interface",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "knex": "knex",
+    "migrate": "tsx ../../node_modules/knex/bin/cli.js migrate:latest",
+    "seed": "tsx ../../node_modules/knex/bin/cli.js seed:run",
+    "migrate_down": "tsx ../../node_modules/knex/bin/cli.js migrate:down",
+    "migrate_up": "tsx ../../node_modules/knex/bin/cli.js migrate:up",
+    "schema_make": "tsx ../../node_modules/knex/bin/cli.js migrate:make -x ts"
+  },
+  "exports": {
+    "./admin_users": "./src/admin_users/index.ts",
+    "./api_keys": "./src/api_keys/index.ts",
+    "./ks_nodes": "./src/ks_nodes/index.ts",
+    "./customer_dashboard_users": "./src/customer_dashboard_users/index.ts",
+    "./customer_team_invitations": "./src/customer_team_invitations/index.ts",
+    "./customers": "./src/customers/index.ts",
+    "./email_verifications": "./src/email_verifications/index.ts",
+    "./email_sent_logs": "./src/email_sent_logs/index.ts",
+    "./bitcodex_users": "./src/bitcodex_users/index.ts",
+    "./bitcodex_wallets": "./src/bitcodex_wallets/index.ts",
+    "./tss": "./src/tss/index.ts",
+    "./tss_activate": "./src/tss_activate/index.ts",
+    "./key_share_node_meta": "./src/key_share_node_meta/index.ts",
+    "./server_keypairs": "./src/server_keypairs/index.ts",
+    "./referrals": "./src/referrals/index.ts",
+    "./commit_reveal": "./src/commit_reveal/index.ts",
+    "./user_customer_connections": "./src/user_customer_connections/index.ts",
+    "./knexfile": "./knexfile.ts"
+  },
+  "dependencies": {
+    "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/cait-sith-cosmos-compat-addon": "workspace:*",
+    "@bitcodex/cait-sith-cosmos-compat-express": "workspace:*",
+    "@bitcodex/crypto-js": "workspace:*",
+    "@bitcodex/dotenv": "workspace:*",
+    "@bitcodex/postgres-lib": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "jest": "^30.1.3",
+    "knex": "^3.1.0",
+    "pg": "^8.16.3",
+    "pgsql-parser": "^17.7.8",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.10.1",
+    "ts-jest": "^29.4.5",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

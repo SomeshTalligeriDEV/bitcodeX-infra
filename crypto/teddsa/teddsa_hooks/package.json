@@ -1,0 +1,17 @@
+{
+  "name": "@bitcodex/teddsa-hooks",
+  "main": "./src/index.ts",
+  "version": "0.1.0",
+  "dependencies": {
+    "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/bytes": "workspace:*",
+    "@bitcodex/frost-ed25519-cosmos-compat-wasm": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "@bitcodex/teddsa-api-lib": "workspace:*",
+    "@bitcodex/teddsa-interface": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.8.3"
+  }
+}

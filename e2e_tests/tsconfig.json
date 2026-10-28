@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2017", "esnext.asynciterable", "dom"],
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "noEmit": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@e2e/*": ["./src/*"],
+      "@bitcodex-api/*": ["../backend/bitcodex_api/server/src/*"],
+      "@bitcodex-ksn-server/*": ["../key_share_node/server/src/*"],
+      "@bitcodex-types/*": ["../common/bitcodex_types/src/*"],
+      "@bitcodex-bitcodex-pg-interface/*": [
+        "../backend/bitcodex_pg_interface/src/*"
+      ]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

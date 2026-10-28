@@ -1,0 +1,205 @@
+"use client";
+
+import { Badge } from "@bitcodex/bitcodex-common-ui/badge";
+import { IconTransition } from "@bitcodex/bitcodex-common-ui/icon_transition";
+import { AlertTriangleIcon } from "@bitcodex/bitcodex-common-ui/icons/alert_triangle_icon";
+import { CheckThinIcon } from "@bitcodex/bitcodex-common-ui/icons/check_thin_icon";
+import { CopyOutlinedIcon } from "@bitcodex/bitcodex-common-ui/icons/copy_outlined";
+import { EmptyStateIcon } from "@bitcodex/bitcodex-common-ui/icons/empty_state_icon";
+import { QrCodeIcon } from "@bitcodex/bitcodex-common-ui/icons/qr_code_icon";
+import { Skeleton } from "@bitcodex/bitcodex-common-ui/skeleton";
+import { Tooltip } from "@bitcodex/bitcodex-common-ui/tooltip";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import { PricePretty } from "@keplr-wallet/unit";
+import cn from "classnames";
+import type { FC, MouseEvent } from "react";
+
+import styles from "./token_item.module.scss";
+import { AddressQrModal } from "@bitcodex-user-dashboard/components/address_qr_modal/address_qr_modal";
+import { useCopyToClipboard } from "@bitcodex-user-dashboard/hooks/use_copy_to_clipboard";
+import type { TokenBalance } from "@bitcodex-user-dashboard/types/token";
+import {
+  calculateUsdValue,
+  formatDisplayBalance,
+} from "@bitcodex-user-dashboard/utils/format_token_amount";
+
+interface TokenItemProps {
+  tokenBalance: TokenBalance;
+  address?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  isNotReady?: boolean;
+}
+
+export const TokenItem: FC<TokenItemProps> = ({
+  tokenBalance,
+  address,
+  onClick,
+  disabled,
+  isNotReady,
+}) => {
+  const { isCopied, copy } = useCopyToClipboard();
+
+  const currency = tokenBalance.token.currency;
+  const imageUrl = currency.coinImageUrl;
+  const coinDenom = currency.coinDenom;
+
+  // Calculate price
+  const priceUsd = tokenBalance.priceUsd;
+  const valueUsd = priceUsd
+    ? calculateUsdValue(
+        tokenBalance.token.amount,
+        currency.coinDecimals,
+        priceUsd,
+      )
+    : undefined;
+
+  const isIBC = currency.coinMinimalDenom.startsWith("ibc/");
+
+  const handleCopyAddress = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (address) {
+      copy(address);
+    }
+  };
+
+  const handleClick = () => {
+    if (disabled || !onClick) {
+      return;
+    }
+    onClick();
+  };
+
+  return (
+    <div
+      className={cn(styles.container, {
+        [styles.disabled]: disabled,
+        [styles.clickable]: onClick,
+      })}
+      onClick={handleClick}
+    >
+      <div className={styles.leftSection}>
+        {/* Token Image */}
+        {isNotReady ? (
+          <Skeleton width={28} height={28} borderRadius="50%" />
+        ) : imageUrl ? (
+          <img src={imageUrl} alt={coinDenom} className={styles.tokenImage} />
+        ) : (
+          <EmptyStateIcon size={28} />
+        )}
+
+        {/* Token Info */}
+        <div className={styles.tokenInfo}>
+          <div className={styles.tokenNameRow}>
+            {tokenBalance.error && !isNotReady ? (
+              <Tooltip
+                content="NetworkError when attempting to fetch resource"
+                placement="bottom"
+                className={styles.errorTooltip}
+              >
+                <AlertTriangleIcon size={16} />
+                <Typography size="sm" weight="medium" color="warning-primary">
+                  {coinDenom}
+                </Typography>
+                {isIBC && (
+                  <Badge type="pill" size="sm" color="gray" label="IBC" />
+                )}
+              </Tooltip>
+            ) : isNotReady ? (
+              <Skeleton width={60} height={16} />
+            ) : (
+              <>
+                <Typography size="sm" weight="medium" color="secondary">
+                  {coinDenom}
+                </Typography>
+                {isIBC && (
+                  <Badge type="pill" size="sm" color="gray" label="IBC" />
+                )}
+              </>
+            )}
+            {tokenBalance.isFetching && !isNotReady && (
+              <div className={styles.loadingIndicator} />
+            )}
+          </div>
+          <div className={styles.chainNameRow}>
+            {isNotReady ? (
+              <Skeleton width={80} height={14} />
+            ) : (
+              <Typography size="xs" weight="medium" color="tertiary">
+                {tokenBalance.chainInfo.chainName}
+              </Typography>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.rightSection}>
+        {/* Balance & Price */}
+        {
+          <div className={styles.balanceInfo}>
+            {isNotReady ? (
+              <>
+                <Skeleton width={60} height={16} />
+                <Skeleton width={50} height={14} />
+              </>
+            ) : (
+              <>
+                <Typography size="sm" weight="medium" color="secondary">
+                  {formatDisplayBalance(tokenBalance.token.amount, currency)}
+                </Typography>
+                <Typography size="xs" weight="medium" color="tertiary">
+                  {valueUsd !== undefined
+                    ? new PricePretty(
+                        {
+                          currency: "usd",
+                          symbol: "$",
+                          maxDecimals: 2,
+                          locale: "en-US",
+                        },
+                        valueUsd,
+                      ).toString()
+                    : "-"}
+                </Typography>
+              </>
+            )}
+          </div>
+        }
+
+        {/* Copy Address and QR Code Buttons */}
+        {address && !isNotReady && (
+          <>
+            <button
+              className={`${styles.copyButton}`}
+              onClick={handleCopyAddress}
+              type="button"
+            >
+              <IconTransition
+                isActive={isCopied}
+                defaultIcon={
+                  <CopyOutlinedIcon size={16} color="var(--fg-tertiary)" />
+                }
+                activeIcon={
+                  <CheckThinIcon size={16} color="var(--fg-tertiary)" />
+                }
+              />
+            </button>
+
+            <AddressQrModal
+              renderTrigger={({ onOpen }) => (
+                <button
+                  type="button"
+                  className={`${styles.copyButton}`}
+                  onClick={onOpen}
+                >
+                  <QrCodeIcon size={16} color="var(--fg-tertiary)" />
+                </button>
+              )}
+              chainInfo={tokenBalance.chainInfo}
+              address={address}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};

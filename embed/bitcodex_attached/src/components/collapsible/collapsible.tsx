@@ -1,0 +1,46 @@
+import { ChevronDownIcon } from "@bitcodex/bitcodex-common-ui/icons/chevron_down";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import cn from "classnames";
+import { type FC, useState } from "react";
+
+import styles from "./collapsible.module.scss";
+
+export interface CollapsibleProps {
+  title: string;
+  children: React.ReactNode;
+  defaultExpanded?: boolean;
+  className?: string;
+}
+
+export const Collapsible: FC<CollapsibleProps> = ({
+  title,
+  children,
+  defaultExpanded = false,
+  className,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  function toggleExpanded() {
+    setIsExpanded((prev) => !prev);
+  }
+
+  return (
+    <div className={cn(styles.collapsibleContainer, className)}>
+      <div className={styles.collapsibleHeader} onClick={toggleExpanded}>
+        <Typography color="secondary" size="sm" weight="semibold">
+          {title}
+        </Typography>
+        <ChevronDownIcon
+          className={cn(styles.chevronIcon, {
+            [styles.expanded]: isExpanded,
+          })}
+        />
+      </div>
+      {isExpanded && (
+        <div className={styles.collapsibleContent} data-collapsible-content>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};

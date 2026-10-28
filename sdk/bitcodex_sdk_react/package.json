@@ -1,0 +1,75 @@
+{
+  "name": "@bitcodex/bitcodex-sdk-react",
+  "version": "0.1.2-alpha.14",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./eth": {
+      "import": "./dist/eth/index.js",
+      "require": "./dist/eth/index.js",
+      "types": "./dist/eth/index.d.ts"
+    },
+    "./cosmos": {
+      "import": "./dist/cosmos/index.js",
+      "require": "./dist/cosmos/index.js",
+      "types": "./dist/cosmos/index.d.ts"
+    },
+    "./svm": {
+      "import": "./dist/svm/index.js",
+      "require": "./dist/svm/index.js",
+      "types": "./dist/svm/index.d.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bitcodex",
+    "wallet",
+    "react",
+    "hooks",
+    "mpc"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SomeshTalligeriDEV/bitcodeX-infra.git",
+    "directory": "sdk/bitcodex_sdk_react"
+  },
+  "scripts": {
+    "clean": "del-cli dist",
+    "build": "tsx ./scripts/build.ts",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@bitcodex/bitcodex-sdk-core": "workspace:*",
+    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*",
+    "@bitcodex/bitcodex-sdk-eth": "workspace:*",
+    "@bitcodex/bitcodex-sdk-svm": "workspace:*",
+    "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/react": "~19.1.0",
+    "del-cli": "^6.0.0",
+    "rollup": "^4.0.0",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

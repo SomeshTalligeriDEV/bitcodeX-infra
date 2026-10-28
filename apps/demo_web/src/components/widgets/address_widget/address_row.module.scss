@@ -1,0 +1,70 @@
+.container {
+  display: flex;
+  align-self: stretch;
+}
+
+.loggedOut {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.loggedIn {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.chainLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.chainLabelChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.addressContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.placeholderContent {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.placeholderPrefix {
+  color: var(--text-tertiary);
+}
+
+.address {
+  overflow: hidden;
+  word-break: break-all;
+  color: var(--text-tertiary);
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--fg-disabled-subtle);
+  opacity: 1;
+
+  &:nth-last-child(3) {
+    opacity: 0.8;
+  }
+  &:nth-last-child(2) {
+    opacity: 0.6;
+  }
+  &:nth-last-child(1) {
+    opacity: 0.5;
+  }
+}

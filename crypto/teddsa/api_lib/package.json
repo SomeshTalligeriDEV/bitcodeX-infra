@@ -1,0 +1,13 @@
+{
+  "name": "@bitcodex/teddsa-api-lib",
+  "private": true,
+  "main": "./src/index.ts",
+  "type": "module",
+  "dependencies": {
+    "@bitcodex/bitcodex-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,43 @@
+@use "../../styles/viewport.module.scss" as *;
+
+.wrapper {
+  height: 64px;
+  display: flex;
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-items: center;
+  padding: 18px 20px;
+  background-color: var(--bg-primary);
+}
+
+@media (min-width: $desktop_min_width) {
+  .wrapper {
+    padding: 18px 32px;
+  }
+}
+
+.menuIconWrapper {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+@media (min-width: $desktop_min_width) {
+  .menuIconWrapper {
+    display: none;
+  }
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logoResponsive {
+  width: auto;
+  height: 28px;
+  flex-shrink: 0;
+}

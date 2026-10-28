@@ -1,0 +1,105 @@
+import { EmptyStateIcon } from "@bitcodex/bitcodex-common-ui/icons/empty_state_icon";
+import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import type { SvmMessageSignPayload } from "@bitcodex/bitcodex-sdk-core";
+import { useQuery } from "@tanstack/react-query";
+import type { FC } from "react";
+import { useMemo } from "react";
+
+import styles from "../common/signature_content.module.scss";
+import { SvmMessageSummary } from "./svm_message_summary";
+import { Avatar } from "@bitcodex-attached/components/avatar/avatar";
+import { SignerAddressOrEmail } from "@bitcodex-attached/components/modal_variants/common/metadata_content/signer_address_or_email/signer_address_or_email";
+import { useMobileMode } from "@bitcodex-attached/hooks/mobile_mode";
+import { getChainByChainId } from "@bitcodex-attached/requests/chain_infos";
+import { useMemoryState } from "@bitcodex-attached/store/memory";
+import { getFaviconUrl } from "@bitcodex-attached/utils/favicon";
+
+interface SvmMessageSignatureContentProps {
+  payload: SvmMessageSignPayload;
+}
+
+export const SvmMessageSignatureContent: FC<
+  SvmMessageSignatureContentProps
+> = ({ payload }) => {
+  const { origin, signer, chain_id } = payload;
+  const appName = useMemoryState((state) => state.appName);
+  const faviconUrl = getFaviconUrl(origin);
+  const isMobile = useMobileMode();
+  const headingSize = isMobile ? "display-xs" : "lg";
+
+  const { data: chainInfo } = useQuery({
+    queryKey: ["chain", chain_id],
+    queryFn: () => getChainByChainId(chain_id),
+  });
+
+  const chainName = useMemo(() => {
+    if (chainInfo?.chainName) {
+      return chainInfo.chainName;
+    }
+    if (!chain_id) {
+      return null;
+    }
+    const namespace = chain_id.split(":")[0];
+    if (!namespace) {
+      return null;
+    }
+    return namespace.charAt(0).toUpperCase() + namespace.slice(1);
+  }, [chainInfo?.chainName, chain_id]);
+
+  const chainLogoUrl = chainInfo?.chainSymbolImageUrl;
+
+  return (
+    <div className={styles.signatureContent}>
+      <div className={styles.metadataWrapper}>
+        <div className={styles.originRow}>
+          {faviconUrl && faviconUrl.length > 0 && (
+            <img
+              src={faviconUrl}
+              alt="favicon"
+              className={styles.originFavicon}
+            />
+          )}
+          <Typography size={headingSize} color="primary" weight="semibold">
+            {appName}
+          </Typography>
+        </div>
+
+        <Spacing height={isMobile ? 8 : 4} />
+
+        <div className={styles.signInfoColumn}>
+          <div className={styles.chainInfoRow}>
+            <Typography size={headingSize} color="secondary" weight="semibold">
+              requested your
+            </Typography>
+            <div className={styles.chainNameGroup}>
+              {chainLogoUrl !== undefined ? (
+                <Avatar
+                  src={chainLogoUrl}
+                  alt={chainName ?? "chain"}
+                  size={isMobile ? "md" : "sm"}
+                  variant="rounded"
+                />
+              ) : (
+                <EmptyStateIcon size={isMobile ? 24 : 16} />
+              )}
+              <Typography
+                size={headingSize}
+                color="secondary"
+                weight="semibold"
+              >
+                {chainName ? `${chainName} signature` : "Network signature"}
+              </Typography>
+            </div>
+          </div>
+
+          <SignerAddressOrEmail signer={signer} initialViewType="Login Info" />
+        </div>
+      </div>
+
+      <Spacing height={28} />
+
+      <SvmMessageSummary payload={payload} />
+    </div>
+  );
+};

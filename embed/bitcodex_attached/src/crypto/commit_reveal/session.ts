@@ -1,0 +1,282 @@
+import type { AuthType } from "@bitcodex/bitcodex-types/auth";
+import type { OperationType } from "@bitcodex/bitcodex-types/commit_reveal";
+import type { OperationType as KsnOperationType } from "@bitcodex/ksn-interface/commit_reveal";
+import type { Result } from "@bitcodex/stdlib-js";
+
+import type {
+  ClientCommitRevealSession,
+  CommitAllResult,
+  KsnCommitResult,
+  KsnCommitTarget,
+} from "./types";
+import {
+  computeIdTokenHash,
+  generateClientKeypair,
+  generateSessionId,
+  SESSION_TIMEOUT_MS,
+} from "./utils";
+import { commitToBitcodeXApi } from "@bitcodex-attached/requests/bitcodex_api";
+import { commitToKsNode } from "@bitcodex-attached/requests/ks_node_v2";
+
+export function createCommitRevealSession(
+  operationType: OperationType,
+  authType: AuthType,
+  idToken: string,
+): Result<ClientCommitRevealSession, string> {
+  const keypairRes = generateClientKeypair();
+  if (!keypairRes.success) {
+    return { success: false, err: keypairRes.err };
+  }
+
+  const hashRes = computeIdTokenHash(authType, idToken);
+  if (!hashRes.success) {
+    return { success: false, err: hashRes.err };
+  }
+
+  const now = new Date();
+  return {
+    success: true,
+    data: {
+      session_id: generateSessionId(),
+      operation_type: operationType,
+      client_keypair: keypairRes.data,
+      id_token_hash: hashRes.data,
+      auth_type: authType,
+      id_token: idToken,
+      ksn_node_pubkeys: {},
+      ksn_operation_types: {},
+      created_at: now,
+      expires_at: new Date(now.getTime() + SESSION_TIMEOUT_MS),
+    },
+  };
+}
+
+export function setBitcodeXApiNodePubkey(
+  session: ClientCommitRevealSession,
+  nodePubkey: string,
+): ClientCommitRevealSession {
+  return { ...session, bitcodex_api_node_pubkey: nodePubkey };
+}
+
+export function setKsnNodePubkey(
+  session: ClientCommitRevealSession,
+  nodeUrl: string,
+  nodePubkey: string,
+  operationType: KsnOperationType,
+): ClientCommitRevealSession {
+  return {
+    ...session,
+    ksn_node_pubkeys: { ...session.ksn_node_pubkeys, [nodeUrl]: nodePubkey },
+    ksn_operation_types: {
+      ...session.ksn_operation_types,
+      [nodeUrl]: operationType,
+    },
+  };
+}
+
+const PENDING_COMMIT_TIMEOUT_MS = 5000;
+
+/**
+ * Resolve remaining pending commits with a timeout, updating the session
+ * with each successfully committed node's pubkey.
+ *
+ * Pending promises are already in-flight from commitAll. This function
+ * awaits them concurrently (bounded by the timeout) so that all reachable
+ * nodes get registered in the session for downstream register/reshare.
+ *
+ * Down nodes (ECONNREFUSED) fail instantly. Blackholed nodes are skipped
+ * after the timeout instead of blocking until browser TCP timeout.
+ */
+export async function resolvePendingCommits(
+  session: ClientCommitRevealSession,
+  pendingCommits: Map<string, Promise<KsnCommitResult>>,
+): Promise<ClientCommitRevealSession> {
+  let updated = session;
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(
+      () => reject(new Error("pending_commit_timeout")),
+      PENDING_COMMIT_TIMEOUT_MS,
+    ),
+  );
+
+  for (const [, promise] of pendingCommits) {
+    try {
+      const result = await Promise.race([promise, timeout]);
+      updated = setKsnNodePubkey(
+        updated,
+        result.nodeUrl,
+        result.nodePubkey,
+        result.operationType,
+      );
+    } catch {
+      // Node failed or timed out — skip
+    }
+  }
+
+  return updated;
+}
+
+/**
+ * Commit to bitcodex_api and ks nodes with threshold-based early return.
+ *
+ * Returns as soon as `threshold` nodes have successfully committed,
+ * allowing remaining nodes to be used as backups if needed.
+ *
+ * @param bitcodexApiOperationType - Operation type for bitcodex_api commit
+ * @param authType - Authentication type
+ * @param idToken - ID token
+ * @param ksnCommitTargets - All ks nodes to commit to
+ * @param threshold - Minimum number of nodes that must succeed
+ *
+ * @returns CommitAllResult with ready nodes, pending commits, and failed nodes
+ */
+export async function commitAll(
+  bitcodexApiOperationType: OperationType,
+  authType: AuthType,
+  idToken: string,
+  ksnCommitTargets: KsnCommitTarget[],
+  threshold: number,
+): Promise<Result<CommitAllResult, string>> {
+  // 1. Create session
+  const sessionRes = createCommitRevealSession(
+    bitcodexApiOperationType,
+    authType,
+    idToken,
+  );
+  if (!sessionRes.success) {
+    return { success: false, err: sessionRes.err };
+  }
+  let session = sessionRes.data;
+
+  const clientPubkeyHex = session.client_keypair.publicKey.toHex();
+
+  // 2. Commit to bitcodex_api first (must succeed)
+  const bitcodexApiResult = await commitToBitcodeXApi(
+    session.session_id,
+    bitcodexApiOperationType,
+    clientPubkeyHex,
+    session.id_token_hash,
+  );
+  if (!bitcodexApiResult.success || !bitcodexApiResult.data.success) {
+    return { success: false, err: "Failed to commit to bitcodex_api" };
+  }
+  session = setBitcodeXApiNodePubkey(
+    session,
+    bitcodexApiResult.data.data.node_pubkey,
+  );
+
+  // 3. Start commits to all KSN nodes
+  const readyNodes: KsnCommitResult[] = [];
+  const failedNodes: { nodeUrl: string; error: string }[] = [];
+  const pendingCommits = new Map<string, Promise<KsnCommitResult>>();
+
+  // Create individual promises for each node
+  type CommitOutcome =
+    | { success: true; result: KsnCommitResult }
+    | { success: false; error: string };
+
+  const nodePromises = ksnCommitTargets.map((target) => {
+    const promise = commitToKsNode(
+      target.nodeUrl,
+      session.session_id,
+      target.operationType,
+      clientPubkeyHex,
+      session.id_token_hash,
+    ).then((res): CommitOutcome => {
+      if (res.success) {
+        return {
+          success: true,
+          result: {
+            nodeUrl: target.nodeUrl,
+            operationType: target.operationType,
+            nodePubkey: res.data.node_pubkey,
+          },
+        };
+      }
+      return { success: false, error: res.err };
+    });
+
+    return { target, promise };
+  });
+
+  // Add all to pending initially (for backup use later)
+  for (const { target, promise } of nodePromises) {
+    pendingCommits.set(
+      target.nodeUrl,
+      promise.then((outcome) => {
+        if (!outcome.success) {
+          throw new Error(outcome.error);
+        }
+        return outcome.result;
+      }),
+    );
+  }
+
+  // Race to get threshold successful commits
+  const remainingPromises = [...nodePromises];
+
+  while (readyNodes.length < threshold && remainingPromises.length > 0) {
+    // Wait for the first one to complete
+    const raceResult = await Promise.race(
+      remainingPromises.map(async ({ target, promise }, index) => {
+        const outcome = await promise;
+        return { index, target, outcome };
+      }),
+    );
+
+    // Remove from remaining
+    remainingPromises.splice(raceResult.index, 1);
+
+    if (raceResult.outcome.success) {
+      // Success - add to ready nodes and update session
+      const result = raceResult.outcome.result;
+      readyNodes.push(result);
+      pendingCommits.delete(raceResult.target.nodeUrl);
+      session = setKsnNodePubkey(
+        session,
+        result.nodeUrl,
+        result.nodePubkey,
+        result.operationType,
+      );
+    } else {
+      // Failed - add to failed nodes with actual API error
+      failedNodes.push({
+        nodeUrl: raceResult.target.nodeUrl,
+        error: raceResult.outcome.error,
+      });
+      pendingCommits.delete(raceResult.target.nodeUrl);
+    }
+  }
+
+  // Check if we have enough nodes
+  if (readyNodes.length < threshold) {
+    return {
+      success: false,
+      err: `Insufficient nodes committed: got ${readyNodes.length}, need ${threshold}`,
+    };
+  }
+
+  // Move remaining promises to pendingCommits (for backup use)
+  // They're already in pendingCommits, just need to update with proper promises
+  for (const { target, promise } of remainingPromises) {
+    pendingCommits.set(
+      target.nodeUrl,
+      promise.then((outcome) => {
+        if (!outcome.success) {
+          throw new Error(outcome.error);
+        }
+        return outcome.result;
+      }),
+    );
+  }
+
+  return {
+    success: true,
+    data: {
+      session,
+      readyNodes,
+      pendingCommits,
+      failedNodes,
+    },
+  };
+}

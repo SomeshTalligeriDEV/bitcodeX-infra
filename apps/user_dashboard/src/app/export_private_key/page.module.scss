@@ -1,0 +1,236 @@
+@use "../../styles/viewport.module.scss" as *;
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+  max-width: 1280px;
+
+  @media (min-width: $desktop_min_width) {
+    gap: 64px;
+  }
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+
+  @media (min-width: $desktop_min_width) {
+    min-width: 300px;
+    width: auto;
+  }
+}
+
+.headingIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--fg-quaternary);
+}
+
+.stepBadge {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+}
+
+.content {
+  flex: 1 0 0;
+  min-width: 300px;
+  max-width: none;
+  padding: 2px 0;
+
+  @media (min-width: $desktop_min_width) {
+    max-width: 360px;
+  }
+}
+
+/* Step 1 styles */
+
+.loginSection {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-secondary);
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+}
+
+.loginLabel {
+  margin-bottom: 12px;
+}
+
+.authCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.authCardRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.warningSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 8px;
+  margin-bottom: 36px;
+}
+
+.warningItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.warningIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  background-color: var(--bg-warning-secondary);
+  border-radius: 8px;
+  color: var(--fg-warning-secondary);
+}
+
+.warningText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Step 2 styles */
+
+.keySection {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sectionKeyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--fg-quaternary);
+}
+
+.keyIframe {
+  width: 100%;
+  border: none;
+  display: block;
+}
+
+.chainsList {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.chainsTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.chainsSeparator {
+  width: 1px;
+  height: 12px;
+  background-color: var(--border-primary);
+  flex-shrink: 0;
+}
+
+.chainsItems {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chainItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-primary);
+  margin: 32px 0;
+}
+
+.infoBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.infoBoxTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoBoxIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.step2Loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 0;
+}
+
+.spacer24 {
+  height: 24px;
+}
+
+.spacer32 {
+  height: 32px;
+}
+
+.spacer52 {
+  height: 52px;
+}

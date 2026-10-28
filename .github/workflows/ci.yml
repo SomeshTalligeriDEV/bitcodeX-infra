@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  issue_comment:
+    types: [created, edited]
+  push:
+    branches: [develop, main]
+
+jobs:
+  typecheck:
+    name: TypeScript Typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: wasm-build
+
+      - name: Install dependencies
+        run: yarn install --immutable --no-check-resolutions
+
+      - name: Build CS packages
+        run: yarn ci build_cs
+
+      - name: Build Frost packages
+        run: yarn ci build_frost
+
+      - name: Build internal packages
+        run: yarn ci build_pkgs
+
+      - name: Build SDK packages
+        run: yarn ci build_sdk
+
+      - name: Run typecheck
+        run: yarn ci typecheck
+
+      - name: Run language check (lint)
+        run: yarn ci lang_check
+
+  rust-check:
+    name: Rust Check
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: cargo-check
+
+      - name: Run cargo check
+        run: cargo check --workspace

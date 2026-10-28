@@ -1,0 +1,48 @@
+"use client";
+
+import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
+import { useBitcodeXCosmos } from "@bitcodex/bitcodex-sdk-react/cosmos";
+import Image from "next/image";
+import { useState } from "react";
+
+import Button from "./Button";
+
+export default function LoginView() {
+  const { signIn } = useBitcodeX();
+  const { isReady } = useBitcodeXCosmos();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  async function handleSignIn() {
+    setIsSigningIn(true);
+    try {
+      await signIn("google");
+    } finally {
+      setIsSigningIn(false);
+    }
+  }
+
+  return (
+    <div className="text-center max-w-md mx-auto flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
+        <div className="mx-auto flex items-center justify-center">
+          <Image src="/logo.svg" alt="BitcodeX" width={180} height={79.785} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <h2 className="text-4xl font-bold">Welcome to BitcodeX</h2>
+          <p className="text-gray-400 text-lg">
+            Sign in to get started with Cosmos chains
+          </p>
+        </div>
+      </div>
+      <Button
+        onClick={handleSignIn}
+        fullWidth
+        size="lg"
+        disabled={!isReady || isSigningIn}
+        loading={!isReady || isSigningIn}
+      >
+        Sign in
+      </Button>
+    </div>
+  );
+}

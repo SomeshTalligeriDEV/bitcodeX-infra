@@ -1,0 +1,55 @@
+import { Skeleton } from "@bitcodex/bitcodex-common-ui/skeleton";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import type { FC } from "react";
+import type { Address } from "viem";
+
+import styles from "./address_info.module.scss";
+import { Avatar } from "@bitcodex-attached/components/avatar/avatar";
+import { useMobileMode } from "@bitcodex-attached/hooks/mobile_mode";
+import { convertIpfsUrl } from "@bitcodex-attached/utils/url";
+import {
+  useGetENSAvatar,
+  useGetENSName,
+} from "@bitcodex-attached/web3/ethereum/queries";
+
+export interface AddressInfoProps {
+  address: Address;
+}
+
+export const AddressInfo: FC<AddressInfoProps> = ({ address }) => {
+  const isMobile = useMobileMode();
+  const { data: ensName, isLoading: ensNameIsLoading } = useGetENSName({
+    address,
+  });
+
+  // NOTE: can ignore the loading state here
+  // as the ens avatar is not critical and ipfs may cause 502 gateway error
+  const { data: ensAvatar } = useGetENSAvatar({
+    name: ensName as string | undefined,
+  });
+
+  if (ensNameIsLoading) {
+    return <Skeleton width="220px" height="20px" />;
+  }
+
+  return (
+    <div className={styles.addressInfo}>
+      {ensName ? (
+        <Avatar
+          src={ensAvatar ? convertIpfsUrl(ensAvatar) : undefined}
+          alt={ensName ?? "unknown"}
+          size={isMobile ? "md" : "sm"}
+          variant="rounded"
+        />
+      ) : null}
+      <Typography
+        color="secondary"
+        size={isMobile ? "md" : "sm"}
+        weight="medium"
+        className={styles.address}
+      >
+        {ensName || address}
+      </Typography>
+    </div>
+  );
+};

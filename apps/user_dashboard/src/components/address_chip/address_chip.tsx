@@ -1,0 +1,86 @@
+import { IconTransition } from "@bitcodex/bitcodex-common-ui/icon_transition";
+import { CheckThinIcon } from "@bitcodex/bitcodex-common-ui/icons/check_thin_icon";
+import { CopyOutlinedIcon } from "@bitcodex/bitcodex-common-ui/icons/copy_outlined";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import { type FC, type MouseEvent, useMemo } from "react";
+
+import styles from "./address_chip.module.scss";
+import { useCopyToClipboard } from "@bitcodex-user-dashboard/hooks/use_copy_to_clipboard";
+
+interface AddressChipProps {
+  address: string;
+  isEthereumAddress: boolean;
+  className?: string;
+}
+
+export const AddressChip: FC<AddressChipProps> = ({
+  address,
+  isEthereumAddress,
+  className,
+}) => {
+  const { isCopied, copy } = useCopyToClipboard();
+
+  const displayAddress = useMemo(() => {
+    if (!address) {
+      return { former: "", middle: "", latter: "" };
+    }
+
+    const LENGTH_OF_FIRST_PART = 10;
+    const LENGTH_OF_LAST_PART = 6;
+
+    if (isEthereumAddress) {
+      return {
+        former: address.slice(0, LENGTH_OF_FIRST_PART),
+        middle: address.slice(
+          LENGTH_OF_FIRST_PART,
+          address.length - LENGTH_OF_LAST_PART,
+        ),
+        latter: address.slice(address.length - LENGTH_OF_LAST_PART),
+      };
+    }
+    return {
+      former: address.slice(0, LENGTH_OF_FIRST_PART),
+      middle: address.slice(
+        LENGTH_OF_FIRST_PART,
+        address.length - LENGTH_OF_LAST_PART,
+      ),
+      latter: address.slice(address.length - LENGTH_OF_LAST_PART),
+    };
+  }, [address]);
+
+  const handleCopy = (e: MouseEvent) => {
+    e.stopPropagation();
+    copy(address);
+  };
+
+  return (
+    <div
+      className={`${styles.container} ${className || ""}`}
+      onClick={handleCopy}
+    >
+      <div className={styles.addressText}>
+        <Typography size="sm" className={styles.former}>
+          {displayAddress.former}
+        </Typography>
+        <Typography size="sm" className={styles.middle}>
+          {displayAddress.middle}
+        </Typography>
+        <Typography size="sm" className={styles.latter}>
+          {displayAddress.latter}
+        </Typography>
+      </div>
+
+      <div className={styles.iconContainer}>
+        <IconTransition
+          isActive={isCopied}
+          defaultIcon={
+            <CopyOutlinedIcon size={16} color="var(--fg-tertiary)" />
+          }
+          activeIcon={
+            <CheckThinIcon size={16} color="var(--fg-success-primary)" />
+          }
+        />
+      </div>
+    </div>
+  );
+};

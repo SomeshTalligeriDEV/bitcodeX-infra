@@ -1,0 +1,61 @@
+{
+  "name": "@bitcodex/bitcodex-sdk-core-react-native",
+  "version": "0.1.2-alpha.14",
+  "type": "module",
+  "scripts": {
+    "build": "tsx ./scripts/build.ts",
+    "build:plugin": "tsc -p plugin/tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./app.plugin.js": "./app.plugin.cjs"
+  },
+  "keywords": [
+    "bitcodex",
+    "wallet",
+    "react-native"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SomeshTalligeriDEV/bitcodeX-infra.git",
+    "directory": "sdk/bitcodex_sdk_core_react_native"
+  },
+  "dependencies": {
+    "@bitcodex/bitcodex-sdk-core": "workspace:*",
+    "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "buffer": "^6.0.3",
+    "pako": "^2.1.0"
+  },
+  "peerDependencies": {
+    "@react-native-async-storage/async-storage": ">=1.17",
+    "expo-web-browser": ">=14",
+    "react": ">=18",
+    "react-native": ">=0.70",
+    "react-native-get-random-values": ">=1",
+    "react-native-inappbrowser-reborn": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "expo-web-browser": {
+      "optional": true
+    },
+    "react-native-inappbrowser-reborn": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "^55.0.6",
+    "@types/react": "~19.1.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,41 @@
+.menu {
+  width: 252px;
+}
+
+.menuHeader {
+  cursor: default;
+  border: none;
+  background: var(--bg-primary-hover);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: 6px;
+  gap: 12px;
+
+  img {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: cover;
+  }
+}
+
+.sidebarTrigger {
+  img {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: cover;
+  }
+}
+
+.iconWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+
+  &:hover {
+    background-color: var(--bg-primary-hover);
+  }
+}

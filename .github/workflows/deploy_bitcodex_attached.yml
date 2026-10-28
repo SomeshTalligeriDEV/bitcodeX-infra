@@ -1,0 +1,127 @@
+name: Deploy BitcodeX Attached
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PRJ_ID__BITCODEX_ATTACHED }}
+on:
+  workflow_dispatch:
+    inputs:
+      git_tag:
+        description: >
+          "Git tag (format: attached/alpha/v0.0.1, attached/develop/v0.0.1, or attached/release/v0.0.1)"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    environment:
+      name: ${{ contains(inputs.git_tag, '/release/') && 'Production' || contains(inputs.git_tag, '/alpha/') && 'Alpha' || 'Develop' }}
+    steps:
+      - name: Checkout self repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_tag }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Check Node version
+        run: node -v
+
+      - name: Check git tag
+        run: node ./internals/github/dist/validate_git_tag.js
+        env:
+          GIT_TAG: "${{ inputs.git_tag }}"
+
+      - name: Verify app name
+        run: |
+          APP_NAME=$(echo "${{ inputs.git_tag }}" | cut -d'/' -f1)
+          if [ "$APP_NAME" != "attached" ]; then
+            echo "::error::This workflow only supports 'attached' app, got: $APP_NAME"
+            exit 1
+          fi
+
+      - name: Determine deploy environment
+        id: deploy_env
+        run: node ./internals/github/dist/determine_deploy_env.js
+        env:
+          GIT_TAG: "${{ inputs.git_tag }}"
+
+      - name: Yarn version
+        run: yarn -v
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: wasm-build
+
+      - name: Build CS packages
+        run: yarn ci build_cs
+
+      - name: Build Frost packages
+        run: yarn ci build_frost
+
+      - name: Build internal packages
+        run: yarn ci build_pkgs
+
+      - name: Build SDK packages
+        run: yarn ci build_sdk
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ steps.deploy_env.outputs.vercel_env }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify environment variables
+        run: |
+          ENV_FILE=".vercel/.env.${{ steps.deploy_env.outputs.vercel_env }}.local"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "::error::Environment file not found: $ENV_FILE"
+            echo "vercel pull may have failed to fetch environment variables."
+            exit 1
+          fi
+          echo "Environment file found: $ENV_FILE"
+
+      - name: Build Project Artifacts
+        run: vercel build --yes ${{ steps.deploy_env.outputs.vercel_build_flag }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: vercel_deploy
+        run: |
+          URL=$(vercel deploy --prebuilt ${{ steps.deploy_env.outputs.vercel_deploy_flag }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Alias deployment
+        if: contains(inputs.git_tag, '/alpha/')
+        run: |
+          vercel alias set "${{ steps.vercel_deploy.outputs.url }}" \
+            "${{ secrets.VERCEL_ALIAS_ATTACHED_ALPHA }}" \
+            --scope=keplrwallet --token=${{ secrets.VERCEL_TOKEN }}

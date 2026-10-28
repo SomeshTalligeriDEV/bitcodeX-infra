@@ -1,0 +1,128 @@
+import type { Bytes } from "@bitcodex/bytes";
+import express from "express";
+import type { Pool } from "pg";
+import winston from "winston";
+
+import { mockOAuthMiddleware } from "./mock_oauth";
+import { runKeygen as runKeygenV1 } from "@bitcodex-api/api/tss/v1/keygen";
+import { userJwtMiddlewareV2 } from "@bitcodex-api/middleware/auth/cosmos_compat_auth";
+import { commitRevealMiddleware } from "@bitcodex-api/middleware/commit_reveal";
+import { commitRevealCommit } from "@bitcodex-api/routes/tss_v2/commit";
+import { keygenV2 } from "@bitcodex-api/routes/tss_v2/keygen";
+import { keygenEd25519 } from "@bitcodex-api/routes/tss_v2/keygen_ed25519";
+import { reportKeyShareNotFound } from "@bitcodex-api/routes/tss_v2/report_key_share_not_found";
+import { userCheckEmailV2 } from "@bitcodex-api/routes/tss_v2/user_check_email";
+import { userReshareV2 } from "@bitcodex-api/routes/tss_v2/user_reshare";
+import { userSignInV2 } from "@bitcodex-api/routes/tss_v2/user_signin";
+
+export interface BitcodeXApiServerKeypair {
+  privateKey: Bytes<32>;
+  publicKey: Bytes<32>;
+}
+
+const testLogger = winston.createLogger({
+  level: "error",
+  silent: true,
+  transports: [new winston.transports.Console()],
+});
+
+export function createBitcodeXApiApp(
+  pool: Pool,
+  serverKeypair: BitcodeXApiServerKeypair,
+): express.Application {
+  const app = express();
+  app.use(express.json());
+
+  app.locals.db = pool;
+  app.locals.server_keypair = serverKeypair;
+  app.locals.logger = testLogger;
+  app.locals.jwt_secret = "test_jwt_secret";
+  app.locals.jwt_expires_in = "7d";
+  app.locals.encryption_secret = "test_encryption_secret";
+
+  app.post("/tss/v2/commit", commitRevealCommit);
+
+  app.post(
+    "/tss/v2/keygen",
+    commitRevealMiddleware("keygen"),
+    mockOAuthMiddleware,
+    ((_req, res, next) => {
+      res.locals.api_key = { customer_id: "test_customer_id" };
+      next();
+    }) as express.RequestHandler,
+    keygenV2,
+  );
+
+  app.post(
+    "/tss/v2/user/signin",
+    commitRevealMiddleware("signin"),
+    mockOAuthMiddleware,
+    ((_req, res, next) => {
+      res.locals.api_key = { customer_id: "test_customer_id" };
+      next();
+    }) as express.RequestHandler,
+    userSignInV2,
+  );
+
+  app.post(
+    "/tss/v2/user/reshare",
+    commitRevealMiddleware("reshare"),
+    mockOAuthMiddleware,
+    userReshareV2,
+  );
+
+  // Public route: check user/KSN state
+  app.post("/tss/v2/user/check", userCheckEmailV2);
+
+  // JWT-authenticated route (no commit-reveal): report nodes with missing keyshares
+  app.post(
+    "/tss/v2/user/report_key_share_not_found",
+    userJwtMiddlewareV2,
+    reportKeyShareNotFound,
+  );
+
+  // v2 keygen ed25519 (commit-reveal + mock OAuth)
+  app.post(
+    "/tss/v2/keygen_ed25519",
+    commitRevealMiddleware("keygen_ed25519"),
+    mockOAuthMiddleware,
+    keygenEd25519,
+  );
+
+  // v1 keygen (secp256k1 only) using mock OAuth
+  app.post("/tss/v1/keygen", mockOAuthMiddleware, async (req, res) => {
+    const state = app.locals;
+    const oauthUser = res.locals.oauth_user;
+    const auth_type = oauthUser.type;
+    const user_identifier = oauthUser.user_identifier;
+    const body = req.body;
+
+    const jwtConfig = {
+      secret: state.jwt_secret,
+      expires_in: state.jwt_expires_in,
+    };
+
+    const result = await runKeygenV1(
+      state.db,
+      jwtConfig,
+      {
+        auth_type,
+        user_identifier,
+        keygen_2: body.keygen_2,
+        email: oauthUser.email,
+        name: oauthUser.name,
+        metadata: oauthUser.metadata,
+      },
+      state.encryption_secret,
+      state.logger,
+      "test_customer_id",
+    );
+    if (!result.success) {
+      res.status(400).json(result);
+      return;
+    }
+    res.status(200).json({ success: true, data: result.data });
+  });
+
+  return app;
+}

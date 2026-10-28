@@ -1,0 +1,138 @@
+@use "../../styles/viewport.module.scss" as *;
+
+.wrapper {
+  height: 64px;
+  display: flex;
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-items: center;
+  padding: 16px 20px;
+  z-index: 999;
+  justify-content: space-between;
+
+  @media (min-width: $desktop_min_width) {
+    padding: 16px 44px;
+  }
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menuIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: pointer;
+
+  @media (min-width: $desktop_min_width) {
+    display: none;
+  }
+}
+
+// Account area (non-clickable wrapper; only the IconButton inside is clickable)
+.accountArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.authProviderIcon {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+
+  @media (min-width: $desktop_min_width) {
+    display: flex;
+  }
+}
+
+.accountEmail {
+  display: none;
+  white-space: nowrap;
+
+  @media (min-width: $desktop_min_width) {
+    display: block;
+  }
+}
+
+// Mobile menu trigger: auth icon in circle (32px visual, 40px touch area)
+.mobileMenuTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  box-sizing: content-box;
+  background-color: var(--bg-tertiary);
+  background-clip: content-box;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  @media (min-width: $desktop_min_width) {
+    display: none;
+  }
+}
+
+// Dropdown open state: change mobile trigger bg
+:global([aria-expanded="true"]) > .mobileMenuTrigger {
+  background-color: var(--bg-quaternary);
+}
+
+// Desktop menu trigger: dots icon
+.desktopMenuTrigger {
+  display: none;
+
+  @media (min-width: $desktop_min_width) {
+    display: flex;
+  }
+}
+
+// Dropdown menu
+.accountMenu {
+  width: 252px;
+}
+
+.menuHeader {
+  display: flex;
+  padding: 6px;
+}
+
+.menuUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menuEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: ($desktop_min_width - 1)) {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}

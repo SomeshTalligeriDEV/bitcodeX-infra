@@ -1,0 +1,38 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  gap: 8px;
+
+  &:hover {
+    background: var(--bg-secondary-hover);
+    --text-secondary: var(--text-secondary-hover);
+    --fg-tertiary: var(--fg-tertiary-hover);
+  }
+
+  width: auto;
+  min-width: 148px;
+
+  @media (min-width: desktop_min_width) {
+    width: 148px;
+  }
+}
+
+.chainName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  img {
+    border-radius: 50%;
+  }
+}
+
+.explorerName {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 4px;
+}

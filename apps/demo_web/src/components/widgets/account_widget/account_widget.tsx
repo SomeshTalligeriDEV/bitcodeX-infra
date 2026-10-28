@@ -1,0 +1,150 @@
+import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
+import { useBitcodeXSvm } from "@bitcodex/bitcodex-sdk-react/svm";
+import type { AuthType } from "@bitcodex/bitcodex-types/auth";
+import { type FC, useState } from "react";
+
+import { LoginWidget } from "../login_widget/login_widget";
+import { AccountInfoWidget } from "./account_info_widget";
+import { AuthProgressWidget } from "./auth_progress_widget";
+import type { LoginMethod } from "@bitcodex-demo-web/types/login";
+
+type SigningInState =
+  | { status: "ready" }
+  | { status: "signing-in" }
+  | {
+      status: "failed";
+      error: string;
+      errorKind: "signup_disabled" | "generic";
+    };
+
+function authTypeToLoginMethod(authType: AuthType | null): LoginMethod {
+  if (!authType) {
+    return "google";
+  }
+  if (authType === "auth0") {
+    return "email";
+  }
+  return authType;
+}
+
+export const AccountWidget: FC<AccountWidgetProps> = () => {
+  const {
+    wallet: bitcodexWallet,
+    isSignedIn,
+    email,
+    name,
+    authType,
+    publicKey: publicKeySecp256k1,
+  } = useBitcodeX();
+  const { address: svmPublicKey } = useBitcodeXSvm();
+  const [signingInState, setSigningInState] = useState<SigningInState>({
+    status: "ready",
+  });
+
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>("google");
+
+  const displayLoginMethod = isSignedIn
+    ? authTypeToLoginMethod(authType)
+    : loginMethod;
+
+  function isSupportedLoginMethod(method: LoginMethod) {
+    return (
+      method === "google" ||
+      method === "x" ||
+      method === "discord" ||
+      method === "telegram" ||
+      method === "email" ||
+      method === "github"
+    );
+  }
+
+  async function handleSignIn(method: LoginMethod) {
+    setLoginMethod(method);
+
+    if (!bitcodexWallet) {
+      console.error("bitcodexWallet is not initialized");
+      return;
+    }
+
+    if (!isSupportedLoginMethod(method)) {
+      console.error("Unsupported login method atm: %s", method);
+      return;
+    }
+
+    try {
+      setSigningInState({ status: "signing-in" });
+      await bitcodexWallet.signIn(method);
+
+      setSigningInState({ status: "ready" });
+    } catch (error: any) {
+      console.error("sign in fail, err: %s", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
+
+      const errorKind = errorMessage.includes("signup_disabled")
+        ? "signup_disabled"
+        : "generic";
+
+      setSigningInState({
+        status: "failed",
+        error: errorMessage,
+        errorKind,
+      });
+    }
+  }
+
+  async function handleRetry() {
+    setSigningInState({ status: "ready" });
+  }
+
+  async function handleSignOut() {
+    if (!bitcodexWallet) {
+      console.error("bitcodexWallet is not initialized");
+      return;
+    }
+
+    await bitcodexWallet.signOut();
+    setLoginMethod("google");
+    setSigningInState({ status: "ready" });
+  }
+
+  if (!bitcodexWallet) {
+    return <>Loading...</>;
+  }
+
+  // The email login loading progress is shown in the Attached popup, so we don't need to show that here
+  if (signingInState.status === "signing-in" && loginMethod !== "email") {
+    return <AuthProgressWidget method={loginMethod} status="loading" />;
+  }
+
+  if (signingInState.status === "failed") {
+    const isSignupDisabled = signingInState.errorKind === "signup_disabled";
+    return (
+      <AuthProgressWidget
+        method={loginMethod}
+        status="failed"
+        errorKind={signingInState.errorKind}
+        onRetry={isSignupDisabled ? undefined : handleRetry}
+      />
+    );
+  }
+
+  if (isSignedIn) {
+    return (
+      <AccountInfoWidget
+        type={displayLoginMethod}
+        email={email || ""}
+        publicKeySecp256k1={publicKeySecp256k1 || ""}
+        publicKeyEd25519={svmPublicKey}
+        name={name}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  return <LoginWidget onSignIn={handleSignIn} />;
+};
+
+// biome-ignore lint/complexity/noBannedTypes: empty props type used as component interface
+export type AccountWidgetProps = {};

@@ -1,0 +1,24 @@
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import cn from "classnames";
+import type { FC } from "react";
+
+import styles from "./tx_row.module.scss";
+
+export interface TxRowProps {
+  label?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const TxRow: FC<TxRowProps> = ({ label, children, className }) => {
+  return (
+    <div className={cn(styles.txRow, className)}>
+      {label ? (
+        <Typography color="tertiary" size="xs" weight="medium">
+          {label}
+        </Typography>
+      ) : null}
+      {children}
+    </div>
+  );
+};

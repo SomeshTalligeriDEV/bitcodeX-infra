@@ -1,0 +1,56 @@
+import cors from "cors";
+import express from "express";
+import helmet from "helmet";
+import morgan from "morgan";
+import winston from "winston";
+
+import { makeLogRouterV1 } from "@bitcodex-api/routes/log_v1";
+import { makeTSSRouterV1 } from "@bitcodex-api/routes/tss_v1";
+import { makeTSSRouterV2 } from "@bitcodex-api/routes/tss_v2";
+
+const testLogger = winston.createLogger({
+  level: "error",
+  silent: true,
+  transports: [new winston.transports.Console()],
+});
+
+export interface TestEnvsTss {
+  JWT_SECRET: string;
+  JWT_EXPIRES_IN: string;
+  ENCRYPTION_SECRET: string;
+}
+
+export interface TestEnvsLog {
+  ES_URL: string;
+  ES_INDEX: string;
+  ES_USERNAME: string;
+  ES_PASSWORD: string;
+}
+
+export type TestEnvs = TestEnvsTss | TestEnvsLog;
+
+export function makeApp(env: TestEnvs) {
+  const app = express();
+
+  app.use(morgan("dev"));
+  app.use(helmet());
+  app.use(cors());
+  app.use(express.json({ limit: "10mb" }));
+
+  // biome-ignore lint/complexity/noBannedTypes: Express generic params
+  app.get<{}, string>("/", (_, res) => {
+    res.send("Ok");
+  });
+
+  app.use("/tss/v1", makeTSSRouterV1());
+  app.use("/tss/v2", makeTSSRouterV2());
+  app.use("/log/v1", makeLogRouterV1());
+
+  const e = env as any;
+  app.locals.jwt_secret = e.JWT_SECRET;
+  app.locals.jwt_expires_in = e.JWT_EXPIRES_IN;
+  app.locals.encryption_secret = e.ENCRYPTION_SECRET;
+  app.locals.logger = testLogger;
+
+  return app;
+}

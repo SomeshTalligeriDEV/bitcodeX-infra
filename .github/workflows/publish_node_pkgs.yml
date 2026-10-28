@@ -1,0 +1,51 @@
+name: Publish Node packages
+env:
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout self repository
+        uses: actions/checkout@v4
+        with: 
+          ref: ${{ inputs.git_tag }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Yarn version
+        run: yarn -v
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build internal packages
+        run: yarn ci build_pkgs
+
+      - name: Build SDK packages
+        run: yarn ci build_sdk
+
+      - name: Lerna publish
+        run: yarn ci publish

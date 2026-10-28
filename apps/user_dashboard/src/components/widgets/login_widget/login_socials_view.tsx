@@ -1,0 +1,113 @@
+import { Button } from "@bitcodex/bitcodex-common-ui/button";
+import { ChevronLeftIcon } from "@bitcodex/bitcodex-common-ui/icons/chevron_left";
+import { DiscordIcon } from "@bitcodex/bitcodex-common-ui/icons/discord_icon";
+import { GithubIcon } from "@bitcodex/bitcodex-common-ui/icons/github_icon";
+import { TelegramIcon } from "@bitcodex/bitcodex-common-ui/icons/telegram_icon";
+import { XIcon } from "@bitcodex/bitcodex-common-ui/icons/x_icon";
+import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import type { AuthType } from "@bitcodex/bitcodex-types/auth";
+import type { FC } from "react";
+
+import styles from "./login_widget.module.scss";
+
+export interface LoginSocialsViewProps {
+  onBack: () => void;
+  onSignIn: (method: AuthType) => void;
+}
+
+export const LoginSocialsView: FC<LoginSocialsViewProps> = ({
+  onBack,
+  onSignIn,
+}) => {
+  return (
+    <>
+      <div className={styles.backRow}>
+        <div
+          className={styles.backIcon}
+          onClick={onBack}
+          role="button"
+          tabIndex={0}
+        >
+          <ChevronLeftIcon size={24} color={"var(--fg-primary)"} />
+        </div>
+        <Typography
+          size="sm"
+          weight="medium"
+          color="primary"
+          className={styles.backText}
+        >
+          Login or sign up
+        </Typography>
+      </div>
+      <Spacing height={26} />
+      <div className={styles.socialsList}>
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
+          onClick={() => onSignIn("x")}
+        >
+          <XIcon size={20} />
+          <Typography
+            size="sm"
+            weight="semibold"
+            color="secondary"
+            style={{ padding: "0 2px" }}
+          >
+            X
+          </Typography>
+        </Button>
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
+          onClick={() => onSignIn("telegram")}
+        >
+          <TelegramIcon size={20} />
+          <Typography
+            size="sm"
+            weight="semibold"
+            color="secondary"
+            style={{ padding: "0 2px" }}
+          >
+            Telegram
+          </Typography>
+        </Button>
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
+          onClick={() => onSignIn("discord")}
+        >
+          <DiscordIcon size={20} />
+          <Typography
+            size="sm"
+            weight="semibold"
+            color="secondary"
+            style={{ padding: "0 2px" }}
+          >
+            Discord
+          </Typography>
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
+          onClick={() => onSignIn("github")}
+        >
+          <GithubIcon size={20} />
+          <Typography
+            size="sm"
+            weight="semibold"
+            color="secondary"
+            style={{ padding: "0 2px" }}
+          >
+            GitHub
+          </Typography>
+        </Button>
+      </div>
+    </>
+  );
+};

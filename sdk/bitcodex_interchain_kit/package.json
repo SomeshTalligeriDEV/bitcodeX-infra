@@ -1,0 +1,54 @@
+{
+  "name": "@bitcodex/bitcodex-interchain-kit",
+  "version": "0.1.2-alpha.14",
+  "type": "module",
+  "description": "interchain-kit wallet connector for BitcodeX Wallet",
+  "author": "bitcodex-wallet",
+  "homepage": "https://github.com/hyperweb-io/interchain-kit#readme",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!CHANGELOG.md",
+    "!LICENSE"
+  ],
+  "scripts": {
+    "clean": "del-cli dist",
+    "build": "yarn clean && rollup -c --configPlugin typescript && tsc-alias",
+    "lint": "eslint --ext .tsx,.ts .",
+    "format": "eslint --ext .tsx,.ts --fix ."
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "interchain-kit",
+    "cosmos",
+    "bitcodex",
+    "wallet",
+    "embed"
+  ],
+  "dependencies": {
+    "@bitcodex/bitcodex-sdk-core": "workspace:*",
+    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*",
+    "@interchain-kit/core": "^0.10.0",
+    "@keplr-wallet/types": "0.12.297"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "del-cli": "^6.0.0",
+    "rollup": "^4.0.0",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3"
+  }
+}

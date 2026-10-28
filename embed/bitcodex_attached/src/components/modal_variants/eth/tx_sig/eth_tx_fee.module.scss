@@ -1,0 +1,50 @@
+.feeContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.feeSummaryContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.errorMessage {
+  display: flex;
+  width: fit-content;
+  max-width: 360px;
+  max-height: 66px;
+  padding: 6px 8px;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--bg-warning-primary);
+  text-align: center;
+  overflow-y: auto;
+  word-wrap: break-word;
+  word-break: break-word;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    margin: 6px 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-right: 4px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+// Mobile app mode: enlarge fee text
+:global(html[data-mobile]) .feeSummaryContainer p {
+  font-size: var(--font-size-sm);
+  line-height: var(--font-line-height-sm);
+}

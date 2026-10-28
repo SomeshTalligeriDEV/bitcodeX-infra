@@ -1,0 +1,60 @@
+@use "@bitcodex-attached/components/modal_variants/common/make_signature/make_signature_modal_tokens"
+  as *;
+
+.codeBlock {
+  min-height: 0;
+  max-height: 100%;
+  min-width: 0;
+
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-quaternary) transparent;
+
+  // Chromium/Safari: disable standard properties so ::-webkit-scrollbar takes effect
+  @supports selector(::-webkit-scrollbar) {
+    scrollbar-width: unset;
+    scrollbar-color: unset;
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--bg-quaternary);
+    border-radius: 9999px;
+  }
+}
+
+.topLevel {
+  box-sizing: border-box;
+  padding-right: 4px;
+}
+
+.embedded {
+  box-sizing: border-box;
+}
+
+.content {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.contentTopLevel {
+  padding-right: 0;
+}
+
+// App-only: preserve rail position while widening the perceived right-side
+// content whitespace inside the raw body via explicit content inset ownership.
+:global(html[data-mobile]) .contentTopLevel {
+  padding-right: 8px;
+}
+
+.contentEmbedded {
+  padding-right: 0;
+}

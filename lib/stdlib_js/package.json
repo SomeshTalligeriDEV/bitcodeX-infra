@@ -1,0 +1,43 @@
+{
+  "name": "@bitcodex/stdlib-js",
+  "version": "0.1.2-alpha.12",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./path": "./dist/path.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "del-cli dist",
+    "build": "yarn clean && tsc && tsc-alias"
+  },
+  "keywords": [
+    "keplr",
+    "bitcodex"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SomeshTalligeriDEV/bitcodeX-infra.git",
+    "directory": "stdlib_js"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.10.1",
+    "del-cli": "^6.0.0",
+    "ts-jest": "^29.4.5",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3"
+  }
+}

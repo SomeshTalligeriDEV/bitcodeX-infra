@@ -1,0 +1,24 @@
+{
+  "name": "@bitcodex/cait-sith-cosmos-compat-hooks",
+  "main": "./src/index.ts",
+  "version": "0.1.1-alpha.6",
+  "private": true,
+  "dependencies": {
+    "@bitcodex/api-lib": "workspace:*",
+    "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/bytes": "workspace:*",
+    "@bitcodex/cait-sith-cosmos-compat-wasm": "workspace:*",
+    "@bitcodex/stdlib-js": "workspace:*",
+    "@bitcodex/tecdsa-interface": "workspace:*",
+    "classnames": "^2.5.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "eslint-config-next": "^16.0.7",
+    "typescript": "^5.8.3"
+  }
+}

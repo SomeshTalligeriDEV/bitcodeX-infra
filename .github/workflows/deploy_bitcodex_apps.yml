@@ -1,0 +1,157 @@
+name: Deploy BitcodeX Apps
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PRJ_ID__BITCODEX_DEMO_WEB: ${{ secrets.VERCEL_PRJ_ID__BITCODEX_DEMO_WEB }}
+  VERCEL_PRJ_ID__CT_DASHBOARD: ${{ secrets.VERCEL_PRJ_ID__CT_DASHBOARD }}
+  VERCEL_PRJ_ID__USER_DASHBOARD: ${{ secrets.VERCEL_PRJ_ID__USER_DASHBOARD }}
+  VERCEL_PRJ_ID__ADMIN_WEB: ${{ secrets.VERCEL_PRJ_ID__ADMIN_WEB }}
+  VERCEL_PRJ_ID__DOCS_WEB: ${{ secrets.VERCEL_PRJ_ID__DOCS_WEB }}
+  VERCEL_PRJ_ID__ATTACHED_MOBILE_HOST_WEB: ${{ secrets.VERCEL_PRJ_ID__ATTACHED_MOBILE_HOST_WEB }}
+on:
+  workflow_dispatch:
+    inputs:
+      git_tag:
+        description: >
+          "Git tag (format: <app>/alpha/v0.0.1, <app>/develop/v0.0.1, or <app>/release/v0.0.1).
+          Apps: demo_web, user_dashboard, ct_dashboard, admin_web, docs_web, attached_mobile_host_web"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    environment:
+      name: ${{ contains(inputs.git_tag, '/release/') && 'Production' || contains(inputs.git_tag, '/alpha/') && 'Alpha' || 'Develop' }}
+    steps:
+      - name: Checkout self repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_tag }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Check Node version
+        run: node -v
+
+      - name: Check git tag
+        run: node ./internals/github/dist/validate_git_tag.js
+        env:
+          GIT_TAG: "${{ inputs.git_tag }}"
+
+      - name: Determine deploy environment
+        id: deploy_env
+        run: node ./internals/github/dist/determine_deploy_env.js
+        env:
+          GIT_TAG: "${{ inputs.git_tag }}"
+
+      - name: Set Vercel Project Id
+        run: |
+          case "${{ steps.deploy_env.outputs.vercel_app }}" in
+            demo_web)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__BITCODEX_DEMO_WEB" >> \
+                "$GITHUB_ENV"
+              ;;
+            ct_dashboard)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__CT_DASHBOARD" >> \
+                "$GITHUB_ENV"
+              ;;
+            user_dashboard)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__USER_DASHBOARD" >> \
+                "$GITHUB_ENV"
+              ;;
+            admin_web)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__ADMIN_WEB" >> \
+                "$GITHUB_ENV"
+              ;;
+            docs_web)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__DOCS_WEB" >> \
+                "$GITHUB_ENV"
+              ;;
+            attached_mobile_host_web)
+              echo "VERCEL_PROJECT_ID=$VERCEL_PRJ_ID__ATTACHED_MOBILE_HOST_WEB" >> \
+                "$GITHUB_ENV"
+              ;;
+            *)
+              echo "Unknown app: ${{ steps.deploy_env.outputs.vercel_app }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Yarn version
+        run: yarn -v
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build internal packages
+        run: yarn ci build_pkgs
+
+      - name: Build SDK packages
+        run: yarn ci build_sdk
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ steps.deploy_env.outputs.vercel_env }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify environment variables
+        run: |
+          ENV_FILE=".vercel/.env.${{ steps.deploy_env.outputs.vercel_env }}.local"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "::error::Environment file not found: $ENV_FILE"
+            echo "vercel pull may have failed to fetch environment variables."
+            exit 1
+          fi
+          echo "Environment file found: $ENV_FILE"
+
+      - name: Build Project Artifacts
+        run: vercel build --yes ${{ steps.deploy_env.outputs.vercel_build_flag }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: vercel_deploy
+        run: |
+          URL=$(vercel deploy --prebuilt ${{ steps.deploy_env.outputs.vercel_deploy_flag }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Alias deployment
+        if: contains(inputs.git_tag, '/alpha/')
+        env:
+          ALIAS_DEMO_WEB: ${{ secrets.VERCEL_ALIAS_DEMO_WEB_ALPHA }}
+          ALIAS_CT_DASHBOARD: ${{ secrets.VERCEL_ALIAS_CT_DASHBOARD_ALPHA }}
+          ALIAS_ADMIN_WEB: ${{ secrets.VERCEL_ALIAS_ADMIN_WEB_ALPHA }}
+          ALIAS_USER_DASHBOARD: ${{ secrets.VERCEL_ALIAS_USER_DASHBOARD_ALPHA }}
+          ALIAS_ATTACHED_MOBILE_HOST_WEB: ${{ secrets.VERCEL_ALIAS_ATTACHED_MOBILE_HOST_WEB_ALPHA }}
+        run: |
+          case "${{ steps.deploy_env.outputs.vercel_app }}" in
+            demo_web) ALIAS_DOMAIN="$ALIAS_DEMO_WEB" ;;
+            ct_dashboard) ALIAS_DOMAIN="$ALIAS_CT_DASHBOARD" ;;
+            admin_web) ALIAS_DOMAIN="$ALIAS_ADMIN_WEB" ;;
+            user_dashboard) ALIAS_DOMAIN="$ALIAS_USER_DASHBOARD" ;;
+            attached_mobile_host_web) ALIAS_DOMAIN="$ALIAS_ATTACHED_MOBILE_HOST_WEB" ;;
+            *) echo "No alias configured for this app"; exit 0 ;;
+          esac
+          if [ -n "$ALIAS_DOMAIN" ]; then
+            vercel alias set "${{ steps.vercel_deploy.outputs.url }}" "$ALIAS_DOMAIN" \
+              --scope=keplrwallet --token=${{ secrets.VERCEL_TOKEN }}
+          fi

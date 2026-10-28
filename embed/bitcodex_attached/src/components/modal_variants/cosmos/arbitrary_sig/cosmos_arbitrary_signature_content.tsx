@@ -1,0 +1,67 @@
+import { ChevronRightIcon } from "@bitcodex/bitcodex-common-ui/icons/chevron_right";
+import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
+import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import type { CosmosArbitrarySignPayload } from "@bitcodex/bitcodex-sdk-core";
+import { type FC, useState } from "react";
+
+import styles from "./cosmos_arbitrary_signature_content.module.scss";
+import { MakeSignatureRawCodeBlock } from "@bitcodex-attached/components/modal_variants/common/make_signature/make_sig_modal_code_block";
+import { MakeSignatureRawCodeBlockContainer } from "@bitcodex-attached/components/modal_variants/common/make_signature/make_sig_modal_code_block_container";
+import { MetadataContent } from "@bitcodex-attached/components/modal_variants/common/metadata_content/metadata_content";
+
+interface CosmosArbitrarySignatureContentProps {
+  payload: CosmosArbitrarySignPayload;
+}
+
+export const CosmosArbitrarySignatureContent: FC<
+  CosmosArbitrarySignatureContentProps
+> = ({ payload }) => {
+  const [isViewRawData, setIsViewRawData] = useState(false);
+
+  return (
+    <div>
+      <MetadataContent
+        origin={payload.origin}
+        chainInfo={payload.chain_info}
+        signer={payload.signer}
+      />
+
+      <Spacing height={28} />
+
+      <div className={styles.messageHeader}>
+        <Typography size="sm" color="secondary" weight="semibold">
+          Message
+        </Typography>
+        <div
+          onClick={() => setIsViewRawData(!isViewRawData)}
+          className={styles.viewButtonTextRow}
+        >
+          <Typography size="xs" color="tertiary" weight="medium">
+            {isViewRawData ? "Smart View" : "Raw View"}
+          </Typography>
+          <ChevronRightIcon color="var(--fg-tertiary)" />
+        </div>
+      </div>
+      <Spacing height={8} />
+
+      {isViewRawData ? (
+        <MakeSignatureRawCodeBlockContainer className={styles.rawSurface}>
+          <MakeSignatureRawCodeBlock
+            code={JSON.stringify(payload.signDoc, null, 2)}
+          />
+        </MakeSignatureRawCodeBlockContainer>
+      ) : (
+        <div className={styles.dataContainer}>
+          <Typography
+            size="sm"
+            color="tertiary"
+            weight="medium"
+            className={styles.data}
+          >
+            {payload.data}
+          </Typography>
+        </div>
+      )}
+    </div>
+  );
+};

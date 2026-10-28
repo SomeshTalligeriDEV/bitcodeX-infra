@@ -1,0 +1,2 @@
+export const BITCODEX_API_ENDPOINT =
+  process.env.NEXT_PUBLIC_BITCODEX_API_ENDPOINT;
