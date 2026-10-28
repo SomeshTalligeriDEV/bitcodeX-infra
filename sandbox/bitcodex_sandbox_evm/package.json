@@ -1,5 +1,5 @@
 {
-  "name": "sandbox-evm",
+  "name": "@bitcodex/sandbox-evm",
   "private": true,
   "scripts": {
     "dev": "tsx launch.ts",

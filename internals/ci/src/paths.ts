@@ -52,10 +52,13 @@ export const paths = (function () {
 
   const sandbox_simple_host = path.join(
     __dirname,
-    "../../../sandbox/sandbox_simple_host/",
+    "../../../sandbox/bitcodex_sandbox_simple_host/",
   );
 
-  const sandbox_sol = path.join(__dirname, "../../../sandbox/sandbox_sol/");
+  const sandbox_sol = path.join(
+    __dirname,
+    "../../../sandbox/bitcodex_sandbox_sol/",
+  );
 
   const crypto_bytes = path.join(__dirname, "../../../crypto/bytes/");
 

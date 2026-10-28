@@ -1,5 +1,5 @@
 {
-  "name": "sandbox_simple_host",
+  "name": "@bitcodex/sandbox-simple-host",
   "private": true,
   "scripts": {
     "dev": "vite",

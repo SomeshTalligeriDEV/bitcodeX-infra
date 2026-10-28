@@ -3988,9 +3988,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/sandbox-cosmos-kit@workspace:sandbox/sandbox_cosmos_kit":
+"@bitcodex/sandbox-cosmos-kit@workspace:sandbox/bitcodex_sandbox_cosmos_kit":
   version: 0.0.0-use.local
-  resolution: "@bitcodex/sandbox-cosmos-kit@workspace:sandbox/sandbox_cosmos_kit"
+  resolution: "@bitcodex/sandbox-cosmos-kit@workspace:sandbox/bitcodex_sandbox_cosmos_kit"
   dependencies:
     "@bitcodex/bitcodex-cosmos-kit": "workspace:*"
     "@cosmjs/amino": "npm:0.36.1"
@@ -4018,9 +4018,51 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/sandbox-interchain-kit@workspace:sandbox/sandbox_interchain_kit":
+"@bitcodex/sandbox-evm@workspace:sandbox/bitcodex_sandbox_evm":
   version: 0.0.0-use.local
-  resolution: "@bitcodex/sandbox-interchain-kit@workspace:sandbox/sandbox_interchain_kit"
+  resolution: "@bitcodex/sandbox-evm@workspace:sandbox/bitcodex_sandbox_evm"
+  dependencies:
+    "@bitcodex/bitcodex-sdk-core": "workspace:*"
+    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
+    "@heroicons/react": "npm:~2.1.5"
+    "@keplr-wallet/proto-types": "npm:^0.12.250"
+    "@nomicfoundation/hardhat-ethers": "npm:^3.0.9"
+    "@nomicfoundation/hardhat-ignition": "npm:^0.15.12"
+    "@nomicfoundation/hardhat-ignition-ethers": "npm:^0.15.13"
+    "@nomicfoundation/hardhat-toolbox": "npm:^6.0.0"
+    "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
+    "@nomicfoundation/ignition-core": "npm:^0.15.12"
+    "@rainbow-me/rainbowkit": "npm:2.2.7"
+    "@tailwindcss/postcss": "npm:4.0.15"
+    "@tanstack/react-query": "npm:^5.90.12"
+    "@types/node": "npm:^24.10.1"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
+    "@uniswap/sdk-core": "npm:~5.8.2"
+    "@uniswap/v2-sdk": "npm:~4.6.1"
+    abitype: "npm:1.0.6"
+    blo: "npm:~1.2.0"
+    hardhat: "npm:^2.25.0"
+    next: "npm:^16.1.1"
+    pino-pretty: "npm:^13.1.1"
+    postcss: "npm:~8.4.45"
+    react: "npm:^19.2.1"
+    react-dom: "npm:^19.2.1"
+    react-hot-toast: "npm:~2.4.0"
+    tailwindcss: "npm:^4.1.3"
+    tsx: "npm:^4.20.3"
+    type-fest: "npm:~4.26.1"
+    typescript: "npm:^5.8.3"
+    usehooks-ts: "npm:~3.1.0"
+    viem: "npm:^2.41.2"
+    wagmi: "npm:2.15.6"
+    zustand: "npm:^5.0.6"
+  languageName: unknown
+  linkType: soft
+
+"@bitcodex/sandbox-interchain-kit@workspace:sandbox/bitcodex_sandbox_interchain_kit":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex/sandbox-interchain-kit@workspace:sandbox/bitcodex_sandbox_interchain_kit"
   dependencies:
     "@bitcodex/bitcodex-interchain-kit": "workspace:*"
     "@bitcodex/bitcodex-sdk-core": "workspace:*"
@@ -4052,9 +4094,57 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/sandbox-rialo@workspace:sandbox/sandbox_rialo":
+"@bitcodex/sandbox-react-native@workspace:sandbox/bitcodex_sandbox_react_native":
   version: 0.0.0-use.local
-  resolution: "@bitcodex/sandbox-rialo@workspace:sandbox/sandbox_rialo"
+  resolution: "@bitcodex/sandbox-react-native@workspace:sandbox/bitcodex_sandbox_react_native"
+  dependencies:
+    "@bitcodex/bitcodex-sdk-core": "workspace:*"
+    "@bitcodex/bitcodex-sdk-core-react-native": "workspace:*"
+    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*"
+    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
+    "@bitcodex/bitcodex-sdk-svm": "workspace:*"
+    "@cosmjs/proto-signing": "npm:0.36.1"
+    "@expo/vector-icons": "npm:^15.1.1"
+    "@keplr-wallet/proto-types": "npm:^0.12.253"
+    "@react-native-async-storage/async-storage": "npm:^2.1.2"
+    "@react-navigation/bottom-tabs": "npm:^7.10.1"
+    "@react-navigation/elements": "npm:^2.9.10"
+    "@react-navigation/native": "npm:^7.1.28"
+    "@solana/web3.js": "npm:^1.98.0"
+    "@types/react": "npm:~19.2.10"
+    buffer: "npm:^6.0.3"
+    eslint: "npm:^9.25.0"
+    eslint-config-expo: "npm:~55.0.0"
+    expo: "npm:~55.0.6"
+    expo-constants: "npm:~55.0.7"
+    expo-font: "npm:~55.0.4"
+    expo-haptics: "npm:~55.0.8"
+    expo-image: "npm:~55.0.6"
+    expo-linking: "npm:~55.0.7"
+    expo-router: "npm:~55.0.5"
+    expo-splash-screen: "npm:~55.0.10"
+    expo-status-bar: "npm:~55.0.4"
+    expo-symbols: "npm:~55.0.5"
+    expo-system-ui: "npm:~55.0.9"
+    expo-web-browser: "npm:~55.0.9"
+    react: "npm:^19.2.1"
+    react-dom: "npm:^19.2.1"
+    react-native: "npm:0.83.2"
+    react-native-gesture-handler: "npm:~2.30.0"
+    react-native-get-random-values: "npm:~1.11.0"
+    react-native-reanimated: "npm:4.2.1"
+    react-native-safe-area-context: "npm:~5.6.2"
+    react-native-screens: "npm:~4.23.0"
+    react-native-web: "npm:~0.21.2"
+    react-native-worklets: "npm:0.7.2"
+    typescript: "npm:~5.9.2"
+    viem: "npm:^2.41.2"
+  languageName: unknown
+  linkType: soft
+
+"@bitcodex/sandbox-rialo@workspace:sandbox/bitcodex_sandbox_rialo":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex/sandbox-rialo@workspace:sandbox/bitcodex_sandbox_rialo"
   dependencies:
     "@bitcodex/bitcodex-sdk-svm": "workspace:*"
     "@rialo/frost": "npm:^0.1.0"
@@ -4073,9 +4163,42 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/sandbox-sol@workspace:sandbox/sandbox_sol":
+"@bitcodex/sandbox-simple-host@workspace:sandbox/bitcodex_sandbox_simple_host":
   version: 0.0.0-use.local
-  resolution: "@bitcodex/sandbox-sol@workspace:sandbox/sandbox_sol"
+  resolution: "@bitcodex/sandbox-simple-host@workspace:sandbox/bitcodex_sandbox_simple_host"
+  dependencies:
+    "@bitcodex/bitcodex-sdk-core": "workspace:*"
+    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*"
+    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
+    "@cosmjs/stargate": "npm:^0.34.0"
+    "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
+    "@react-router/dev": "npm:^7.4.0"
+    "@tanstack/react-query": "npm:^5.90.12"
+    "@types/node": "npm:^24.10.1"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
+    "@vitejs/plugin-react": "npm:^5.0.3"
+    classnames: "npm:^2.5.1"
+    long: "npm:^5.3.2"
+    next: "npm:^16.1.1"
+    react: "npm:^19.2.1"
+    react-dom: "npm:^19.2.1"
+    react-router: "npm:^7.8.0"
+    react-router-devtools: "npm:^1.1.0"
+    sass: "npm:^1.94.2"
+    tsx: "npm:^4.20.3"
+    typescript: "npm:^5.8.3"
+    vite: "npm:^7.1.6"
+    vite-plugin-node-polyfills: "npm:^0.24.0"
+    vite-tsconfig-paths: "npm:^5.1.4"
+    zod: "npm:^4.1.12"
+    zustand: "npm:^5.0.6"
+  languageName: unknown
+  linkType: soft
+
+"@bitcodex/sandbox-sol@workspace:sandbox/bitcodex_sandbox_sol":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex/sandbox-sol@workspace:sandbox/bitcodex_sandbox_sol"
   dependencies:
     "@bitcodex/bitcodex-sdk-svm": "workspace:*"
     "@solana/spl-token": "npm:^0.4.14"
@@ -41641,129 +41764,6 @@ __metadata:
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
   languageName: node
   linkType: hard
-
-"sandbox-evm@workspace:sandbox/sandbox_evm":
-  version: 0.0.0-use.local
-  resolution: "sandbox-evm@workspace:sandbox/sandbox_evm"
-  dependencies:
-    "@bitcodex/bitcodex-sdk-core": "workspace:*"
-    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
-    "@heroicons/react": "npm:~2.1.5"
-    "@keplr-wallet/proto-types": "npm:^0.12.250"
-    "@nomicfoundation/hardhat-ethers": "npm:^3.0.9"
-    "@nomicfoundation/hardhat-ignition": "npm:^0.15.12"
-    "@nomicfoundation/hardhat-ignition-ethers": "npm:^0.15.13"
-    "@nomicfoundation/hardhat-toolbox": "npm:^6.0.0"
-    "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
-    "@nomicfoundation/ignition-core": "npm:^0.15.12"
-    "@rainbow-me/rainbowkit": "npm:2.2.7"
-    "@tailwindcss/postcss": "npm:4.0.15"
-    "@tanstack/react-query": "npm:^5.90.12"
-    "@types/node": "npm:^24.10.1"
-    "@types/react": "npm:^19.2.7"
-    "@types/react-dom": "npm:^19.2.3"
-    "@uniswap/sdk-core": "npm:~5.8.2"
-    "@uniswap/v2-sdk": "npm:~4.6.1"
-    abitype: "npm:1.0.6"
-    blo: "npm:~1.2.0"
-    hardhat: "npm:^2.25.0"
-    next: "npm:^16.1.1"
-    pino-pretty: "npm:^13.1.1"
-    postcss: "npm:~8.4.45"
-    react: "npm:^19.2.1"
-    react-dom: "npm:^19.2.1"
-    react-hot-toast: "npm:~2.4.0"
-    tailwindcss: "npm:^4.1.3"
-    tsx: "npm:^4.20.3"
-    type-fest: "npm:~4.26.1"
-    typescript: "npm:^5.8.3"
-    usehooks-ts: "npm:~3.1.0"
-    viem: "npm:^2.41.2"
-    wagmi: "npm:2.15.6"
-    zustand: "npm:^5.0.6"
-  languageName: unknown
-  linkType: soft
-
-"sandbox_react_native@workspace:sandbox/sandbox_react_native":
-  version: 0.0.0-use.local
-  resolution: "sandbox_react_native@workspace:sandbox/sandbox_react_native"
-  dependencies:
-    "@bitcodex/bitcodex-sdk-core": "workspace:*"
-    "@bitcodex/bitcodex-sdk-core-react-native": "workspace:*"
-    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*"
-    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
-    "@bitcodex/bitcodex-sdk-svm": "workspace:*"
-    "@cosmjs/proto-signing": "npm:0.36.1"
-    "@expo/vector-icons": "npm:^15.1.1"
-    "@keplr-wallet/proto-types": "npm:^0.12.253"
-    "@react-native-async-storage/async-storage": "npm:^2.1.2"
-    "@react-navigation/bottom-tabs": "npm:^7.10.1"
-    "@react-navigation/elements": "npm:^2.9.10"
-    "@react-navigation/native": "npm:^7.1.28"
-    "@solana/web3.js": "npm:^1.98.0"
-    "@types/react": "npm:~19.2.10"
-    buffer: "npm:^6.0.3"
-    eslint: "npm:^9.25.0"
-    eslint-config-expo: "npm:~55.0.0"
-    expo: "npm:~55.0.6"
-    expo-constants: "npm:~55.0.7"
-    expo-font: "npm:~55.0.4"
-    expo-haptics: "npm:~55.0.8"
-    expo-image: "npm:~55.0.6"
-    expo-linking: "npm:~55.0.7"
-    expo-router: "npm:~55.0.5"
-    expo-splash-screen: "npm:~55.0.10"
-    expo-status-bar: "npm:~55.0.4"
-    expo-symbols: "npm:~55.0.5"
-    expo-system-ui: "npm:~55.0.9"
-    expo-web-browser: "npm:~55.0.9"
-    react: "npm:^19.2.1"
-    react-dom: "npm:^19.2.1"
-    react-native: "npm:0.83.2"
-    react-native-gesture-handler: "npm:~2.30.0"
-    react-native-get-random-values: "npm:~1.11.0"
-    react-native-reanimated: "npm:4.2.1"
-    react-native-safe-area-context: "npm:~5.6.2"
-    react-native-screens: "npm:~4.23.0"
-    react-native-web: "npm:~0.21.2"
-    react-native-worklets: "npm:0.7.2"
-    typescript: "npm:~5.9.2"
-    viem: "npm:^2.41.2"
-  languageName: unknown
-  linkType: soft
-
-"sandbox_simple_host@workspace:sandbox/sandbox_simple_host":
-  version: 0.0.0-use.local
-  resolution: "sandbox_simple_host@workspace:sandbox/sandbox_simple_host"
-  dependencies:
-    "@bitcodex/bitcodex-sdk-core": "workspace:*"
-    "@bitcodex/bitcodex-sdk-cosmos": "workspace:*"
-    "@bitcodex/bitcodex-sdk-eth": "workspace:*"
-    "@cosmjs/stargate": "npm:^0.34.0"
-    "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
-    "@react-router/dev": "npm:^7.4.0"
-    "@tanstack/react-query": "npm:^5.90.12"
-    "@types/node": "npm:^24.10.1"
-    "@types/react": "npm:^19.2.7"
-    "@types/react-dom": "npm:^19.2.3"
-    "@vitejs/plugin-react": "npm:^5.0.3"
-    classnames: "npm:^2.5.1"
-    long: "npm:^5.3.2"
-    next: "npm:^16.1.1"
-    react: "npm:^19.2.1"
-    react-dom: "npm:^19.2.1"
-    react-router: "npm:^7.8.0"
-    react-router-devtools: "npm:^1.1.0"
-    sass: "npm:^1.94.2"
-    tsx: "npm:^4.20.3"
-    typescript: "npm:^5.8.3"
-    vite: "npm:^7.1.6"
-    vite-plugin-node-polyfills: "npm:^0.24.0"
-    vite-tsconfig-paths: "npm:^5.1.4"
-    zod: "npm:^4.1.12"
-    zustand: "npm:^5.0.6"
-  languageName: unknown
-  linkType: soft
 
 "sass@npm:^1.94.2":
   version: 1.97.3

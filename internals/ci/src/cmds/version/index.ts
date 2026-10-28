@@ -32,7 +32,7 @@ export async function version(args: any[]) {
     stdio: "inherit",
   });
   expectSuccess(testSandboxRet, "publish failed");
-  console.log("%s %s", chalk.green.bold("Ok"), "sandbox_simple_host");
+  console.log("%s %s", chalk.green.bold("Ok"), "bitcodex_sandbox_simple_host");
 
   const wsDeps = findWorkspaceDependencies();
   if (wsDeps.length > 0) {
