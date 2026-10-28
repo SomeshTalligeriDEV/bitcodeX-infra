@@ -6,12 +6,28 @@ import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import { getApi, INJECTED_NAME, injectWeb3 } from "@bitcodex/sdk-bittensor";
 import type { ApiPromise } from "@polkadot/api";
 import { signatureVerify } from "@polkadot/util-crypto";
+import { QRCodeSVG } from "qrcode.react";
 import { type FC, useEffect, useRef, useState } from "react";
 
 import styles from "./bittensor_widget.module.scss";
 import { Widget } from "@bitcodex-demo-web/components/widgets/widget_components";
 
 const TAO = BigInt(1_000_000_000);
+const API_ENDPOINT = process.env.NEXT_PUBLIC_BITCODEX_API_ENDPOINT;
+
+interface FaucetStatus {
+  amountTao: number;
+  faucetBalanceRao: string;
+}
+
+async function faucetRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_ENDPOINT}/faucet/v1${path}`, init);
+  const body = await res.json();
+  if (!body.success) {
+    throw new Error(body.msg ?? `faucet error ${res.status}`);
+  }
+  return body.data as T;
+}
 
 function formatTao(rao: bigint): string {
   const frac = (rao % TAO).toString().padStart(9, "0").replace(/0+$/, "");
@@ -36,6 +52,8 @@ export const BittensorWidget: FC = () => {
   const [amount, setAmount] = useState("1");
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<LogLine[]>([]);
+  const [faucet, setFaucet] = useState<FaucetStatus | null>(null);
+  const [showQr, setShowQr] = useState(false);
   const injectedRef = useRef(false);
 
   const push = (ok: boolean, text: string) => {
@@ -52,6 +70,16 @@ export const BittensorWidget: FC = () => {
         push(false, `localnet: ${res.err}`);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    // Only shown when the API's faucet is running and its chain checks out as localnet.
+    if (!API_ENDPOINT) {
+      return;
+    }
+    faucetRequest<FaucetStatus>("/status")
+      .then(setFaucet)
+      .catch(() => setFaucet(null));
   }, []);
 
   useEffect(() => {
@@ -83,6 +111,22 @@ export const BittensorWidget: FC = () => {
       setBusy(null);
     }
   }
+
+  const getTestTao = () =>
+    run("Get test TAO", async () => {
+      if (!address) {
+        throw new Error("not signed in");
+      }
+      const data = await faucetRequest<{ amountRao: string; txHash: string }>(
+        "/drip",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
+        },
+      );
+      return `${formatTao(BigInt(data.amountRao))} from the localnet faucet tx=${data.txHash}`;
+    });
 
   const sendTao = () =>
     run("Send TAO", async () => {
@@ -187,18 +231,45 @@ export const BittensorWidget: FC = () => {
           <div className={styles.row}>
             <span className={styles.mono}>{address ?? "…"}</span>
             {address && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(address)}
+                >
+                  Copy
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowQr((v) => !v)}
+                >
+                  {showQr ? "Hide QR" : "Receive (QR)"}
+                </Button>
+              </>
+            )}
+          </div>
+          {address && showQr && (
+            <div className={styles.qr}>
+              <QRCodeSVG value={address} size={168} />
+            </div>
+          )}
+          <div className={styles.row}>
+            <Typography size="sm" color="secondary">
+              Balance: {balance === null ? "…" : formatTao(balance)}
+            </Typography>
+            {faucet && address && (
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
-                onClick={() => navigator.clipboard.writeText(address)}
+                disabled={!!busy}
+                isLoading={busy === "Get test TAO"}
+                onClick={getTestTao}
               >
-                Copy
+                Get {faucet.amountTao} test TAO
               </Button>
             )}
           </div>
-          <Typography size="sm" color="secondary">
-            Balance: {balance === null ? "…" : formatTao(balance)}
-          </Typography>
         </div>
 
         <div className={styles.row}>
