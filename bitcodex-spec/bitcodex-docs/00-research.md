@@ -123,3 +123,37 @@ Fee identical to 3a (83,124 rao): the chain treats a FROST key as an ordinary ed
 ```
 
 **Meaning:** BitcodeX's FROST 2-of-2 Ed25519 signatures are accepted by Subtensor for short and >256-byte payloads. The fallback in 06-build-order.md is not needed. Still open: probes 3c (add/remove stake), 3d (burned_register), 3e (Staking proxy) need a localnet subnet + validator hotkey; MEV-shield behaviour for stake calls; `CheckShieldedTxValidity` semantics.
+
+### 2026-10-28 — probes 3c, 3d, 3e from a FROST ed25519 coldkey (localnet)
+
+All on localnet (`system_chainType` = Local, ws://127.0.0.1:9944, //Alice dev funds, random throwaway keys). Script: `node scratch/probe/probe_3cde.mjs` (helpers in `scratch/probe/lib.mjs`; `send()` also fails on `proxy.ProxyExecuted { result: Err }`, because a failed inner proxy call does not fail the outer extrinsic).
+
+**Metadata read from the chain first** (`scratch/probe/meta.mjs`, `meta2.mjs`):
+- `subtensorModule.registerNetwork(hotkey)`, `startCall(netuid)` (subnet owner only; emits `FirstEmissionBlockNumberSet`), `addStake(hotkey, netuid, amountStaked: TaoBalance)`, `removeStake(hotkey, netuid, amountUnstaked: AlphaBalance)`, `burnedRegister(netuid, hotkey)`, `addStakeLimit(hotkey, netuid, amountStaked, limitPrice, allowPartial)`, `removeStakeLimit(...)`.
+- `proxy.addProxy(delegate, proxyType, delay)`, `proxy.proxy(real, forceProxyType: Option<ProxyType>, call)`, `removeProxy(...)`.
+- **ProxyType is `SubtensorRuntimeCommonProxyProxyType`** with 21 variants: Any, Owner, NonCritical, NonTransfer, Senate, NonFungible, Triumvirate, Governance, Staking, Registration, Transfer, SmallTransfer, RootWeights, ChildKeys, SudoUncheckedSetCode, SwapHotkey, SubnetLeaseBeneficiary, RootClaim, BasketTrading, Validate, Weights. polkadot.js's built-in `ProxyType` only knows Any/NonTransfer/Governance/Staking: always use the metadata type.
+- consts: `proxy.proxyDepositBase` 60,000,000 rao, `proxyDepositFactor` 33,000,000 rao (docs match). `initialStartCallDelay` 0, `initialMaxRegistrationsPerBlock` 1, `initialNetworkMinLockCost` 1,000 TAO. Localnet block time ≈ 0.30 s (fast blocks).
+- Stake reads: runtime API `stakeInfoRuntimeApi.getStakeInfoForHotkeyColdkeyNetuid(hotkey, coldkey, netuid)` (stake in alpha rao). There is no `subtensorModule.alpha` storage; it is `alphaV2`.
+- Runtime APIs present: stakeInfo, subnetInfo, delegateInfo, neuronInfo, swapRuntimeApi, proxyFilterRuntimeApi, shieldApi, subnetRegistrationRuntimeApi, transactionPaymentApi, …
+
+**Results (11/11 steps PASS):**
+```
+setup  Alice registerNetwork(validatorHk)         netuid=2 tx=0x1524e4f29c1e1eda29c5f1522ef7eb1a93e0439acaed5fbad934f6a34c2546c8
+setup  Alice startCall(2)                         tx=0xac318b0ec21cdeff979dfc696a5393e5b797cf58f0d4d0aa869f200ddb978a7a
+setup  Alice addStake(validatorHk, 2, 100 TAO)    tx=0x9941e30e68472167b2d1968daef3c81bf2f3e45625976c61773ce2556b85af91
+setup  Alice -> FROST 500 TAO                     tx=0xa3fe132a36af4274aeb280f040ef3a0099df86dc22020d639024bb2c990e1e02
+FROST coldkey 5CvJzNC6fGLeui3HyJPABPcdGb4tepz94dn6HFg4kDink7bs
+3c  add_stake 50 TAO (FROST)        PASS tx=0x8da9f25da6b723718758f5ebf19d0695dd13496d00bf28ac8b04143ec653d89f stake=39510192204 alpha-rao
+3c  remove_stake half (FROST)       PASS tx=0x9b23fd9dd49b4450ab3ef3ad042c249e33ed6b78a71b025dd787f3958f96c438 stake 40911922126 -> 20455961063; free 449.999187277 -> 476.413354782 TAO
+3d  burned_register sr25519 hotkey  PASS tx=0xfb8a6c7701d8f60e28388240b83ea537f020ea207d393426b3bd8d23e2fccb77 uid=1, owner(hotkey)=FROST coldkey
+3e  add_proxy(agent, Staking, 0)    PASS tx=0x2ed82bed96b258e4b3c382a7a5cd028b0e92c4385bf6f694ba6295dece1d7ab0 deposit 0.093 TAO reserved
+3e  agent proxy.proxy(addStake 1)   PASS tx=0xf1067bcc4f2a1614336f500134c5f48a2f2ad85f9c3d80e4fba734fb125f510b FROST stake 20455961063 -> 22387267800, FROST free -1 TAO, no FROST signature
+3e  agent proxy.proxy(transfer)     PASS (rejected) system.CallFiltered, tx=0xc07dd10ecbcd875b61fad1a45fccea0b19f5202cb96b8e1549b979e11f60fcf7
+```
+Notes:
+- Unshielded stake calls from JS succeed on localnet: no MEV-shield step was needed (re-check on testnet).
+- Stake grew between 3c steps (39.51 → 40.91 alpha) from emissions; read stake right before unstaking, never cache it.
+- **Open (affects X08 "burn shown = burn charged"):** `subtensorModule.burn(2)` read at the parent block = 979,043,208 rao, but the coldkey's balance dropped by 977,159,963 rao + fee (fee `balances.Withdraw` 1,070,891 rao); 1,883,245 rao (≈0.19%) less than the stored `Burn`. At the inclusion block `Burn` rose to 1,231,221,553 (burn adjusts after each registration). Cause not yet found: read the `burned_register` source before building X08's cost display.
+- 3e matches X09's design: the chain enforces the Staking proxy (CallFiltered on transfer), the agent pays its own fees, and the user's shares are not used.
+
+**Phase 0 status:** probes 3a, 3b, 3b-long, 3c, 3d, 3e PASS on localnet. One open item (burn amount accounting) for X08.
