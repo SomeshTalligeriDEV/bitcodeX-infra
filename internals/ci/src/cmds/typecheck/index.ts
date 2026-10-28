@@ -11,6 +11,7 @@ export async function typeCheck(..._args: any[]) {
   const pkgPaths = [
     paths.sdk_core,
     paths.bittensor_chain,
+    paths.sdk_bittensor,
     paths.sdk_core_react_native,
     paths.sdk_cosmos,
     paths.sdk_eth,

@@ -12,6 +12,7 @@ export async function doBuildSDK() {
       paths.sdk_cosmos,
       paths.sdk_eth,
       paths.sdk_svm,
+      paths.sdk_bittensor,
       paths.sdk_core_react_native,
     ],
     [paths.sdk_react],

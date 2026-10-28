@@ -4046,6 +4046,43 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@bitcodex/sdk-bittensor@workspace:sdk/bitcodex_sdk_bittensor":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex/sdk-bittensor@workspace:sdk/bitcodex_sdk_bittensor"
+  dependencies:
+    "@bitcodex/bitcodex-sdk-core": "workspace:*"
+    "@bitcodex/bittensor-chain": "workspace:*"
+    "@bitcodex/stdlib-js": "workspace:*"
+    "@jest/globals": "npm:^29.7.0"
+    "@polkadot/api": "npm:17.0.2"
+    "@polkadot/extension-inject": "npm:0.64.1"
+    "@polkadot/keyring": "npm:14.0.3"
+    "@polkadot/types": "npm:17.0.2"
+    "@polkadot/util": "npm:14.0.3"
+    "@polkadot/util-crypto": "npm:14.0.3"
+    "@rollup/plugin-commonjs": "npm:^25.0.0"
+    "@rollup/plugin-json": "npm:^6.1.0"
+    "@rollup/plugin-node-resolve": "npm:^15.0.0"
+    "@rollup/plugin-typescript": "npm:^11.0.0"
+    "@types/jest": "npm:^29.5.14"
+    "@types/node": "npm:^24.10.1"
+    "@types/uuid": "npm:^10.0.0"
+    chalk: "npm:^5.5.0"
+    del: "npm:^8.0.1"
+    del-cli: "npm:^6.0.0"
+    eventemitter3: "npm:^5.0.1"
+    jest: "npm:^30.1.3"
+    rollup: "npm:^4.0.0"
+    rollup-plugin-dts: "npm:^6.2.1"
+    rollup-plugin-tsconfig-paths: "npm:^1.5.2"
+    ts-jest: "npm:^29.4.5"
+    tsc-alias: "npm:^1.8.16"
+    tsx: "npm:^4.20.3"
+    typescript: "npm:^5.8.3"
+    uuid: "npm:^9.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@bitcodex/stdlib-js@workspace:*, @bitcodex/stdlib-js@workspace:lib/stdlib_js":
   version: 0.0.0-use.local
   resolution: "@bitcodex/stdlib-js@workspace:lib/stdlib_js"
@@ -11737,7 +11774,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/api@npm:17.0.2":
+"@polkadot/api@npm:17.0.2, @polkadot/api@npm:^17.0.1":
   version: 17.0.2
   resolution: "@polkadot/api@npm:17.0.2"
   dependencies:
@@ -11759,6 +11796,24 @@ __metadata:
     rxjs: "npm:^7.8.1"
     tslib: "npm:^2.8.1"
   checksum: 10c0/980c0fef943ed1a0dd483cb78a42d082714978701f7961398155694b520423faf193dc5c16c870cb580132657ee571344f3946c45bc631c52d3e01cdfe706727
+  languageName: node
+  linkType: hard
+
+"@polkadot/extension-inject@npm:0.64.1":
+  version: 0.64.1
+  resolution: "@polkadot/extension-inject@npm:0.64.1"
+  dependencies:
+    "@polkadot/api": "npm:^17.0.1"
+    "@polkadot/rpc-provider": "npm:^17.0.1"
+    "@polkadot/types": "npm:^17.0.1"
+    "@polkadot/util": "npm:^14.0.3"
+    "@polkadot/util-crypto": "npm:^14.0.3"
+    "@polkadot/x-global": "npm:^14.0.3"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    "@polkadot/api": "*"
+    "@polkadot/util": "*"
+  checksum: 10c0/33ce9cfe74c99b843d133b715487256c9da7c89d45d08f309c97c44a9af273a661bda49d66a18af9b2ad19f124bd92bdb2e39d5c906cec15a2891d72487f2fba
   languageName: node
   linkType: hard
 
@@ -11814,7 +11869,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/rpc-provider@npm:17.0.2":
+"@polkadot/rpc-provider@npm:17.0.2, @polkadot/rpc-provider@npm:^17.0.1":
   version: 17.0.2
   resolution: "@polkadot/rpc-provider@npm:17.0.2"
   dependencies:
@@ -11894,7 +11949,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/types@npm:17.0.2":
+"@polkadot/types@npm:17.0.2, @polkadot/types@npm:^17.0.1":
   version: 17.0.2
   resolution: "@polkadot/types@npm:17.0.2"
   dependencies:
