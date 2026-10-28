@@ -1,0 +1,38 @@
+# Local BitcodeX stack: the containers only.
+# Postgres holds three databases (API + two key share nodes); Subtensor localnet is the chain.
+# The API, key share nodes, iframe and demo run on the host (scripts/dev-up.sh) because the
+# key share node URL stored by the API is used by both the API server and the browser, so it
+# must be the same http://localhost:420x address for both.
+name: bitcodex-local
+
+services:
+  postgres:
+    image: postgres:17.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bitcodex_dev
+      TZ: "UTC"
+      PGTZ: "UTC"
+    volumes:
+      - bitcodex-pg:/var/lib/postgresql/data
+      - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitcodex_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Pinned by digest (verified 28 Oct 2026, bitcodex-docs/00-research.md).
+  subtensor-localnet:
+    image: ghcr.io/raofoundation/subtensor-localnet:devnet@sha256:64f56c4b5485c2bf1f299ce792423517217acd7e763549dab311c74e784bee2b
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9944:9944"
+      - "127.0.0.1:9945:9945"
+
+volumes:
+  bitcodex-pg:
