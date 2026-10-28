@@ -1,5 +1,6 @@
 import { handleDiscordSignIn } from "./discord";
 import { handleEmailSignIn } from "./email";
+import { EMAIL_LOGIN_ENABLED } from "./flags";
 import { handleGithubSignIn } from "./github";
 import { handleGoogleSignIn } from "./google";
 import { handleTelegramSignIn } from "./telegram";
@@ -21,6 +22,9 @@ export async function signIn(
         await handleGoogleSignIn(this);
         break;
       case "email":
+        if (!EMAIL_LOGIN_ENABLED) {
+          throw new Error("email login is disabled: no email OTP backend");
+        }
         await handleEmailSignIn(this);
         break;
       case "x":
