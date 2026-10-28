@@ -25,7 +25,7 @@ Widgets:
 5. (30 s) Stake 50 TAO to a validator on subnet 1; register a miner hotkey.
 6. (20 s) Open Bitcode Studio: "Sign in with BitcodeX" → launch a subnet signed with the same wallet.
 7. (20 s) Code panel: "Any Bittensor app adds this in 10 lines." Credit: built on BitcodeX (Apache-2.0).
-8. (10 s) Roadmap: proxies for AI agents, MFA, EVM, audit, then mainnet.
+8. (10 s) Roadmap: proxies for AI agents, MFA, EVM, distributed keygen (FROST DKG), audit, then mainnet.
 
 ## Steps added by the agent
 
