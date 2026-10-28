@@ -157,3 +157,11 @@ Notes:
 - 3e matches X09's design: the chain enforces the Staking proxy (CallFiltered on transfer), the agent pays its own fees, and the user's shares are not used.
 
 **Phase 0 status:** probes 3a, 3b, 3b-long, 3c, 3d, 3e PASS on localnet. One open item (burn amount accounting) for X08.
+
+### X05 stake units (verified on localnet, 2026-10-28)
+- Runtime APIs present: `swapRuntimeApi.currentAlphaPrice(netuid)`, `currentAlphaPriceAll()`, `simSwapTaoForAlpha(netuid, tao)`, `simSwapAlphaForTao(netuid, alpha)`, `stakeInfoRuntimeApi.getStakeInfoForColdkey(coldkey)`, `getStakeInfoForHotkeyColdkeyNetuid`, `getStakeFee(...)`, `subnetInfoRuntimeApi.getDynamicInfo(netuid)` (`subnetName` comes back as bytes).
+- Price unit: rao of TAO per 1 alpha (`1000000000` = 1 TAO/alpha). `limitPrice` on `addStakeLimit` / `removeStakeLimit` uses the same unit.
+- `simSwapTaoForAlpha(50 TAO)` predicted 47596210440 alpha; the real `addStake` gave exactly 47596210440 (tx `0x05fe378a…990e4d`). A 50 TAO stake into a fresh 1000 TAO pool moved the price from 1.0 to about 1.10 TAO/alpha.
+- `addStakeLimit` with a limit below the current price fails with `swap.PriceLimitExceeded`; 2x the price succeeds (tx `0x6af9e95e…3815f0`). `removeStakeLimit` is the reverse: a limit above the price fails, half the price succeeds (tx `0xb4a3440c…b766e2`).
+- `StakeAdded` / `StakeRemoved` event data: (coldkey, hotkey, tao rao, alpha, netuid, fee).
+- Plan for X05: limit price = current price × (1 + slippage) for stake, × (1 − slippage) for unstake (default 1%), with price impact shown from the simulation. Sign-in-with-Bittensor is waiting until its message format is verified.
