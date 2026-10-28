@@ -20,6 +20,7 @@
       "examples/evm_wagmi_nextjs",
       "examples/multi_ecosystem_react",
       "examples/svm_nextjs",
+      "examples/bittensor_nextjs",
       "sandbox/bitcodex_sandbox_simple_host",
       "sandbox/bitcodex_sandbox_evm",
       "sandbox/bitcodex_sandbox_react_native",

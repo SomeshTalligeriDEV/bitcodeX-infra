@@ -10,6 +10,8 @@ by following the instructions in the README.
 
 ## Examples
 
+- **[Bittensor Next.js Example](bittensor_nextjs)** — Google sign-in, Bittensor
+  coldkey and TAO transfer on localnet
 - **[EVM Next.js Example](evm_nextjs)** — BitcodeX Ethereum SDK on Next.js
 - **[EVM Wagmi Next.js Example](evm_wagmi_nextjs)** — Next.js + wagmi +
   RainbowKit with BitcodeX

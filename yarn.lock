@@ -2720,6 +2720,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bitcodex-examples/bittensor-nextjs@workspace:examples/bittensor_nextjs":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex-examples/bittensor-nextjs@workspace:examples/bittensor_nextjs"
+  dependencies:
+    "@bitcodex/bitcodex-sdk-react": "workspace:*"
+    "@bitcodex/sdk-bittensor": "workspace:*"
+    "@polkadot/api": "npm:17.0.2"
+    "@types/node": "npm:^24.10.1"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
+    next: "npm:^16.1.1"
+    react: "npm:^19.2.1"
+    react-dom: "npm:^19.2.1"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
+
 "@bitcodex-examples/evm-nextjs@workspace:examples/evm_nextjs":
   version: 0.0.0-use.local
   resolution: "@bitcodex-examples/evm-nextjs@workspace:examples/evm_nextjs"
