@@ -8,12 +8,20 @@ import {
   useState,
 } from "react";
 
+import {
+  BittensorContext,
+  type BittensorContextValue,
+} from "./bittensor/context";
 import { BitcodeXContext } from "./context";
 import { CosmosContext, type CosmosContextValue } from "./cosmos/context";
 import { EthContext, type EthContextValue } from "./eth/context";
 import { coreReducer, initialCoreState } from "./reducer";
 import { SvmContext, type SvmContextValue } from "./svm/context";
-import type { BitcodeXProviderConfig, BitcodeXSvmConfig } from "./types";
+import type {
+  BitcodeXBittensorConfig,
+  BitcodeXProviderConfig,
+  BitcodeXSvmConfig,
+} from "./types";
 
 const defaultChainCtx = {
   instance: null,
@@ -43,6 +51,9 @@ export const BitcodeXProvider: FC<BitcodeXProviderProps> = ({
   const [cosmosCtx, setCosmosCtx] =
     useState<CosmosContextValue>(defaultChainCtx);
   const [svmCtx, setSvmCtx] = useState<SvmContextValue>(
+    defaultChainCtxWithAddress,
+  );
+  const [bittensorCtx, setBittensorCtx] = useState<BittensorContextValue>(
     defaultChainCtxWithAddress,
   );
 
@@ -75,7 +86,7 @@ export const BitcodeXProvider: FC<BitcodeXProviderProps> = ({
       }
     });
 
-    initChainSDKs(config, setEthCtx, setCosmosCtx, setSvmCtx);
+    initChainSDKs(config, setEthCtx, setCosmosCtx, setSvmCtx, setBittensorCtx);
   }, []);
 
   // Subscribe to events (re-registers on every mount for Strict Mode compat)
@@ -188,11 +199,33 @@ export const BitcodeXProvider: FC<BitcodeXProviderProps> = ({
     };
   }, [svmCtx.instance]);
 
+  // Bittensor address listener
+  useEffect(() => {
+    const bittensorWallet = bittensorCtx.instance;
+    if (!bittensorWallet) {
+      return;
+    }
+
+    const bittensorAccountHandler = (address: string | null) => {
+      setBittensorCtx((prev) => ({ ...prev, address }));
+    };
+
+    bittensorWallet.on("accountChanged", bittensorAccountHandler);
+
+    return () => {
+      bittensorWallet.off("accountChanged", bittensorAccountHandler);
+    };
+  }, [bittensorCtx.instance]);
+
   return (
     <BitcodeXContext.Provider value={{ state, dispatch }}>
       <EthContext.Provider value={ethCtx}>
         <CosmosContext.Provider value={cosmosCtx}>
-          <SvmContext.Provider value={svmCtx}>{children}</SvmContext.Provider>
+          <SvmContext.Provider value={svmCtx}>
+            <BittensorContext.Provider value={bittensorCtx}>
+              {children}
+            </BittensorContext.Provider>
+          </SvmContext.Provider>
         </CosmosContext.Provider>
       </EthContext.Provider>
     </BitcodeXContext.Provider>
@@ -204,6 +237,7 @@ async function initChainSDKs(
   setEthCtx: React.Dispatch<React.SetStateAction<EthContextValue>>,
   setCosmosCtx: React.Dispatch<React.SetStateAction<CosmosContextValue>>,
   setSvmCtx: React.Dispatch<React.SetStateAction<SvmContextValue>>,
+  setBittensorCtx: React.Dispatch<React.SetStateAction<BittensorContextValue>>,
 ) {
   const initArgs = {
     api_key: config.apiKey,
@@ -312,6 +346,42 @@ async function initChainSDKs(
       console.warn(
         "[bitcodex-react] @bitcodex/bitcodex-sdk-svm is not installed",
       );
+    }
+  }
+
+  if (config.bittensor) {
+    const bittensorConfig: BitcodeXBittensorConfig =
+      typeof config.bittensor === "object"
+        ? config.bittensor
+        : { chainId: "bittensor:localnet" };
+    try {
+      const { BitcodeXBittensorWallet } = await import(
+        "@bitcodex/sdk-bittensor"
+      );
+      const res = BitcodeXBittensorWallet.init({
+        ...initArgs,
+        chain_id: bittensorConfig.chainId,
+      });
+      if (res.success) {
+        const bittensorWallet = res.data;
+        setBittensorCtx({
+          instance: bittensorWallet,
+          isInitialized: true,
+          isReady: false,
+          address: null,
+        });
+        bittensorWallet.waitUntilInitialized.then(() => {
+          setBittensorCtx((prev) => ({
+            ...prev,
+            isReady: true,
+            address: bittensorWallet.state.address,
+          }));
+        });
+      } else {
+        console.error("[bitcodex-react] Bittensor init failed:", res.err);
+      }
+    } catch {
+      console.warn("[bitcodex-react] @bitcodex/sdk-bittensor is not installed");
     }
   }
 }

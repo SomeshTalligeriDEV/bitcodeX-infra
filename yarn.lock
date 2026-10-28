@@ -3320,6 +3320,7 @@ __metadata:
     "@bitcodex/bitcodex-sdk-eth": "workspace:*"
     "@bitcodex/bitcodex-sdk-svm": "workspace:*"
     "@bitcodex/bitcodex-types": "workspace:*"
+    "@bitcodex/sdk-bittensor": "workspace:*"
     "@bitcodex/stdlib-js": "workspace:*"
     "@rollup/plugin-commonjs": "npm:^25.0.0"
     "@rollup/plugin-json": "npm:^6.1.0"
@@ -4046,7 +4047,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/sdk-bittensor@workspace:sdk/bitcodex_sdk_bittensor":
+"@bitcodex/sdk-bittensor@workspace:*, @bitcodex/sdk-bittensor@workspace:sdk/bitcodex_sdk_bittensor":
   version: 0.0.0-use.local
   resolution: "@bitcodex/sdk-bittensor@workspace:sdk/bitcodex_sdk_bittensor"
   dependencies:
