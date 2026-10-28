@@ -11,6 +11,7 @@ const bitcodexConfig = {
   eth: true as const,
   cosmos: true as const,
   svm: { chainId: "solana:devnet" },
+  bittensor: { chainId: "bittensor:localnet" as const },
 };
 
 const InnerProvider: FC<PropsWithChildren> = ({ children }) => {

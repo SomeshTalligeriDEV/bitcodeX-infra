@@ -3642,9 +3642,14 @@ __metadata:
     "@bitcodex/bitcodex-sdk-react": "workspace:*"
     "@bitcodex/bitcodex-sdk-svm": "workspace:*"
     "@bitcodex/dotenv": "workspace:*"
+    "@bitcodex/sdk-bittensor": "workspace:*"
     "@bitcodex/stdlib-js": "workspace:*"
     "@cosmjs/proto-signing": "npm:^0.33.1"
     "@keplr-wallet/proto-types": "npm:^0.12.250"
+    "@polkadot/api": "npm:17.0.2"
+    "@polkadot/extension-dapp": "npm:0.64.1"
+    "@polkadot/util": "npm:14.0.3"
+    "@polkadot/util-crypto": "npm:14.0.3"
     "@types/node": "npm:^24.10.1"
     "@types/react": "npm:^19.2.7"
     "@types/react-dom": "npm:^19.2.3"
@@ -11814,6 +11819,22 @@ __metadata:
     rxjs: "npm:^7.8.1"
     tslib: "npm:^2.8.1"
   checksum: 10c0/980c0fef943ed1a0dd483cb78a42d082714978701f7961398155694b520423faf193dc5c16c870cb580132657ee571344f3946c45bc631c52d3e01cdfe706727
+  languageName: node
+  linkType: hard
+
+"@polkadot/extension-dapp@npm:0.64.1":
+  version: 0.64.1
+  resolution: "@polkadot/extension-dapp@npm:0.64.1"
+  dependencies:
+    "@polkadot/extension-inject": "npm:0.64.1"
+    "@polkadot/util": "npm:^14.0.3"
+    "@polkadot/util-crypto": "npm:^14.0.3"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    "@polkadot/api": "*"
+    "@polkadot/util": "*"
+    "@polkadot/util-crypto": "*"
+  checksum: 10c0/d50e423cc1c1e818513ee4370b376ace8fcc61ae0491c9d8d2fe1ffac56d66d147674ee9952b2b81d866c5f876adef5ef363188f65382902497bfbe0d972e401
   languageName: node
   linkType: hard
 
