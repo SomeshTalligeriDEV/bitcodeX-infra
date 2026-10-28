@@ -105,6 +105,7 @@ export interface ServerState {
   github_client_secret: string;
   server_keypair: EddsaKeypair;
   dapp_dashboard_url: string;
+  signup_enabled: boolean;
 }
 
 export interface InitStateArgs {
@@ -139,6 +140,7 @@ export interface InitStateArgs {
   ks_node_report_password: string;
   github_client_secret: string;
   dapp_dashboard_url: string;
+  signup_enabled: boolean;
 }
 
 async function initializeServerKeypair(

@@ -48,4 +48,7 @@ export const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string(),
 
   DAPP_DASHBOARD_URL: z.string(),
+
+  // "true" allows new wallet signups (keygen). Unset or any other value blocks them.
+  BITCODEX_SIGNUP_ENABLED: z.string().optional(),
 });

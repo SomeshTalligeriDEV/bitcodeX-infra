@@ -9,13 +9,12 @@ import {
   SignInSuccessResponseV2Schema,
 } from "@bitcodex/bitcodex-api-openapi/tss";
 import type { BitcodeXApiResponse } from "@bitcodex/bitcodex-types/api_response";
-// Service shutdown: signups blocked. Imports below are unused while the handler body is commented out. Re-enable together if restoring.
-// import type { AuthType } from "@bitcodex/bitcodex-types/auth";
+import type { AuthType } from "@bitcodex/bitcodex-types/auth";
 import type { KeygenBodyV2 } from "@bitcodex/bitcodex-types/tss";
 import type { SignInResponseV2 } from "@bitcodex/bitcodex-types/user";
 import type { Response } from "express";
 
-// import { runKeygenV2 } from "@bitcodex-api/api/tss/v2/keygen";
+import { runKeygenV2 } from "@bitcodex-api/api/tss/v2/keygen";
 import type { OAuthAuthenticatedRequest } from "@bitcodex-api/middleware/auth/oauth";
 import type { OAuthLocalsWithAPIKey } from "@bitcodex-api/middleware/auth/types";
 
@@ -89,16 +88,16 @@ export async function keygenV2(
   _req: OAuthAuthenticatedRequest<KeygenBodyV2>,
   res: Response<BitcodeXApiResponse<SignInResponseV2>, OAuthLocalsWithAPIKey>,
 ) {
-  // Service shutdown: signups permanently blocked. To restore, remove this response block and uncomment the block below.
-  res.status(ErrorCodeMap.SIGNUP_DISABLED).json({
-    success: false,
-    code: "SIGNUP_DISABLED",
-    msg: "New signups are disabled as the service is winding down.",
-  });
-  return;
-
-  /* === Disabled due to service shutdown. Uncomment to restore. ===
   const state = _req.app.locals;
+  if (!state.signup_enabled) {
+    res.status(ErrorCodeMap.SIGNUP_DISABLED).json({
+      success: false,
+      code: "SIGNUP_DISABLED",
+      msg: 'New signups are disabled on this server (BITCODEX_SIGNUP_ENABLED is not "true").',
+    });
+    return;
+  }
+
   const oauthUser = res.locals.oauth_user;
   const auth_type = oauthUser.type as AuthType;
   const user_identifier = oauthUser.user_identifier;
@@ -147,5 +146,4 @@ export async function keygenV2(
     data: runKeygenRes.data,
   });
   return;
-  */
 }
