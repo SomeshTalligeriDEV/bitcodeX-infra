@@ -23,6 +23,26 @@ BitcodeX holds people's money. Until an external audit it runs on **localnet and
 | Supply chain | pin all versions, `yarn install --immutable`, no new deps without approval | |
 | FROST nonce reuse | use BitcodeX's WASM as-is; never cache or reuse round-1 nonces | code review |
 
+## Keygen seed lifetime (accepted risk until FROST DKG)
+
+Decision (28 Oct 2026): keep BitcodeX's **dealer keygen** for now. At wallet creation the iframe briefly holds the full Ed25519 seed and derives the full scalar, then FROST-splits it into P0 (client) and P1 (server) and SSS-splits the seed (2-of-2 server/user, then the user part t-of-n across KSNs). This is the one moment the complete key exists in one place outside export, and it contradicts the "never in one place" rule. It is accepted as a known risk with these controls:
+
+- The seed is created by `generateSeed()` in `embed/bitcodex_attached/src/crypto/keygen_ed25519.ts` and lives only in memory inside `runEd25519KeygenAndSplit`.
+- It is **never logged, never stored** (not in Zustand/localStorage, not in IndexedDB) **and never returned**: `Ed25519KeygenSplitResult` carries only shares.
+- **Zeroed right after splitting:** `seedBytes.fill(0)` and the WASM input copy `.fill(0)` run in a `finally` block, on success and on every error path. `runTeddsaKeygenSeed` (`crypto/teddsa/teddsa_hooks/src/keygen.ts`) zeroes its own temporary copies the same way.
+- Keygen runs only in the iframe origin, never in the host app and never on the server.
+
+Residual risk, stated honestly:
+- JavaScript cannot guarantee erasure: the engine may have copied the buffer (GC, JIT, structured clone), and the number arrays passed into WASM are copied by `serde_wasm_bindgen`.
+- The Rust/WASM side (`cli_keygen_seed_ed25519`, `seed_sss_split`) takes the seed and scalar by value and does not zeroize. Fixing that is a `crypto/` Rust change, which needs a separate decision.
+- Malicious code running in the iframe origin during keygen (XSS, a compromised dependency) could read the seed.
+
+**Deferred (ROADMAP): zeroize in Rust.** Make `cli_keygen_seed_ed25519` and `seed_sss_split` take the seed by reference and wipe it and the derived scalar with the `zeroize` crate before returning. This is a `crypto/` Rust change, deliberately not made now (decision 28 Oct 2026); revisit together with DKG.
+
+**Fix (ROADMAP):** replace dealer keygen with **distributed keygen (FROST DKG)** between iframe and server, so that no party ever holds the full scalar. Export (X07) would then need a different design (e.g. export signing shares, or no seed export).
+
+Check: `git grep -n "seed" embed/bitcodex_attached/src/crypto/keygen_ed25519.ts` shows no logging; a code review confirms `fill(0)` on every path.
+
 ## Hard rules (also in CLAUDE.md)
 
 1. Mainnet disabled until audit.

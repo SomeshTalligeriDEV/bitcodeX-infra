@@ -5,6 +5,7 @@ import { Skeleton } from "@bitcodex/bitcodex-common-ui/skeleton";
 import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
+import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import { useBitcodeXCosmos } from "@bitcodex/bitcodex-sdk-react/cosmos";
 import { useBitcodeXEth } from "@bitcodex/bitcodex-sdk-react/eth";
 import { useBitcodeXSvm } from "@bitcodex/bitcodex-sdk-react/svm";
@@ -14,6 +15,7 @@ import type { FC } from "react";
 import styles from "./preview_panel.module.scss";
 import { AccountWidget } from "@bitcodex-demo-web/components/widgets/account_widget/account_widget";
 import { AddressWidget } from "@bitcodex-demo-web/components/widgets/address_widget/address_widget";
+import { BittensorWidget } from "@bitcodex-demo-web/components/widgets/bittensor_widget/bittensor_widget";
 import { CosmosOffChainSignWidget } from "@bitcodex-demo-web/components/widgets/cosmos_offchain_sign_widget/cosmos_offchain_sign_widget";
 import { CosmosOnchainSignWidget } from "@bitcodex-demo-web/components/widgets/cosmos_onchain_sign_widget/cosmos_onchain_sign_widget";
 import { DocsWidget } from "@bitcodex-demo-web/components/widgets/docs_widget/docs_widget";
@@ -29,7 +31,9 @@ export const PreviewPanel: FC = () => {
   const { isReady: isCosmosReady } = useBitcodeXCosmos();
   const { isReady: isEthReady } = useBitcodeXEth();
   const { isReady: isSvmReady } = useBitcodeXSvm();
-  const isLazyInitialized = isCosmosReady && isEthReady && isSvmReady;
+  const { isReady: isBittensorReady } = useBitcodeXBittensor();
+  const isLazyInitialized =
+    isCosmosReady && isEthReady && isSvmReady && isBittensorReady;
 
   const { isSignedIn } = useBitcodeX();
 
@@ -52,6 +56,11 @@ export const PreviewPanel: FC = () => {
                 />
                 {isSignedIn && <DocsWidget />}
               </div>
+              {isSignedIn && (
+                <div className={styles.col}>
+                  <BittensorWidget />
+                </div>
+              )}
               {isSignedIn ? (
                 <div className={styles.signingSection}>
                   <div className={styles.signingHeader}>

@@ -13,6 +13,8 @@ export interface BitcodeXProviderConfig {
   eth?: BitcodeXEthConfig | boolean;
   cosmos?: BitcodeXCosmosConfig | boolean;
   svm?: BitcodeXSvmConfig | boolean;
+  /** Bittensor coldkey (FROST ed25519). `true` = localnet. */
+  bittensor?: BitcodeXBittensorConfig | boolean;
 }
 
 export type BitcodeXEthConfig = Record<string, never>;
@@ -21,6 +23,10 @@ export type BitcodeXCosmosConfig = Record<string, never>;
 
 export interface BitcodeXSvmConfig {
   chainId: string;
+}
+
+export interface BitcodeXBittensorConfig {
+  chainId: "bittensor:localnet" | "bittensor:testnet" | "bittensor:mainnet";
 }
 
 export interface BitcodeXCoreState {

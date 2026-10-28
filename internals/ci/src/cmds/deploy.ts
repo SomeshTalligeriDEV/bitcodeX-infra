@@ -21,10 +21,10 @@ const APP_CONFIGS: Record<string, { path: string }> = {
   },
   "bitcodex-attached-mobile-host-web": { path: paths.attached_mobile_host_web },
   "bitcodex-sandbox-evm": {
-    path: path.join(paths.root, "sandbox/sandbox_evm"),
+    path: path.join(paths.root, "sandbox/bitcodex_sandbox_evm"),
   },
   "bitcodex-sandbox-sol": {
-    path: path.join(paths.root, "sandbox/sandbox_sol"),
+    path: path.join(paths.root, "sandbox/bitcodex_sandbox_sol"),
   },
 };
 

@@ -24,6 +24,11 @@
       "import": "./dist/svm/index.js",
       "require": "./dist/svm/index.js",
       "types": "./dist/svm/index.d.ts"
+    },
+    "./bittensor": {
+      "import": "./dist/bittensor/index.js",
+      "require": "./dist/bittensor/index.js",
+      "types": "./dist/bittensor/index.d.ts"
     }
   },
   "publishConfig": {
@@ -55,6 +60,7 @@
     "@bitcodex/bitcodex-sdk-eth": "workspace:*",
     "@bitcodex/bitcodex-sdk-svm": "workspace:*",
     "@bitcodex/bitcodex-types": "workspace:*",
+    "@bitcodex/sdk-bittensor": "workspace:*",
     "@bitcodex/stdlib-js": "workspace:*"
   },
   "peerDependencies": {

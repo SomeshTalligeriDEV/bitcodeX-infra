@@ -6,7 +6,6 @@ import { DiscordIcon } from "@bitcodex/bitcodex-common-ui/icons/discord_icon";
 import { ExternalLinkOutlinedIcon } from "@bitcodex/bitcodex-common-ui/icons/external_link_outlined";
 import { GithubIcon } from "@bitcodex/bitcodex-common-ui/icons/github_icon";
 import { GoogleIcon } from "@bitcodex/bitcodex-common-ui/icons/google_icon";
-import { MailboxIcon } from "@bitcodex/bitcodex-common-ui/icons/mailbox";
 import { TelegramIcon } from "@bitcodex/bitcodex-common-ui/icons/telegram_icon";
 import { XIcon } from "@bitcodex/bitcodex-common-ui/icons/x_icon";
 import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
@@ -48,21 +47,16 @@ export const LoginDefaultView: FC<LoginDefaultViewProps> = ({
           Google
         </Button>
 
-        <div
-          className={styles.emailLoginMethod}
-          onClick={() => onSignIn("email")}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              onSignIn("email");
-            }
-          }}
+        {/* Email OTP is disabled: it needs an Auth0 tenant we do not run. */}
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
+          onClick={() => onSignIn("github")}
         >
-          <MailboxIcon size={20} color={"var(--text-placeholder)"} />
-          <span className={styles.emailInput}>your@email.com</span>
-          <span className={styles.loginButton}>Submit</span>
-        </div>
+          <GithubIcon size={20} />
+          GitHub
+        </Button>
 
         <Button variant="secondary" size="md" fullWidth onClick={onShowSocials}>
           <div className={styles.socialIconWrapper}>

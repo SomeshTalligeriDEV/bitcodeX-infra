@@ -16,7 +16,7 @@
       "!**/cait_sith_cosmos_compat_addon/addon/index.js",
       "!**/teddsa_addon/addon/index.js",
       "!**/plugin/build",
-      "sandbox/sandbox_react_native"
+      "sandbox/bitcodex_sandbox_react_native"
     ]
   },
   "formatter": {

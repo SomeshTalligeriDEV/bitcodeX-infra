@@ -67,6 +67,7 @@ async function bundle() {
       "eth/index": "src/eth/index.ts",
       "cosmos/index": "src/cosmos/index.ts",
       "svm/index": "src/svm/index.ts",
+      "bittensor/index": "src/bittensor/index.ts",
     },
     external: [
       "react",
@@ -78,6 +79,7 @@ async function bundle() {
       "@bitcodex/bitcodex-sdk-eth",
       "@bitcodex/bitcodex-sdk-cosmos",
       "@bitcodex/bitcodex-sdk-svm",
+      "@bitcodex/sdk-bittensor",
     ],
     plugins: [
       json(),

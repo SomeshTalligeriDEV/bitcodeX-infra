@@ -11,7 +11,6 @@ Cosmos, EVM, and SVM (Solana).
 
 ## Quick picks
 
-- **[Cosmos (Next.js)](https://github.com/SomeshTalligeriDEV/bitcodeX-infra/tree/main/examples/cosmos_nextjs)**
 - **[EVM (Next.js)](https://github.com/SomeshTalligeriDEV/bitcodeX-infra/tree/main/examples/evm_nextjs)**
 - **[SVM / Solana (Next.js)](https://github.com/SomeshTalligeriDEV/bitcodeX-infra/tree/main/examples/svm_nextjs)**
 - **[EVM + wagmi (Next.js)](https://github.com/SomeshTalligeriDEV/bitcodeX-infra/tree/main/examples/evm_wagmi_nextjs)**

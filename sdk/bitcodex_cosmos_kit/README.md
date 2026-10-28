@@ -1,1 +1,0 @@
-# @bitcodex/bitcodex-cosmos-kit

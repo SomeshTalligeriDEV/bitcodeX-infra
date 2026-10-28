@@ -6,11 +6,13 @@ import {
   ChevronRightIcon,
   EmailIcon,
   ExternalLinkIcon,
+  GithubIcon,
   GoogleIcon,
   TelegramSmallIcon,
   XSmallIcon,
 } from "./icons";
 import { createProviderButton } from "./provider_button";
+import { EMAIL_LOGIN_ENABLED } from "@bitcodex-sdk-core/methods/sign_in/flags";
 import type { SignInType } from "@bitcodex-sdk-core/types/oauth";
 
 export interface DefaultViewOptions {
@@ -50,16 +52,25 @@ export function createDefaultView(options: DefaultViewOptions): HTMLDivElement {
   `);
 
   const providerList = el.querySelector(".bitcodex-provider-list")!;
+  if (EMAIL_LOGIN_ENABLED) {
+    providerList.append(
+      createProviderButton({
+        icon: EmailIcon(),
+        label: "Email",
+        onClick: () => onSelect("email"),
+      }),
+    );
+  }
   providerList.append(
-    createProviderButton({
-      icon: EmailIcon(),
-      label: "Email",
-      onClick: () => onSelect("email"),
-    }),
     createProviderButton({
       icon: GoogleIcon(),
       label: "Google",
       onClick: () => onSelect("google"),
+    }),
+    createProviderButton({
+      icon: GithubIcon(),
+      label: "GitHub",
+      onClick: () => onSelect("github"),
     }),
     createSocialsButton(onShowSocials),
   );

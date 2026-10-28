@@ -2,6 +2,7 @@ import { type FC, type ReactElement, useEffect, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { UnsupportedChainModal } from "../modal_variants/unsupported_chain/unsupported_chain_modal";
+import { MakeSignatureBittensorModal } from "@bitcodex-attached/components/modal_variants/bittensor/make_signature_bittensor_modal";
 import { MakeSignatureCosmosModal } from "@bitcodex-attached/components/modal_variants/cosmos/make_signature_cosmos_modal";
 import { ErrorModal } from "@bitcodex-attached/components/modal_variants/error/error_modal";
 import { MakeSignatureEthModal } from "@bitcodex-attached/components/modal_variants/eth/make_sig_eth_modal";
@@ -94,6 +95,17 @@ export const ModalDialog: FC<ModalDialogProps> = ({ modalRequest }) => {
     case "svm/make_signature": {
       component = (
         <MakeSignatureSvmModal
+          getIsAborted={getIsAborted}
+          data={payload.data}
+          modalId={payload.modal_id}
+        />
+      );
+      break;
+    }
+
+    case "bittensor/make_signature": {
+      component = (
+        <MakeSignatureBittensorModal
           getIsAborted={getIsAborted}
           data={payload.data}
           modalId={payload.modal_id}

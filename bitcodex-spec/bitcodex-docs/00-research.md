@@ -65,3 +65,95 @@ Do not trust: blog posts older than 2026, the archived `opentensor/bittensor*` r
 ## Verified findings
 
 (The agent appends dated entries: what was checked, the command, the real output, and what it means.)
+
+### 2026-10-28 — toolchain, FROST build, offline signature compatibility (M2 Mac)
+
+**Toolchain (pinned):** node v22.21.1, yarn 4.12.0 (corepack), rustc 1.93.1 (repo `rust-toolchain`), wasm-pack 0.13.1 (workspace npm dep of `frost_ed25519_cosmos_compat_wasm`). `npm view`: `@polkadot/api` 17.0.2 (published 2026-10-01), `@polkadot/keyring` 14.0.3 and `@polkadot/util-crypto` 14.0.3 (2026-03-23). Probe folder `scratch/probe/` (gitignored) pins exactly these.
+
+**Install/build:** `corepack yarn install --immutable` → "Done with warnings in 4m 5s" (YN0007 native builds, peer warnings only). `corepack yarn ci build_frost` → exit 0: "Done teddsa addon", "Done build wasm frost cosmos_compat", "Done copy wasm frost". Only a Rust deprecation warning (`GenericArray::as_slice`, `frost_ed25519_cosmos_compat/src/tss/mod.rs:133`).
+
+**Localnet image (resolves start.md vs this file):** ghcr registry API, anonymous token: `ghcr.io/raofoundation/subtensor-localnet:devnet` → HTTP 200, multi-arch (linux/amd64, linux/arm64), arm64 digest `sha256:c2d0e4ae37295290261eb6cab49f014b5707481aa926847e9b764cb3fd1a8f09`, 112 MB compressed / 11 layers. `ghcr.io/raofoundation/subtensor:latest-local` → 404 (it is only the local build tag in `docker-compose.localnet.yml`). So a prebuilt localnet image exists; no source build needed.
+
+**Offline pre-check for probe 3b** (`scratch/probe/probe_offline.mjs`; both FROST shares in one process, random throwaway seed; no chain): keygen via `cli_keygen_seed_ed25519`, sign via `cli_sign_round1/round2/aggregate_ed25519`, verify with polkadot.js.
+```
+address      5GhmRiDDMa6ncgmSHyMJPuvsmrNKzDkYpZS59YCGBzWge1Xh
+PASS  address starts with 5
+PASS  decodeAddress round-trips to group pubkey
+PASS  keyring ed25519 from same seed = FROST group key (RFC 8032 compatible)
+PASS  len=32|200|256|257|1000: ed25519Verify(FROST sig)
+PASS  len=32|200|256|257|1000: signatureVerify(0x00||sig, ss58) -> crypto=ed25519
+PASS  tampered message rejected
+OFFLINE PRE-CHECK PASSED
+```
+Meaning: FROST aggregate signatures are standard Ed25519 that polkadot.js verifies as `MultiSignature::Ed25519` for `encodeAddress(groupKey, 42)`, including the >256-byte blake2_256 path. **This is not probe 3b** (the chain has not accepted a tx yet). Side result for X07: the FROST group key equals `Keyring({type:'ed25519'}).addFromSeed(seed)`, so an exported seed imports directly into polkadot.js with the same address.
+
+### 2026-10-28 — localnet up; probes 3a and 3b PASS (go/no-go passed)
+
+**Localnet:** Colima 0.10.3 (4 CPU / 8 GB / 60 GB), Docker 29.5.2 arm64.
+`docker run -d --name subtensor-localnet -p 9944:9944 -p 9945:9945 ghcr.io/raofoundation/subtensor-localnet:devnet`
+Image digest `sha256:64f56c4b5485c2bf1f299ce792423517217acd7e763549dab311c74e784bee2b`, created 2026-10-23.
+RPC: `system_chain` = "Bittensor" (same name as mainnet: do not use chain name to detect localnet), `system_chainType` = "Local", `system_name` = "Subtensor Node", `system_version` = "4.0.0-dev-5749dbfbe4a", `system_properties` = `{"ss58Format":42,"tokenDecimals":9,"tokenSymbol":"TAO"}`, genesis `0xda4f6b75d463bc28dc6d833bb07dbe356ebf1c37aeeb214f57d2e42599fcee1c`. Runtime `node-subtensor` spec 484, transactionVersion 1.
+
+**Signed extensions (from metadata, in order):** CheckNonZeroSender, CheckSpecVersion, CheckTxVersion, CheckGenesis, CheckMortality, CheckNonce, CheckWeight, ChargeTransactionPayment, SudoTransactionExtension, CheckShieldedTxValidity, SubtensorTransactionExtension, DrandPriority, CheckMetadataHash. polkadot.js 17.0.2 logs `Unknown signed extensions SudoTransactionExtension, CheckShieldedTxValidity, SubtensorTransactionExtension, DrandPriority found, treating them as no-effect`; transfers still succeed, so these add no signed payload bytes for these calls. Re-check if a call ever fails with `BadProof`/`Invalid transaction`.
+**Existential deposit:** `api.consts.balances.existentialDeposit` = 500 rao.
+
+**Probe 3a** (`node scratch/probe/probe_3ab.mjs 3a`, @polkadot/keyring ed25519 pair, random seed):
+```
+[3a keyring-ed25519] address=5EhVr8qPDttoLC6LhkEMt9aPzLM4uF2Lqp1Gng4MH2Szrjbg
+Alice -> ed25519 10 TAO  tx=0x9c410b9b0ac284165198b6c1ac329015bb1ada4d0c7818c3df714d130a3e8f83
+balance after fund: 10000000000 rao
+ed25519 -> Alice 1 TAO   tx=0xef2c9b7fb89999a810d24513725d0406835011e370e7fa568302f35af2b28b00
+balance after send-back: 8999916876 rao  (PASS)
+```
+
+**Probe 3b — GO** (`node scratch/probe/probe_3ab.mjs 3b`). Key from `cli_keygen_seed_ed25519`; polkadot.js `Signer.signPayload` builds `ExtrinsicPayload(...).toU8a({ method: true })`, signs with FROST `cli_sign_round1_ed25519` ×2 → `cli_sign_round2_ed25519` ×2 → `cli_aggregate_ed25519`, returns `0x00 || sig` (MultiSignature::Ed25519). Both shares in one process (probe only, not the product flow).
+```
+[3b frost-ed25519] address=5GuR4c6TSz3xd5gVaRKAVyYLjZuL6rNWGZ6NESe7RDsFHAtV
+Alice -> ed25519 10 TAO  tx=0xf53738bc75bdce12203213603ac2c3bf7431f81389e095cca33104bd3e167b83
+balance after fund: 10000000000 rao
+ed25519 -> Alice 1 TAO   tx=0x7661eee2621cf8a330b681c33ab942aeb5bf6df9c886949ae6f863a53aec39dc
+balance after send-back: 8999916876 rao  (PASS)
+```
+Fee identical to 3a (83,124 rao): the chain treats a FROST key as an ordinary ed25519 account.
+
+**Probe 3b-long** (`node scratch/probe/probe_3ab.mjs 3b-long`): `utility.batchAll` of 10 `system.remark`, FROST-signed.
+```
+[3b-long] signer payload 511 bytes (blake2_256 path)
+[3b-long] utility.batchAll(10 x remark) tx=0xc186a42a60ba8bf5833dd01b69640a2dee24ee6e0e802535f8840672e7a321bc  (PASS)
+```
+
+**Meaning:** BitcodeX's FROST 2-of-2 Ed25519 signatures are accepted by Subtensor for short and >256-byte payloads. The fallback in 06-build-order.md is not needed. Still open: probes 3c (add/remove stake), 3d (burned_register), 3e (Staking proxy) need a localnet subnet + validator hotkey; MEV-shield behaviour for stake calls; `CheckShieldedTxValidity` semantics.
+
+### 2026-10-28 — probes 3c, 3d, 3e from a FROST ed25519 coldkey (localnet)
+
+All on localnet (`system_chainType` = Local, ws://127.0.0.1:9944, //Alice dev funds, random throwaway keys). Script: `node scratch/probe/probe_3cde.mjs` (helpers in `scratch/probe/lib.mjs`; `send()` also fails on `proxy.ProxyExecuted { result: Err }`, because a failed inner proxy call does not fail the outer extrinsic).
+
+**Metadata read from the chain first** (`scratch/probe/meta.mjs`, `meta2.mjs`):
+- `subtensorModule.registerNetwork(hotkey)`, `startCall(netuid)` (subnet owner only; emits `FirstEmissionBlockNumberSet`), `addStake(hotkey, netuid, amountStaked: TaoBalance)`, `removeStake(hotkey, netuid, amountUnstaked: AlphaBalance)`, `burnedRegister(netuid, hotkey)`, `addStakeLimit(hotkey, netuid, amountStaked, limitPrice, allowPartial)`, `removeStakeLimit(...)`.
+- `proxy.addProxy(delegate, proxyType, delay)`, `proxy.proxy(real, forceProxyType: Option<ProxyType>, call)`, `removeProxy(...)`.
+- **ProxyType is `SubtensorRuntimeCommonProxyProxyType`** with 21 variants: Any, Owner, NonCritical, NonTransfer, Senate, NonFungible, Triumvirate, Governance, Staking, Registration, Transfer, SmallTransfer, RootWeights, ChildKeys, SudoUncheckedSetCode, SwapHotkey, SubnetLeaseBeneficiary, RootClaim, BasketTrading, Validate, Weights. polkadot.js's built-in `ProxyType` only knows Any/NonTransfer/Governance/Staking: always use the metadata type.
+- consts: `proxy.proxyDepositBase` 60,000,000 rao, `proxyDepositFactor` 33,000,000 rao (docs match). `initialStartCallDelay` 0, `initialMaxRegistrationsPerBlock` 1, `initialNetworkMinLockCost` 1,000 TAO. Localnet block time ≈ 0.30 s (fast blocks).
+- Stake reads: runtime API `stakeInfoRuntimeApi.getStakeInfoForHotkeyColdkeyNetuid(hotkey, coldkey, netuid)` (stake in alpha rao). There is no `subtensorModule.alpha` storage; it is `alphaV2`.
+- Runtime APIs present: stakeInfo, subnetInfo, delegateInfo, neuronInfo, swapRuntimeApi, proxyFilterRuntimeApi, shieldApi, subnetRegistrationRuntimeApi, transactionPaymentApi, …
+
+**Results (11/11 steps PASS):**
+```
+setup  Alice registerNetwork(validatorHk)         netuid=2 tx=0x1524e4f29c1e1eda29c5f1522ef7eb1a93e0439acaed5fbad934f6a34c2546c8
+setup  Alice startCall(2)                         tx=0xac318b0ec21cdeff979dfc696a5393e5b797cf58f0d4d0aa869f200ddb978a7a
+setup  Alice addStake(validatorHk, 2, 100 TAO)    tx=0x9941e30e68472167b2d1968daef3c81bf2f3e45625976c61773ce2556b85af91
+setup  Alice -> FROST 500 TAO                     tx=0xa3fe132a36af4274aeb280f040ef3a0099df86dc22020d639024bb2c990e1e02
+FROST coldkey 5CvJzNC6fGLeui3HyJPABPcdGb4tepz94dn6HFg4kDink7bs
+3c  add_stake 50 TAO (FROST)        PASS tx=0x8da9f25da6b723718758f5ebf19d0695dd13496d00bf28ac8b04143ec653d89f stake=39510192204 alpha-rao
+3c  remove_stake half (FROST)       PASS tx=0x9b23fd9dd49b4450ab3ef3ad042c249e33ed6b78a71b025dd787f3958f96c438 stake 40911922126 -> 20455961063; free 449.999187277 -> 476.413354782 TAO
+3d  burned_register sr25519 hotkey  PASS tx=0xfb8a6c7701d8f60e28388240b83ea537f020ea207d393426b3bd8d23e2fccb77 uid=1, owner(hotkey)=FROST coldkey
+3e  add_proxy(agent, Staking, 0)    PASS tx=0x2ed82bed96b258e4b3c382a7a5cd028b0e92c4385bf6f694ba6295dece1d7ab0 deposit 0.093 TAO reserved
+3e  agent proxy.proxy(addStake 1)   PASS tx=0xf1067bcc4f2a1614336f500134c5f48a2f2ad85f9c3d80e4fba734fb125f510b FROST stake 20455961063 -> 22387267800, FROST free -1 TAO, no FROST signature
+3e  agent proxy.proxy(transfer)     PASS (rejected) system.CallFiltered, tx=0xc07dd10ecbcd875b61fad1a45fccea0b19f5202cb96b8e1549b979e11f60fcf7
+```
+Notes:
+- Unshielded stake calls from JS succeed on localnet: no MEV-shield step was needed (re-check on testnet).
+- Stake grew between 3c steps (39.51 → 40.91 alpha) from emissions; read stake right before unstaking, never cache it.
+- **Open (affects X08 "burn shown = burn charged"):** `subtensorModule.burn(2)` read at the parent block = 979,043,208 rao, but the coldkey's balance dropped by 977,159,963 rao + fee (fee `balances.Withdraw` 1,070,891 rao); 1,883,245 rao (≈0.19%) less than the stored `Burn`. At the inclusion block `Burn` rose to 1,231,221,553 (burn adjusts after each registration). Cause not yet found: read the `burned_register` source before building X08's cost display.
+- 3e matches X09's design: the chain enforces the Staking proxy (CallFiltered on transfer), the agent pays its own fees, and the user's shares are not used.
+
+**Phase 0 status:** probes 3a, 3b, 3b-long, 3c, 3d, 3e PASS on localnet. One open item (burn amount accounting) for X08.

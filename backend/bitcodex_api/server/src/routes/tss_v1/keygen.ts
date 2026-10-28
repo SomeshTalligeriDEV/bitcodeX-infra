@@ -9,13 +9,12 @@ import {
   SignInSuccessResponseSchema,
 } from "@bitcodex/bitcodex-api-openapi/tss";
 import type { BitcodeXApiResponse } from "@bitcodex/bitcodex-types/api_response";
-// Service shutdown: signups blocked. Imports below are unused while the handler body is commented out. Re-enable together if restoring.
-// import type { AuthType } from "@bitcodex/bitcodex-types/auth";
+import type { AuthType } from "@bitcodex/bitcodex-types/auth";
 import type { KeygenBody } from "@bitcodex/bitcodex-types/tss";
 import type { SignInResponse } from "@bitcodex/bitcodex-types/user";
 import type { Response, Router } from "express";
 
-// import { runKeygen } from "@bitcodex-api/api/tss/v1/keygen";
+import { runKeygen } from "@bitcodex-api/api/tss/v1/keygen";
 import { apiKeyMiddleware } from "@bitcodex-api/middleware/auth/api_key_auth";
 import {
   type OAuthAuthenticatedRequest,
@@ -98,16 +97,16 @@ export function setKeygenV1Routes(router: Router) {
       _req: OAuthAuthenticatedRequest<KeygenBody>,
       res: Response<BitcodeXApiResponse<SignInResponse>, OAuthLocalsWithAPIKey>,
     ) => {
-      // Service shutdown: signups permanently blocked. To restore, remove this response block and uncomment the block below.
-      res.status(ErrorCodeMap.SIGNUP_DISABLED).json({
-        success: false,
-        code: "SIGNUP_DISABLED",
-        msg: "New signups are disabled as the service is winding down.",
-      });
-      return;
-
-      /* === Disabled due to service shutdown. Uncomment to restore. ===
       const state = _req.app.locals;
+      if (!state.signup_enabled) {
+        res.status(ErrorCodeMap.SIGNUP_DISABLED).json({
+          success: false,
+          code: "SIGNUP_DISABLED",
+          msg: 'New signups are disabled on this server (BITCODEX_SIGNUP_ENABLED is not "true").',
+        });
+        return;
+      }
+
       const apiKey = res.locals.api_key;
       const oauthUser = res.locals.oauth_user;
       const auth_type = oauthUser.type as AuthType;
@@ -154,7 +153,6 @@ export function setKeygenV1Routes(router: Router) {
         data: runKeygenRes.data,
       });
       return;
-      */
     },
   );
 }

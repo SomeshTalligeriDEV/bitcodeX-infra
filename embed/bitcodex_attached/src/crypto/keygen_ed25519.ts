@@ -192,11 +192,22 @@ export interface Ed25519KeygenSplitResult {
 /**
  * Generate a random 32-byte seed.
  * All 32-byte values are valid because seed SSS uses a 257-bit prime (p = 2^256 + 297 > 2^256).
+ *
+ * Returns the backing buffer too: `Bytes.fromUint8Array` keeps a reference to it, so the
+ * caller can zero the seed with `seedBytes.fill(0)` once it has been split.
  */
-function generateSeed(): Result<Bytes32, string> {
+function generateSeed(): Result<
+  { seed: Bytes32; seedBytes: Uint8Array },
+  string
+> {
   const seedBytes = new Uint8Array(32);
   crypto.getRandomValues(seedBytes);
-  return Bytes.fromUint8Array(seedBytes, 32);
+  const seedRes = Bytes.fromUint8Array(seedBytes, 32);
+  if (!seedRes.success) {
+    seedBytes.fill(0);
+    return seedRes;
+  }
+  return { success: true, data: { seed: seedRes.data, seedBytes } };
 }
 
 /**
@@ -236,6 +247,10 @@ export const SEED_ID_SERVER = seedSplitId(2);
  * 3. FROST split scalar into signing shares (existing flow)
  * 4. 257-bit prime SSS split seed into 2-of-2 (server + user)
  * 5. 257-bit prime SSS split user's seed share Y into t-of-n for KSN distribution
+ *
+ * The full seed exists only in memory inside this function. It is never logged, stored or
+ * returned, and every copy made here is zeroed in `finally`, on success and on every error
+ * path. See bitcodex-docs/07-security.md "Keygen seed lifetime".
  */
 export async function runEd25519KeygenAndSplit(
   keyshareNodeMeta: KeyShareNodeMetaWithNodeStatusInfo,
@@ -253,8 +268,28 @@ export async function runEd25519KeygenAndSplit(
       err: { type: "sign_in_request_fail", error: seedRes.err },
     };
   }
-  const seed = seedRes.data;
+  const { seed, seedBytes } = seedRes.data;
+  // Copy handed to the seed SSS WASM call; zeroed with the seed.
+  const seedSplitInput = [...seedBytes];
 
+  try {
+    return await keygenAndSplitFromSeed(seed, seedSplitInput, keyshareNodeMeta);
+  } finally {
+    seedBytes.fill(0);
+    seedSplitInput.fill(0);
+  }
+}
+
+async function keygenAndSplitFromSeed(
+  seed: Bytes32,
+  seedSplitInput: number[],
+  keyshareNodeMeta: KeyShareNodeMetaWithNodeStatusInfo,
+): Promise<
+  Result<
+    Ed25519KeygenSplitResult,
+    { type: "sign_in_request_fail"; error: string }
+  >
+> {
   // 2. Seed-based ed25519 keygen (SHA-512 + clamp + mod l → scalar → FROST split)
   const ed25519KeygenRes = await runTeddsaKeygenSeed(seed);
   if (ed25519KeygenRes.success === false) {
@@ -286,7 +321,7 @@ export async function runEd25519KeygenAndSplit(
 
   // 4. Seed 2-of-2 split via 257-bit prime SSS (server + user)
   const seedSplitPoints: PointNumArr[] = secp256k1Wasm.seed_sss_split(
-    [...seed.toUint8Array()],
+    seedSplitInput,
     [SEED_ID_SERVER, SEED_ID_CLIENT],
     2,
   );

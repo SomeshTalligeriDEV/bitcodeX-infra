@@ -41,9 +41,12 @@ export async function runTeddsaKeygen(): Promise<
 export async function runTeddsaKeygenSeed(
   seed: Bytes32,
 ): Promise<Result<TeddsaKeygenResult, string>> {
+  // Temporary copies of the seed; zeroed before returning (the caller zeroes the original).
+  const seedCopy = seed.toUint8Array();
+  const seedInput = [...seedCopy];
   try {
     const keygenOutput: CentralizedKeygenOutput =
-      wasmModule.cli_keygen_seed_ed25519([...seed.toUint8Array()]);
+      wasmModule.cli_keygen_seed_ed25519(seedInput);
 
     return processKeygenOutput(keygenOutput);
   } catch (error: any) {
@@ -51,6 +54,9 @@ export async function runTeddsaKeygenSeed(
       success: false,
       err: String(error),
     };
+  } finally {
+    seedCopy.fill(0);
+    seedInput.fill(0);
   }
 }
 

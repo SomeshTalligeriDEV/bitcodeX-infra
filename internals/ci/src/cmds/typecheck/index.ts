@@ -10,6 +10,8 @@ const DEFAULT_CONCURRENCY = 4;
 export async function typeCheck(..._args: any[]) {
   const pkgPaths = [
     paths.sdk_core,
+    paths.bittensor_chain,
+    paths.sdk_bittensor,
     paths.sdk_core_react_native,
     paths.sdk_cosmos,
     paths.sdk_eth,
@@ -32,8 +34,6 @@ export async function typeCheck(..._args: any[]) {
   // NOTE: Currently not used
   const _thoroughCheckPkgPaths = [
     ...pkgPaths,
-    paths.example_cosmoskit_nextjs,
-    paths.example_cosmos_nextjs,
     paths.example_evm_nextjs,
     paths.example_evm_wagmi_nextjs,
     paths.example_multi_ecosystem_react,

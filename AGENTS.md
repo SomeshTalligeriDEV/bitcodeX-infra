@@ -36,7 +36,6 @@ Chain-specific SDKs extend it:
 - `bitcodex_sdk_svm` — Solana Wallet Standard via `@solana/web3.js`
 - `bitcodex_sdk_react` — React hooks (`useBitcodeX`, `useBitcodeXEth`, `useBitcodeXCosmos`, `useBitcodeXSvm`)
 - `bitcodex_sdk_core_react_native` — React Native adaptation
-- `bitcodex_cosmos_kit`, `bitcodex_interchain_kit` — Ecosystem adapters
 
 ### `backend/` — API Services
 
