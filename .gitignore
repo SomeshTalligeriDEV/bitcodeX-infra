@@ -440,6 +440,9 @@ next-env.d.ts
 minio_data/
 mailpit_data/
 
+# throwaway probe scripts, not app code
+scratch/
+
 # wasm-pack build output
 pkg/
 
