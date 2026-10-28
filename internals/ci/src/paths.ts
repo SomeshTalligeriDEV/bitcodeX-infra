@@ -30,11 +30,6 @@ export const paths = (function () {
     "../../../common/bitcodex_types/",
   );
 
-  const sdk_cosmos_kit = path.join(
-    __dirname,
-    "../../../sdk/bitcodex_cosmos_kit/",
-  );
-
   const sdk_core = path.join(__dirname, "../../../sdk/bitcodex_sdk_core/");
 
   const sdk_react = path.join(__dirname, "../../../sdk/bitcodex_sdk_react/");
@@ -140,16 +135,6 @@ export const paths = (function () {
 
   const dockerfiles_bitcodex = path.join(__dirname, "../../docker/bitcodex");
 
-  const example_cosmos_nextjs = path.join(
-    __dirname,
-    "../../../examples/cosmos_nextjs",
-  );
-
-  const example_cosmoskit_nextjs = path.join(
-    __dirname,
-    "../../../examples/cosmoskit_nextjs",
-  );
-
   const example_evm_nextjs = path.join(
     __dirname,
     "../../../examples/evm_nextjs",
@@ -162,7 +147,7 @@ export const paths = (function () {
 
   const example_multi_ecosystem_react = path.join(
     __dirname,
-    "../../../examples/cosmos_nextjs",
+    "../../../examples/multi_ecosystem_react",
   );
 
   const example_svm_nextjs = path.join(
@@ -175,8 +160,6 @@ export const paths = (function () {
     github,
     stdlib,
     dotenv,
-    example_cosmoskit_nextjs,
-    example_cosmos_nextjs,
     example_evm_nextjs,
     example_evm_wagmi_nextjs,
     example_multi_ecosystem_react,
@@ -185,7 +168,6 @@ export const paths = (function () {
     sdk_core,
     sdk_core_react_native,
     sdk_eth,
-    sdk_cosmos_kit,
     sdk_cosmos,
     sdk_react,
     sdk_svm,

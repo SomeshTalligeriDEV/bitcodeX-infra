@@ -32,8 +32,6 @@ export async function typeCheck(..._args: any[]) {
   // NOTE: Currently not used
   const _thoroughCheckPkgPaths = [
     ...pkgPaths,
-    paths.example_cosmoskit_nextjs,
-    paths.example_cosmos_nextjs,
     paths.example_evm_nextjs,
     paths.example_evm_wagmi_nextjs,
     paths.example_multi_ecosystem_react,
