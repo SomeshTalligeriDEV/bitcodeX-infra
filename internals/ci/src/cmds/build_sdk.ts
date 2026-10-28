@@ -7,7 +7,7 @@ export async function buildSDK(..._args: any[]) {
 
 export async function doBuildSDK() {
   const stages = [
-    [paths.sdk_core],
+    [paths.sdk_core, paths.bittensor_chain],
     [
       paths.sdk_cosmos,
       paths.sdk_eth,

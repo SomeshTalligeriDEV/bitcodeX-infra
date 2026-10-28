@@ -27,6 +27,7 @@
     "sdk/bitcodex_sdk_eth",
     "sdk/bitcodex_sdk_react",
     "sdk/bitcodex_sdk_svm",
+    "sdk/bitcodex_bittensor_chain",
     "crypto/bytes",
     "crypto/crypto_js",
     "crypto/tecdsa/tecdsa_interface",

@@ -32,6 +32,11 @@ export const paths = (function () {
 
   const sdk_core = path.join(__dirname, "../../../sdk/bitcodex_sdk_core/");
 
+  const bittensor_chain = path.join(
+    __dirname,
+    "../../../sdk/bitcodex_bittensor_chain/",
+  );
+
   const sdk_react = path.join(__dirname, "../../../sdk/bitcodex_sdk_react/");
 
   const sdk_core_react_native = path.join(
@@ -166,6 +171,7 @@ export const paths = (function () {
     example_svm_nextjs,
     bitcodex_types,
     sdk_core,
+    bittensor_chain,
     sdk_core_react_native,
     sdk_eth,
     sdk_cosmos,

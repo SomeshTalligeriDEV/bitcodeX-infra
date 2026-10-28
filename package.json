@@ -14,6 +14,7 @@
       "sdk/bitcodex_sdk_eth",
       "sdk/bitcodex_sdk_react",
       "sdk/bitcodex_sdk_svm",
+      "sdk/bitcodex_bittensor_chain",
       "examples/evm_nextjs",
       "examples/evm_wagmi_nextjs",
       "examples/multi_ecosystem_react",
