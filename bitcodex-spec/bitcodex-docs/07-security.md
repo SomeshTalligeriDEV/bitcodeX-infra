@@ -37,6 +37,8 @@ Residual risk, stated honestly:
 - The Rust/WASM side (`cli_keygen_seed_ed25519`, `seed_sss_split`) takes the seed and scalar by value and does not zeroize. Fixing that is a `crypto/` Rust change, which needs a separate decision.
 - Malicious code running in the iframe origin during keygen (XSS, a compromised dependency) could read the seed.
 
+**Deferred (ROADMAP): zeroize in Rust.** Make `cli_keygen_seed_ed25519` and `seed_sss_split` take the seed by reference and wipe it and the derived scalar with the `zeroize` crate before returning. This is a `crypto/` Rust change, deliberately not made now (decision 28 Oct 2026); revisit together with DKG.
+
 **Fix (ROADMAP):** replace dealer keygen with **distributed keygen (FROST DKG)** between iframe and server, so that no party ever holds the full scalar. Export (X07) would then need a different design (e.g. export signing shares, or no seed export).
 
 Check: `git grep -n "seed" embed/bitcodex_attached/src/crypto/keygen_ed25519.ts` shows no logging; a code review confirms `fill(0)` on every path.

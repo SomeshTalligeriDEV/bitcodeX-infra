@@ -43,7 +43,8 @@ Do not start a later phase while an earlier phase's acceptance checks fail.
 
 ## 4. How to change this codebase
 
-- Add Bittensor as a **new ecosystem next to SVM**, mirroring the SVM files (see the copy map in `01-bitcodex-codebase-map.md`). Do not modify the SVM, EVM or Cosmos paths except where a shared type must learn about the new ecosystem.
+- **BitcodeX is Bittensor only.** Cosmos is being removed (decision 28 Oct 2026): the CosmosKit/InterchainKit adapters, Cosmos examples and sandboxes are gone; `sdk_cosmos` and the Cosmos code in the iframe, demo and dashboards come out in a planned follow-up. Do not add Cosmos code. Note: the `*_cosmos_compat` crypto crates are the threshold-signing libraries (FROST, Cait-Sith), not Cosmos chain code; keep them.
+- Add Bittensor as a **new ecosystem next to SVM**, copying the SVM file layout (see the copy map in `01-bitcodex-codebase-map.md`). **Do not modify SVM code.** EVM stays for now (X13 Subtensor EVM); change it only where a shared type must learn about Bittensor.
 - Reuse BitcodeX's Ed25519 keygen and FROST signing as-is. Do not touch `crypto/` Rust unless a probe proves it is necessary; if so, stop and ask.
 - Bittensor chain access uses `@polkadot/api` (pin the version). Address encoding uses `@polkadot/util-crypto` `encodeAddress(pubkey, 42)`.
 - Every new route: Zod schema + OpenAPI registration, as `AGENTS.md` describes.

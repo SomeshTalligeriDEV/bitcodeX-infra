@@ -45,6 +45,7 @@ Tiers: **BUILD** (works live), **PREVIEW** (real screen, one simulated action, l
 | Session signers, owners, authorization keys | proxy types + delays | no | BUILD (Staking, SmallTransfer) | X09 |
 | Policies (amount limits, allowlists, time-bound) | on-chain proxy type (+ off-chain checks in iframe) | no | BUILD (on-chain types), PREVIEW (off-chain rules) | X09 |
 | Key quorums / manual approvals | Subtensor multisig | no | ROADMAP | |
+| Zeroize seed and scalar in Rust/WASM keygen | `zeroize` in `cli_keygen_seed_ed25519` / `seed_sss_split` (crypto/ change, deferred) | no | ROADMAP | |
 | Distributed key generation (no dealer) | **FROST DKG** between iframe and server, so the full key never exists, even at creation (today: dealer keygen, seed zeroed after split; see 07-security.md) | no | ROADMAP | |
 | Smart wallets, gas sponsorship | | no | OUT (no AA on Subtensor native) | |
 | Secure enclaves (TEE) | | no | OUT | |
