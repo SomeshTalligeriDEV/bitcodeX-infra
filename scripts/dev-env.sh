@@ -4,7 +4,8 @@
 # unless --force is given.
 #
 # Optional OAuth client IDs (public values) are read from the environment:
-#   GOOGLE_CLIENT_ID=... GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=... scripts/dev-env.sh
+#   GOOGLE_CLIENT_ID=... GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=... scripts/dev-env.sh --force
+# --force rewrites the env files (keeping the existing secrets).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,9 +17,11 @@ chmod 700 "$CFG"
 
 rand() { openssl rand -hex 32; }
 
-# Shared between the API and the key share nodes; must match.
+# Shared between the API and the key share nodes; must match. Created once and never
+# regenerated (also not by --force): the API and KSNs encrypt stored shares with them.
+# To start over, run scripts/dev-down.sh --volumes and delete ~/.bitcodex.
 SECRETS="$CFG/.dev_secrets"
-if [[ ! -f "$SECRETS" || "$FORCE" == "--force" ]]; then
+if [[ ! -f "$SECRETS" ]]; then
   umask 077
   {
     echo "JWT_SECRET=$(rand)"
