@@ -1,4 +1,9 @@
 import type {
+  MakeBittensorSigData,
+  MakeBittensorSigError,
+  MakeBittensorSigModalResult,
+} from "./bittensor";
+import type {
   MakeCosmosSigData,
   MakeCosmosSigError,
   MakeCosmosSigModalResult,
@@ -14,6 +19,7 @@ import type {
   MakeSvmSigModalResult,
 } from "./svm";
 
+export * from "./bittensor";
 export * from "./common";
 export * from "./cosmos";
 export * from "./eth";
@@ -34,6 +40,11 @@ export type MakeSigModalPayload =
       modal_type: "svm/make_signature";
       modal_id: string;
       data: MakeSvmSigData;
+    }
+  | {
+      modal_type: "bittensor/make_signature";
+      modal_id: string;
+      data: MakeBittensorSigData;
     };
 
 export type MakeSigModalApproveAckPayload =
@@ -54,6 +65,12 @@ export type MakeSigModalApproveAckPayload =
       modal_id: string;
       type: "approve";
       data: MakeSvmSigModalResult;
+    }
+  | {
+      modal_type: "bittensor/make_signature";
+      modal_id: string;
+      type: "approve";
+      data: MakeBittensorSigModalResult;
     };
 
 export type MakeSigModalRejectAckPayload =
@@ -69,6 +86,11 @@ export type MakeSigModalRejectAckPayload =
     }
   | {
       modal_type: "svm/make_signature";
+      modal_id: string;
+      type: "reject";
+    }
+  | {
+      modal_type: "bittensor/make_signature";
       modal_id: string;
       type: "reject";
     };
@@ -91,4 +113,10 @@ export type MakeSigModalErrorAckPayload =
       modal_id: string;
       type: "error";
       error: MakeSvmSigError;
+    }
+  | {
+      modal_type: "bittensor/make_signature";
+      modal_id: string;
+      type: "error";
+      error: MakeBittensorSigError;
     };
