@@ -3,6 +3,7 @@ import { makeCustomerRouter } from "@bitcodex/ct-dashboard-api";
 import { makeUserRouter } from "@bitcodex/user-dashboard-api";
 import type { Express } from "express";
 
+import { makeFaucetRouterV1 } from "./faucet_v1";
 import { getStatus } from "./get_status";
 import { makeLogRouterV1 } from "./log_v1";
 import { makeSocialLoginRouter } from "./social_login_v1";
@@ -26,6 +27,8 @@ export function setRoutes(app: Express) {
   app.use("/social-login/v1", makeSocialLoginRouter());
 
   app.use("/social-login/v2", makeSocialLoginV2Router());
+
+  app.use("/faucet/v1", makeFaucetRouterV1());
 
   app.get("/status", getStatus);
 }

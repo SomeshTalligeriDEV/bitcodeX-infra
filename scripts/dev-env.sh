@@ -100,5 +100,16 @@ if make_env "$ROOT/embed/bitcodex_attached/bitcodex_attached.env.example" bitcod
 fi
 make_env "$ROOT/apps/demo_web/demo_web.env.example" demo_web.env || true
 
+# Non-secret keys added after the first run: append to existing files, never overwrite.
+ensure_kv() {
+  local file="$1" key="$2" val="$3"
+  [[ -f "$file" ]] && ! grep -qE "^${key}=" "$file" && printf '%s=%s\n' "$key" "$val" >> "$file"
+  return 0
+}
+ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_SURI "//Alice"
+ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_RPC_URL "ws://127.0.0.1:9944"
+ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_AMOUNT_TAO "1000"
+ensure_kv "$CFG/demo_web.env" NEXT_PUBLIC_BITCODEX_API_ENDPOINT "http://localhost:4200"
+
 [[ -z "$G" ]] && echo "note: GOOGLE_CLIENT_ID not set; re-run with it (and --force) once the OAuth client exists."
 echo "done. Env files are in $CFG (secrets not printed)."
