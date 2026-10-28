@@ -1,8 +1,8 @@
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import type { CallCard } from "@bitcodex/bittensor-chain";
 import type { FC, ReactNode } from "react";
 
 import styles from "./bittensor_sig_modal.module.scss";
-import type { DecodedCall } from "./decode";
 
 export const SigSection: FC<{ title: string; children: ReactNode }> = ({
   title,
@@ -38,18 +38,38 @@ export const DangerBox: FC<{ children: ReactNode }> = ({ children }) => (
   <div className={styles.danger}>{children}</div>
 );
 
-export const CallView: FC<{ call: DecodedCall }> = ({ call }) => (
-  <div>
-    {!call.known && <DangerBox>Unknown call: check it carefully.</DangerBox>}
-    <div className={styles.call}>
-      {call.section}.{call.method}
+/** One call card; unknown calls show section.method and raw args under a red warning. */
+export const CallView: FC<{ card: CallCard }> = ({ card }) => (
+  <div className={styles.card}>
+    {card.danger && <DangerBox>{card.danger}</DangerBox>}
+    <div className={styles.cardTitle}>
+      <Typography size="sm" weight="semibold" color="primary">
+        {card.title}
+      </Typography>
+      {card.known && (
+        <span className={styles.callName}>
+          {card.section}.{card.method}
+        </span>
+      )}
     </div>
-    <pre className={styles.args}>{JSON.stringify(call.args, null, 2)}</pre>
-    {call.inner.length > 0 && (
+    {card.rows.map((row) => (
+      <SigRow
+        key={row.label}
+        label={row.label}
+        value={
+          row.mono ? (
+            <span className={styles.mono}>{row.value}</span>
+          ) : (
+            row.value
+          )
+        }
+      />
+    ))}
+    {card.inner.length > 0 && (
       <div className={styles.inner}>
-        {call.inner.map((c, i) => (
+        {card.inner.map((c, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: calls have no identity besides position
-          <CallView key={i} call={c} />
+          <CallView key={i} card={c} />
         ))}
       </div>
     )}

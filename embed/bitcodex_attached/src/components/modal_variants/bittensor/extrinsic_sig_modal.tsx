@@ -143,8 +143,8 @@ export const ExtrinsicSigModal: FC<ExtrinsicSigModalProps> = ({
           )}
 
           {decoded?.success && (
-            <SigSection title="Call">
-              <CallView call={decoded.data.call} />
+            <SigSection title="Action">
+              <CallView card={decoded.data.card} />
             </SigSection>
           )}
 

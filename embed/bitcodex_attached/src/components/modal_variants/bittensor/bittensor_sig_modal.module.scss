@@ -22,21 +22,28 @@
   background: var(--bg-secondary, rgba(128, 128, 128, 0.15));
 }
 
-.call {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
-  font-weight: 600;
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.args {
-  margin: 0;
-  padding: 8px;
-  border-radius: 8px;
+.cardTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.callName,
+.mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
-  white-space: pre-wrap;
   word-break: break-all;
-  background: var(--bg-secondary, rgba(128, 128, 128, 0.1));
+}
+
+.callName {
+  color: var(--fg-quaternary, #98a2b3);
 }
 
 .inner {
