@@ -1,0 +1,55 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-secondary, rgba(128, 128, 128, 0.2));
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  word-break: break-all;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-secondary, rgba(128, 128, 128, 0.15));
+}
+
+.call {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.args {
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--bg-secondary, rgba(128, 128, 128, 0.1));
+}
+
+.inner {
+  margin-left: 12px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border-secondary, rgba(128, 128, 128, 0.3));
+}
+
+.danger {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #b42318;
+  background: rgba(217, 45, 32, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+}

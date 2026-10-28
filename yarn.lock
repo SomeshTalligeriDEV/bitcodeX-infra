@@ -3081,6 +3081,7 @@ __metadata:
     "@bitcodex/bitcodex-sdk-core": "workspace:*"
     "@bitcodex/bitcodex-sdk-cosmos": "workspace:*"
     "@bitcodex/bitcodex-sdk-eth": "workspace:*"
+    "@bitcodex/bittensor-chain": "workspace:*"
     "@bitcodex/bytes": "workspace:*"
     "@bitcodex/cait-sith-cosmos-compat-hooks": "workspace:*"
     "@bitcodex/cait-sith-cosmos-compat-wasm": "workspace:*"
@@ -3103,6 +3104,10 @@ __metadata:
     "@keplr-wallet/proto-types": "npm:^0.12.250"
     "@keplr-wallet/types": "npm:0.12.297"
     "@keplr-wallet/unit": "npm:0.12.297"
+    "@polkadot/api": "npm:17.0.2"
+    "@polkadot/types": "npm:17.0.2"
+    "@polkadot/util": "npm:14.0.3"
+    "@polkadot/util-crypto": "npm:14.0.3"
     "@solana/web3.js": "npm:^1.98.0"
     "@solanafm/explorer-kit": "npm:^1.2.0"
     "@solanafm/explorer-kit-idls": "npm:^1.1.4"
@@ -3378,7 +3383,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@bitcodex/bittensor-chain@workspace:sdk/bitcodex_bittensor_chain":
+"@bitcodex/bittensor-chain@workspace:*, @bitcodex/bittensor-chain@workspace:sdk/bitcodex_bittensor_chain":
   version: 0.0.0-use.local
   resolution: "@bitcodex/bittensor-chain@workspace:sdk/bitcodex_bittensor_chain"
   dependencies:
