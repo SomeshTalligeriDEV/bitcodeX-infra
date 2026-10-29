@@ -626,3 +626,123 @@
 .header {
   border-bottom-color: var(--m-border);
 }
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.providerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--m-border-strong);
+  background: var(--m-card);
+  color: var(--m-fg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--m-fg);
+    background: var(--m-hover);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:first-child {
+    background: var(--accent, var(--m-fg));
+    border-color: var(--accent, var(--m-fg));
+    color: var(--accent-fg, var(--m-bg));
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+      background: var(--accent, var(--m-fg));
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.ghMark {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--m-fg);
+  color: var(--m-bg);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.linkBtn {
+  align-self: center;
+  margin-top: 4px;
+  border: none;
+  background: none;
+  color: var(--m-fg2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--m-fg);
+    text-decoration: underline;
+  }
+}
+
+.devPanel {
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  background: var(--m-card);
+  animation: fadeUp 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: 0.08s;
+
+  summary {
+    padding: 14px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m-fg2);
+    list-style: none;
+
+    &::after {
+      content: "+";
+      float: right;
+      color: var(--m-fg3);
+    }
+  }
+
+  &[open] summary::after {
+    content: "–";
+  }
+}
+
+.devBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 18px 18px;
+}
+
+.ctaCol {
+  max-width: none !important;
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { GoogleIcon } from "@bitcodex/bitcodex-common-ui/icons/google_icon";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import {
@@ -18,6 +19,8 @@ import { ThemeButton } from "@bitcodex-demo-web/components/theme/theme_button";
 import { BittensorWidget } from "@bitcodex-demo-web/components/widgets/bittensor_widget/bittensor_widget";
 
 const REPO = "https://github.com/SomeshTalligeriDEV/bitcodeX-infra";
+// Shown only when a GitHub OAuth app is configured on the server.
+const GITHUB_ENABLED = process.env.NEXT_PUBLIC_GITHUB_ENABLED === "true";
 
 type Method = "google" | "github" | "wallet";
 const METHODS: { id: Method; label: string; hint: string }[] = [
@@ -140,12 +143,8 @@ const SignedOut: FC<{
 
   const login = () =>
     run("login", async () => {
-      if (social.length === 1) {
-        await signIn(social[0]);
-        return;
-      }
       await openSignInModal({
-        loginMethods: social,
+        loginMethods: social.length > 0 ? social : ["google"],
         accentColor: custom.accent === "mono" ? null : custom.accent,
         logoUrl: custom.logoUrl.trim() || null,
         theme: custom.theme,
@@ -208,110 +207,51 @@ const SignedOut: FC<{
   }, [custom, social]);
 
   return (
-    <div className={styles.split}>
-      <aside className={styles.customize}>
-        <h2 className={styles.panelTitle}>Customize</h2>
-        <p className={styles.muted}>
-          Changes apply to the real login on this page.
-        </p>
-
-        <div className={styles.group}>
-          <span className={styles.groupLabel}>Login methods</span>
-          {METHODS.map((m) => (
-            <label key={m.id} className={styles.toggleRow}>
-              <input
-                type="checkbox"
-                checked={custom.methods.includes(m.id)}
-                onChange={() => toggle(m.id)}
-              />
-              <span>
-                <strong>{m.label}</strong>
-                <span className={styles.hint}>{m.hint}</span>
-              </span>
-            </label>
-          ))}
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupLabel}>Accent colour</span>
-          <div className={styles.swatches}>
-            {ACCENTS.map((c) => (
-              <button
-                type="button"
-                key={c}
-                aria-label={c}
-                className={styles.swatch}
-                data-active={custom.accent === c}
-                style={{
-                  background:
-                    c === "mono"
-                      ? "linear-gradient(135deg, #000 50%, #fff 50%)"
-                      : c,
-                }}
-                onClick={() => setCustom({ ...custom, accent: c })}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupLabel}>Login modal theme</span>
-          <div className={styles.segmented}>
-            {(["system", "light", "dark"] as const).map((t) => (
-              <button
-                type="button"
-                key={t}
-                data-active={custom.theme === t}
-                onClick={() => setCustom({ ...custom, theme: t })}
-              >
-                {t[0].toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupLabel}>Logo URL (optional)</span>
-          <input
-            className={styles.input}
-            placeholder="https://…/logo.png"
-            value={custom.logoUrl}
-            onChange={(e) => setCustom({ ...custom, logoUrl: e.target.value })}
-          />
-        </div>
-      </aside>
-
+    <div className={styles.stack}>
       <section className={styles.previewCol}>
         <div className={styles.loginCard}>
           <span className={styles.eyebrow}>Embedded wallets for Bittensor</span>
-          <h1 className={styles.title}>Log in to see your Bittensor wallet</h1>
+          <h1 className={styles.title}>
+            Your Bittensor wallet, one click away
+          </h1>
           <p className={styles.lead}>
             A coldkey is created on first login, split 2-of-2 between this
             browser and the BitcodeX server. No extension, no seed phrase. Every
             signature is approved in a readable popup.
           </p>
           <div className={styles.ctaCol}>
-            {social.length > 0 && (
+            <button
+              type="button"
+              className={styles.providerBtn}
+              disabled={!!busy}
+              onClick={() => run("google", () => signIn("google"))}
+            >
+              <GoogleIcon width={18} height={18} />
+              {busy === "google" ? "Opening Google…" : "Continue with Google"}
+            </button>
+            {GITHUB_ENABLED && (
               <button
                 type="button"
-                className={styles.primary}
+                className={styles.providerBtn}
                 disabled={!!busy}
-                onClick={login}
+                onClick={() => run("github", () => signIn("github"))}
               >
-                {busy === "login"
-                  ? "Opening…"
-                  : social.length === 1
-                    ? `Continue with ${social[0] === "google" ? "Google" : "GitHub"}`
-                    : "Log in"}
+                <span className={styles.ghMark} aria-hidden="true">
+                  GH
+                </span>
+                {busy === "github" ? "Opening GitHub…" : "Continue with GitHub"}
               </button>
             )}
-            {custom.methods.includes("wallet") && !accounts && (
+            {!accounts && (
               <button
                 type="button"
-                className={styles.secondaryBtn}
+                className={styles.providerBtn}
                 disabled={!!busy}
                 onClick={findWallets}
               >
+                <span className={styles.ghMark} aria-hidden="true">
+                  τ
+                </span>
                 {busy === "wallets"
                   ? "Looking for wallets…"
                   : "Continue with a Bittensor wallet"}
@@ -338,14 +278,97 @@ const SignedOut: FC<{
                 </span>
               </button>
             ))}
-            {custom.methods.length === 0 && (
-              <span className={styles.muted}>
-                Turn on at least one login method.
-              </span>
-            )}
+            <button
+              type="button"
+              className={styles.linkBtn}
+              disabled={!!busy}
+              onClick={login}
+            >
+              Or open the BitcodeX login popup →
+            </button>
           </div>
           {error && <div className={styles.error}>{error}</div>}
         </div>
+
+        <details className={styles.devPanel}>
+          <summary>Developer: customize the login popup</summary>
+          <div className={styles.devBody}>
+            <p className={styles.muted}>
+              These settings change only the BitcodeX login popup below (in a
+              real app they are your app settings in the developer dashboard).
+              The sign-in buttons above always stay.
+            </p>
+
+            <div className={styles.group}>
+              <span className={styles.groupLabel}>
+                Methods shown in the popup
+              </span>
+              {METHODS.map((m) => (
+                <label key={m.id} className={styles.toggleRow}>
+                  <input
+                    type="checkbox"
+                    checked={custom.methods.includes(m.id)}
+                    onChange={() => toggle(m.id)}
+                  />
+                  <span>
+                    <strong>{m.label}</strong>
+                    <span className={styles.hint}>{m.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className={styles.group}>
+              <span className={styles.groupLabel}>Accent colour</span>
+              <div className={styles.swatches}>
+                {ACCENTS.map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    aria-label={c}
+                    className={styles.swatch}
+                    data-active={custom.accent === c}
+                    style={{
+                      background:
+                        c === "mono"
+                          ? "linear-gradient(135deg, #000 50%, #fff 50%)"
+                          : c,
+                    }}
+                    onClick={() => setCustom({ ...custom, accent: c })}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.group}>
+              <span className={styles.groupLabel}>Login modal theme</span>
+              <div className={styles.segmented}>
+                {(["system", "light", "dark"] as const).map((t) => (
+                  <button
+                    type="button"
+                    key={t}
+                    data-active={custom.theme === t}
+                    onClick={() => setCustom({ ...custom, theme: t })}
+                  >
+                    {t[0].toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.group}>
+              <span className={styles.groupLabel}>Logo URL (optional)</span>
+              <input
+                className={styles.input}
+                placeholder="https://…/logo.png"
+                value={custom.logoUrl}
+                onChange={(e) =>
+                  setCustom({ ...custom, logoUrl: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        </details>
 
         <div className={styles.codeCard}>
           <div className={styles.codeHead}>

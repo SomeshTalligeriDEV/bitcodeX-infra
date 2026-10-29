@@ -5,6 +5,8 @@ export const EXAMPLE_ENV_FILE = "demo_web.env.example";
 
 export const envSchema = z.object({
   SERVER_PORT: z.string(),
+  // "true" once a GitHub OAuth app is configured (shows the GitHub button).
+  NEXT_PUBLIC_GITHUB_ENABLED: z.string().optional(),
   // bittensor:localnet (default) or bittensor:testnet; mainnet is refused.
   NEXT_PUBLIC_BITTENSOR_CHAIN_ID: z
     .enum(["bittensor:localnet", "bittensor:testnet"])
