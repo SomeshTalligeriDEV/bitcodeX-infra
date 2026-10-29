@@ -6,17 +6,24 @@ import {
 import {
   type Balances,
   caip2ChainId,
+  checkRegistration,
   createSiwbMessage,
   DEFAULT_SLIPPAGE_BPS,
+  decayedBurn,
   describeCall,
   type EventRecordLike,
   getApi,
   getBalances,
+  getHotkeyInfo,
+  getOwnedHotkeys,
   getStakes,
+  type HotkeyInfo,
   listSubnets,
   parseUnits,
+  quoteRegistration,
   quoteStake,
   quoteUnstake,
+  type RegistrationQuote,
   type SiwbFields,
   type StakePosition,
   type SubnetSummary,
@@ -53,6 +60,7 @@ import type {
   BitcodeXBittensorState,
   BittensorWalletEvent,
   BittensorWalletEventHandler,
+  RegisterHotkeyResult,
   SendResult,
   SignInWithBittensorArgs,
   SignInWithBittensorResult,
@@ -308,6 +316,63 @@ export class BitcodeXBittensorWallet {
       ),
     );
     return { ...res, quote };
+  }
+
+  /** Hotkeys the chain records as owned by this coldkey, with subnets and UIDs. */
+  async getHotkeys(): Promise<HotkeyInfo[]> {
+    const api = await this.api();
+    const owned = await getOwnedHotkeys(api, await this.connect());
+    return Promise.all(owned.map((h) => getHotkeyInfo(api, h)));
+  }
+
+  async getHotkeyInfo(hotkey: string): Promise<HotkeyInfo> {
+    return getHotkeyInfo(await this.api(), hotkey);
+  }
+
+  /** Exact cost of a registration included in the next block (rao, excl. tx fee). */
+  async quoteRegistration(netuid: number): Promise<RegistrationQuote> {
+    return quoteRegistration(await this.api(), netuid);
+  }
+
+  /**
+   * Register a hotkey (public address only; created on the miner machine) on a subnet,
+   * signed by this coldkey. Uses `registerLimit` capped at the quoted cost, so it never
+   * charges more than quoted; `charged` is read from chain state after inclusion.
+   */
+  async registerHotkey(args: {
+    netuid: number;
+    hotkey: string;
+  }): Promise<RegisterHotkeyResult> {
+    const api = await this.api();
+    const coldkey = await this.connect();
+    const check = await checkRegistration(
+      api,
+      coldkey,
+      args.netuid,
+      args.hotkey,
+    );
+    if (!check.success) {
+      throw new Error(check.err);
+    }
+    const quote = check.data;
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.registerLimit(
+        args.netuid,
+        args.hotkey,
+        quote.cost,
+      ),
+    );
+    // Charged = the parent block's burn decayed one block (verified to the rao).
+    const header = await api.rpc.chain.getHeader(res.blockHash);
+    const parent = await api.at(header.parentHash);
+    const parentBurn = BigInt(
+      (await parent.query.subtensorModule.burn(args.netuid)).toString(),
+    );
+    return {
+      ...res,
+      quotedMax: quote.cost,
+      charged: decayedBurn(parentBurn, quote.params),
+    };
   }
 
   /** Transactions sent from this browser through BitcodeX, newest first. */

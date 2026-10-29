@@ -91,3 +91,10 @@ export interface SignInWithBittensorResult {
   address: string;
   fields: SiwbFields;
 }
+
+export interface RegisterHotkeyResult extends SendResult {
+  /** Cost shown and used as the limit (rao). */
+  quotedMax: bigint;
+  /** Exact registration cost charged on chain (rao, excl. tx fee); <= quotedMax. */
+  charged: bigint;
+}
