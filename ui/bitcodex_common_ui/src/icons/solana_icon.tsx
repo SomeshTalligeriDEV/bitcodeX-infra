@@ -1,20 +1,12 @@
 import type React from "react";
 
-import { s3BucketURL } from "./paths";
+import { LetterBadge } from "./letter_badge";
 
 export const SolanaIcon: React.FC<SolanaIconProps> = ({
   width = 16,
   height = 16,
 }) => {
-  return (
-    <img
-      src={`${s3BucketURL}/solana.png`}
-      alt="solana_icon"
-      width={width}
-      height={height}
-      style={{ borderRadius: "999px" }}
-    />
-  );
+  return <LetterBadge label="Solana" width={width} height={height} />;
 };
 
 export interface SolanaIconProps {
