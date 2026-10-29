@@ -1,6 +1,7 @@
 "use client";
 
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
+import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import { useBitcodeXCosmos } from "@bitcodex/bitcodex-sdk-react/cosmos";
 import { useBitcodeXEth } from "@bitcodex/bitcodex-sdk-react/eth";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,10 @@ export const Authorized: FC<PropsWithChildren> = ({ children }) => {
   const { isReady: isEthInitialized } = useBitcodeXEth();
   const { isSignedIn } = useBitcodeX();
 
-  const isSDKReady = isCosmosInitialized && isEthInitialized;
+  const { isReady: isBittensorReady } = useBitcodeXBittensor();
+
+  const isSDKReady =
+    isCosmosInitialized && isEthInitialized && isBittensorReady;
 
   useEffect(() => {
     if (isSDKReady && !isSignedIn) {

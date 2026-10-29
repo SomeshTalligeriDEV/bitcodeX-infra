@@ -24,6 +24,9 @@ const bitcodexConfig = {
   eth: true as const,
   cosmos: true as const,
   svm: { chainId: SOLANA_MAINNET_CHAIN_ID },
+  // Bittensor is the only chain shown; the others stay initialised (login and
+  // connected-apps code depends on them) but have no UI.
+  bittensor: { chainId: "bittensor:localnet" as const },
 };
 
 const InnerProvider: FC<PropsWithChildren> = ({ children }) => {

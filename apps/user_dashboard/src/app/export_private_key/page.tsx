@@ -263,6 +263,9 @@ const Step1Content = ({
   );
 };
 
+/** Bittensor only for now; the other ecosystems' export stays in code, hidden. */
+const SHOW_OTHER_CHAINS = false;
+
 const Step2Content = ({
   attachedOrigin,
   onReady,
@@ -275,6 +278,7 @@ const Step2Content = ({
   const LOG = "[export][step2]";
   const [secpIframeHeight, setSecpIframeHeight] = useState(0);
   const [edIframeHeight, setEdIframeHeight] = useState(0);
+  const [btIframeHeight, setBtIframeHeight] = useState(0);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -297,6 +301,8 @@ const Step2Content = ({
           setSecpIframeHeight(data.payload.height);
         } else if (data.payload.key_type === "ed25519") {
           setEdIframeHeight(data.payload.height);
+        } else if (data.payload.key_type === "bittensor") {
+          setBtIframeHeight(data.payload.height);
         }
       } else if (data.msg_type === "__export_display_copy__") {
         displayToast({ variant: "success", title: "Copied!" });
@@ -318,7 +324,10 @@ const Step2Content = ({
     };
   }, [attachedOrigin, onError]);
 
-  const iframesReady = secpIframeHeight > 0 && edIframeHeight > 0;
+  // Bittensor only: the EVM/Cosmos and Solana sections are hidden (SHOW_OTHER_CHAINS).
+  const iframesReady = SHOW_OTHER_CHAINS
+    ? secpIframeHeight > 0 && edIframeHeight > 0
+    : btIframeHeight > 0;
 
   const onReadyFired = useRef(false);
   const secpRef = useRef(secpIframeHeight);
@@ -368,55 +377,81 @@ const Step2Content = ({
 
         <div className={styles.spacer32} />
 
-        {/* EVM & Cosmos Section */}
+        {/* Bittensor coldkey */}
         <div className={styles.keySection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionKeyIcon}>
               <SectionKeyIcon />
             </span>
             <Typography size="lg" weight="semibold" color="secondary">
-              EVM & Cosmos
+              Bittensor coldkey (ed25519)
             </Typography>
           </div>
 
           <iframe
-            src={`${attachedOrigin}/export/display?key_type=secp256k1&parent_origin=${encodeURIComponent(window.location.origin)}`}
+            src={`${attachedOrigin}/export/display?key_type=bittensor&parent_origin=${encodeURIComponent(window.location.origin)}`}
             className={styles.keyIframe}
-            style={secpIframeHeight ? { height: secpIframeHeight } : undefined}
-            title="EVM & Cosmos private key"
+            style={btIframeHeight ? { height: btIframeHeight } : undefined}
+            title="Bittensor coldkey seed"
             allow="clipboard-write"
           />
-
-          <div className={styles.spacer24} />
-
-          <ChainsList chains={EVM_COSMOS_CHAINS} />
         </div>
 
-        <div className={styles.spacer52} />
+        {SHOW_OTHER_CHAINS && (
+          <>
+            {/* EVM & Cosmos Section */}
+            <div className={styles.keySection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionKeyIcon}>
+                  <SectionKeyIcon />
+                </span>
+                <Typography size="lg" weight="semibold" color="secondary">
+                  EVM & Cosmos
+                </Typography>
+              </div>
 
-        {/* Solana & SVM Section */}
-        <div className={styles.keySection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionKeyIcon}>
-              <SectionKeyIcon />
-            </span>
-            <Typography size="lg" weight="semibold" color="secondary">
-              Solana & SVM
-            </Typography>
-          </div>
+              <iframe
+                src={`${attachedOrigin}/export/display?key_type=secp256k1&parent_origin=${encodeURIComponent(window.location.origin)}`}
+                className={styles.keyIframe}
+                style={
+                  secpIframeHeight ? { height: secpIframeHeight } : undefined
+                }
+                title="EVM & Cosmos private key"
+                allow="clipboard-write"
+              />
 
-          <iframe
-            src={`${attachedOrigin}/export/display?key_type=ed25519&parent_origin=${encodeURIComponent(window.location.origin)}`}
-            className={styles.keyIframe}
-            style={edIframeHeight ? { height: edIframeHeight } : undefined}
-            title="Solana & SVM private key"
-            allow="clipboard-write"
-          />
+              <div className={styles.spacer24} />
 
-          <div className={styles.spacer24} />
+              <ChainsList chains={EVM_COSMOS_CHAINS} />
+            </div>
 
-          <ChainsList chains={SVM_CHAINS} />
-        </div>
+            <div className={styles.spacer52} />
+
+            {/* Solana & SVM Section */}
+            <div className={styles.keySection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionKeyIcon}>
+                  <SectionKeyIcon />
+                </span>
+                <Typography size="lg" weight="semibold" color="secondary">
+                  Solana & SVM
+                </Typography>
+              </div>
+
+              <iframe
+                src={`${attachedOrigin}/export/display?key_type=ed25519&parent_origin=${encodeURIComponent(window.location.origin)}`}
+                className={styles.keyIframe}
+                style={edIframeHeight ? { height: edIframeHeight } : undefined}
+                title="Solana & SVM private key"
+                allow="clipboard-write"
+              />
+
+              <div className={styles.spacer24} />
+
+              <ChainsList chains={SVM_CHAINS} />
+            </div>
+          </>
+        )}
 
         <hr className={styles.divider} />
 
@@ -425,12 +460,15 @@ const Step2Content = ({
           <div className={styles.infoBoxTitle}>
             <InfoCircleIcon className={styles.infoBoxIcon} color="#414651" />
             <Typography size="sm" weight="semibold" color="tertiary">
-              Why are there two keys?
+              {SHOW_OTHER_CHAINS
+                ? "Why are there two keys?"
+                : "What is this key?"}
             </Typography>
           </div>
           <Typography size="sm" weight="medium" color="quaternary">
-            Different ecosystems use different cryptographic curves, so their
-            private keys are generated differently.
+            {SHOW_OTHER_CHAINS
+              ? "Different ecosystems use different cryptographic curves, so their private keys are generated differently."
+              : "Your Bittensor coldkey seed. It controls your TAO, stake, hotkeys and subnets. It was rebuilt only inside this secure frame and was never sent over the network."}
           </Typography>
         </div>
       </div>

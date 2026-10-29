@@ -1,4 +1,3 @@
-import { FileIcon } from "@bitcodex/bitcodex-common-ui/icons/file_icon";
 import { HomeOutlinedIcon } from "@bitcodex/bitcodex-common-ui/icons/home_outlined";
 import type React from "react";
 
@@ -34,13 +33,10 @@ export const navigationItems: NavigationItem[] = [
     href: paths.home,
     icon: <HomeOutlinedIcon color="var(--gray-400)" className={styles.icon} />,
   },
+  // Bittensor only: the multi-chain "Transaction History" page is hidden; history is
+  // on the home page. The route (paths.transaction_history) is kept.
   {
-    label: "Transaction History",
-    href: paths.transaction_history,
-    icon: <FileIcon color="var(--gray-400)" className={styles.icon} />,
-  },
-  {
-    label: "Export Private Key",
+    label: "Export Key",
     href: paths.export_private_key,
     icon: <KeyNavIcon />,
   },
