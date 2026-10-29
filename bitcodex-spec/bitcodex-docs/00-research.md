@@ -165,3 +165,8 @@ Notes:
 - `addStakeLimit` with a limit below the current price fails with `swap.PriceLimitExceeded`; 2x the price succeeds (tx `0x6af9e95e…3815f0`). `removeStakeLimit` is the reverse: a limit above the price fails, half the price succeeds (tx `0xb4a3440c…b766e2`).
 - `StakeAdded` / `StakeRemoved` event data: (coldkey, hotkey, tao rao, alpha, netuid, fee).
 - Plan for X05: limit price = current price × (1 + slippage) for stake, × (1 − slippage) for unstake (default 1%), with price impact shown from the simulation. Sign-in-with-Bittensor is waiting until its message format is verified.
+
+### Limit price and localnet stability (verified 2026-10-29)
+- `addStakeLimit` checks `limitPrice` against the price AFTER the swap: a limit between the average fill price and the end price failed with `subtensorModule.SlippageTooHigh`; above the end price it succeeded. End price = average² / spot.
+- Quote vs fill: emissions change the pool every block; a 50 TAO stake on a fresh subnet filled 0.13% below the quote one or two blocks later.
+- The localnet image runs 3 validator nodes in one container. After about 8 h on a 4-CPU / 8 GB Colima VM they used about 6.7 GB and reorged by up to 26 blocks. Transactions then failed as "bad signature" or never landed. A container restart fixed it (fresh chain; reseed with `seed_localnet.mjs`). Parallel test files sending from //Alice collide on the nonce ("temporarily banned"), so `test:localnet` runs with `--runInBand`.
