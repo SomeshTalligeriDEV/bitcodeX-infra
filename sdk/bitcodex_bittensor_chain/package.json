@@ -19,7 +19,7 @@
     "clean": "del-cli dist",
     "build": "yarn clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:localnet": "BITTENSOR_LOCALNET=1 NODE_OPTIONS=--experimental-vm-modules jest"
+    "test:localnet": "BITTENSOR_LOCALNET=1 NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "dependencies": {
     "@bitcodex/stdlib-js": "workspace:*",
