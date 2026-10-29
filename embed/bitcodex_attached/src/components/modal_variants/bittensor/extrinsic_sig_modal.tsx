@@ -2,7 +2,11 @@ import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { XCloseIcon } from "@bitcodex/bitcodex-common-ui/icons/x_close";
 import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
 import type { MakeBittensorExtrinsicSignData } from "@bitcodex/bitcodex-sdk-core";
-import { payloadBytes, wrapEd25519 } from "@bitcodex/bittensor-chain";
+import {
+  payloadBytes,
+  quoteRegistration,
+  wrapEd25519,
+} from "@bitcodex/bittensor-chain";
 import type { SignerPayloadJSON } from "@polkadot/types/types";
 import { type FC, useEffect, useMemo, useState } from "react";
 
@@ -13,7 +17,7 @@ import {
   SigRow,
   SigSection,
 } from "./bittensor_sig_parts";
-import { decodeSignerPayload, formatTao } from "./decode";
+import { decodeSignerPayload, formatTao, registrationNetuids } from "./decode";
 import { useBittensorSignature } from "./use_bittensor_signature";
 import { CommonModal } from "@bitcodex-attached/components/modal_variants/common/common_modal";
 import { DemoView } from "@bitcodex-attached/components/modal_variants/common/make_signature/demo_view";
@@ -72,6 +76,41 @@ export const ExtrinsicSigModal: FC<ExtrinsicSigModalProps> = ({
       cancelled = true;
     };
   }, [api, decoded, signerPayload]);
+
+  // Registration cost decays every block: show the cost for the NEXT block, live.
+  const [regCosts, setRegCosts] = useState<Record<number, string>>({});
+  useEffect(() => {
+    if (!api || !decoded?.success) {
+      return;
+    }
+    const netuids = [...new Set(registrationNetuids(decoded.data.plain))];
+    if (netuids.length === 0) {
+      return;
+    }
+    let unsub: (() => void) | undefined;
+    let cancelled = false;
+    api.rpc.chain
+      .subscribeNewHeads(() => {
+        Promise.all(netuids.map((n) => quoteRegistration(api, n)))
+          .then((quotes) => {
+            if (!cancelled) {
+              setRegCosts(
+                Object.fromEntries(
+                  quotes.map((q) => [q.netuid, formatTao(q.cost)]),
+                ),
+              );
+            }
+          })
+          .catch(() => undefined);
+      })
+      .then((u) => {
+        unsub = u;
+      });
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
+  }, [api, decoded]);
 
   const refusal =
     sig.apiState.status === "refused"
@@ -145,6 +184,18 @@ export const ExtrinsicSigModal: FC<ExtrinsicSigModalProps> = ({
           {decoded?.success && (
             <SigSection title="Action">
               <CallView card={decoded.data.card} />
+            </SigSection>
+          )}
+
+          {Object.keys(regCosts).length > 0 && (
+            <SigSection title="Registration cost">
+              {Object.entries(regCosts).map(([netuid, cost]) => (
+                <SigRow
+                  key={netuid}
+                  label={`Subnet ${netuid}, if included in the next block`}
+                  value={cost}
+                />
+              ))}
             </SigSection>
           )}
 

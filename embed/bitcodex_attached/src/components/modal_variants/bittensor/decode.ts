@@ -3,6 +3,7 @@ import {
   type CallCard,
   describeCall,
   formatTaoAmount,
+  type PlainCall,
   toPlainCall,
 } from "@bitcodex/bittensor-chain";
 import type { Result } from "@bitcodex/stdlib-js";
@@ -12,6 +13,8 @@ import type { Call } from "@polkadot/types/interfaces";
 export interface DecodedExtrinsic {
   /** Plain-English card; calls nested in batch/proxy are in `inner`, never hidden. */
   card: CallCard;
+  /** Raw decoded call tree (JSON args), for live lookups such as registration cost. */
+  plain: PlainCall;
   callHex: string;
 }
 
@@ -53,10 +56,10 @@ export function decodeSignerPayload(
     const call = api.registry.createType("Call", payload.method) as Call;
     return {
       success: true,
-      data: {
-        card: describeCall(toPlainCall(call)),
-        callHex: payload.method,
-      },
+      data: (() => {
+        const plain = toPlainCall(call);
+        return { card: describeCall(plain), plain, callHex: payload.method };
+      })(),
     };
   } catch (err) {
     return { success: false, err: `Cannot decode the call: ${String(err)}` };
@@ -65,3 +68,16 @@ export function decodeSignerPayload(
 
 /** rao -> "1.5 TAO" with up to 9 decimals, trailing zeros trimmed. */
 export const formatTao = formatTaoAmount;
+
+const REGISTER_METHODS = new Set(["burnedRegister", "registerLimit"]);
+
+/** Subnets of every hotkey registration in the call tree (batch/proxy included). */
+export function registrationNetuids(call: PlainCall): number[] {
+  const own =
+    call.section === "subtensorModule" &&
+    REGISTER_METHODS.has(call.method) &&
+    typeof call.args.netuid === "number"
+      ? [call.args.netuid]
+      : [];
+  return [...own, ...call.inner.flatMap(registrationNetuids)];
+}
