@@ -52,3 +52,13 @@ Record each result here with the tx hash, then tick it.
 - [ ] Network tab during export: no seed, no seed share in any request or response, except the server seed share in the `export_shares` response, which is by design.
 - [ ] Clear site data for localhost:3201 → log in again → same address (recovery from key share nodes).
 - [ ] Hotkey swap screen (Preview label): swap a registered hotkey on one subnet, cost 0.001 TAO shown = charged; the UID moves to the new hotkey.
+
+## X06 · User dashboard (`http://localhost:3206`)
+- [ ] Sign in with Google: the home page shows only Bittensor; no Solana/Cosmos/EVM anywhere (home, left bar, export).
+- [ ] Balance = free + stake value; compare with `node` raw queries for the same address (free, `getStakeInfoForColdkey`). USD shown with "Reference only".
+- [ ] Block `api.coingecko.com` in DevTools (Network → Block request domain), reload: TAO numbers still shown; USD shows "last known price" or "USD unavailable".
+- [ ] Get test TAO, stake on two hotkeys from the demo, grant one proxy (X09): all three appear here within a block.
+- [ ] Revoke the proxy: the popup shows "Remove a permission"; after the block the row disappears and the deposit is returned.
+- [ ] Hotkey swap (Preview): swap one subnet, cost 0.001 TAO; UID moves.
+- [ ] Coldkey swap (Preview): explainer shows this network's delay (50 blocks on localnet); there is no execute button.
+- [ ] Export key → Bittensor section only (see X07 checks). Sign out works.
