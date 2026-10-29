@@ -1,0 +1,27 @@
+# BitcodeX status (honest, 2026-10-29)
+
+Rule: nothing simulated ships. **Real** = works against the live chain/API (tested chain-side or over HTTP). **Preview** = real data or real action, labelled. **Not built** = hidden or "Coming soon".
+Every Real item below still needs one browser run with a real Google login (`PENDING_BROWSER_CHECKS.md`); none has been clicked through yet.
+
+| Area | Status | Proof so far |
+|---|---|---|
+| FROST 2-of-2 coldkey, signing accepted by Subtensor | Real | phase-0 probes, tx hashes in 00-research.md |
+| Signing popup with plain-English cards, fee, warnings | Real | localnet tests, fee preview = charged |
+| SDK: send, stake/unstake + quotes, balances, history | Real | 62 localnet tests |
+| Sign-In with Bittensor (CAIP-122 profile) | Real | FROST signature verified |
+| Hotkeys + registration (exact cost) | Real | charge = prediction to the rao |
+| Export key (seed + keystore JSON) | Real | imported key signed a localnet tx |
+| Hotkey swap | Preview (localnet only) | exact cost on chain |
+| Coldkey swap | Preview (explainer only, no action) | delays read from chain |
+| User dashboard (Bittensor only) | Real | data layer = raw chain storage |
+| App/agent permissions (proxies) | Real | 4 acceptance tests on chain |
+| Agent daily limit | Preview (enforced by agent server, not chain) | curl test |
+| Developer dashboard: apps, key, secret once, origins, login methods, theme, network | Real | HTTP end-to-end test |
+| Developer dashboard users table | Preview (per account, not per app) | HTTP test |
+| Faucet | Real (localnet only) | 1000 TAO in 1 block |
+| Testnet | Not built | endpoint/genesis not verified |
+| Email, passkey, wallet login (X04) | Not built | |
+| Server SDK (X10), MFA (X12), EVM address (X13) | Not built | |
+| npm packages, self-host compose, Playwright quickstart, demo instance | Not built | |
+| Tensor Studio integration (X16) | Deferred | Studio not built |
+| Mainnet | Disabled by design | needs DKG + audit |
