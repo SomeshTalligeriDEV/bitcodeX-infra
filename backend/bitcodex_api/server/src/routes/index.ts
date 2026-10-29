@@ -8,6 +8,7 @@ import { makeAppConfigRouterV1 } from "./app_config_v1";
 import { makeFaucetRouterV1 } from "./faucet_v1";
 import { getStatus } from "./get_status";
 import { makeLogRouterV1 } from "./log_v1";
+import { makeMfaRouterV1 } from "./mfa_v1";
 import { makeServerRouterV1 } from "./server_v1";
 import { makeSocialLoginRouter } from "./social_login_v1";
 import { makeSocialLoginV2Router } from "./social_login_v2";
@@ -41,6 +42,8 @@ export function setRoutes(app: Express) {
   app.use("/server/v1", makeServerRouterV1());
 
   app.use("/wallet_login/v1", makeWalletLoginRouterV1());
+
+  app.use("/mfa/v1", makeMfaRouterV1());
 
   app.get("/status", getStatus);
 }
