@@ -29,7 +29,8 @@
     "./commit_reveal": "./src/commit_reveal/index.ts",
     "./user_customer_connections": "./src/user_customer_connections/index.ts",
     "./knexfile": "./knexfile.ts",
-    "./apps": "./src/apps/index.ts"
+    "./apps": "./src/apps/index.ts",
+    "./wallet_login": "./src/wallet_login/index.ts"
   },
   "dependencies": {
     "@bitcodex/bitcodex-types": "workspace:*",

@@ -13,6 +13,7 @@ import { makeSocialLoginRouter } from "./social_login_v1";
 import { makeSocialLoginV2Router } from "./social_login_v2";
 import { makeTSSRouterV1 } from "./tss_v1";
 import { makeTSSRouterV2 } from "./tss_v2";
+import { makeWalletLoginRouterV1 } from "./wallet_login_v1";
 
 export function setRoutes(app: Express) {
   app.use("/customer_dashboard/v1", makeCustomerRouter());
@@ -38,6 +39,8 @@ export function setRoutes(app: Express) {
   mountAccessTokenRoutes(app);
 
   app.use("/server/v1", makeServerRouterV1());
+
+  app.use("/wallet_login/v1", makeWalletLoginRouterV1());
 
   app.get("/status", getStatus);
 }

@@ -5,6 +5,7 @@ import { ErrorCodeMap } from "@bitcodex/bitcodex-api-error-codes";
 import { registry } from "@bitcodex/bitcodex-api-openapi";
 import { ErrorResponseSchema } from "@bitcodex/bitcodex-api-openapi/common";
 import { getAppByIdOnly } from "@bitcodex/bitcodex-pg-interface/apps";
+import { getLinkedAccounts } from "@bitcodex/bitcodex-pg-interface/wallet_login";
 import type { App } from "@bitcodex/bitcodex-types/ct_dashboard";
 import { encodeAddress } from "@polkadot/util-crypto";
 import express, {
@@ -84,8 +85,35 @@ async function appSecretAuth(req: Request, res: Response, next: NextFunction) {
 const address = (hex: string) =>
   hex.length === 64 ? encodeAddress(Buffer.from(hex, "hex"), 42) : null;
 
+/** Wallet-only users (wallet login, X04): known if they signed in to one of this account's apps. */
+async function getWalletOnlyUser(req: Request, res: Response, address: string) {
+  const app = res.locals.app as App;
+  const r = await req.app.locals.db.query(
+    `SELECT min(n.used_at) AS first_login FROM wallet_login_nonces n
+     JOIN apps a ON a.app_id = n.app_id
+     WHERE a.customer_id = $1 AND n.address = $2 AND n.used_at IS NOT NULL`,
+    [app.customer_id, address],
+  );
+  if (!r.rows[0]?.first_login) {
+    return fail(res, "USER_NOT_FOUND", "no such user in this app");
+  }
+  return res.json({
+    success: true,
+    data: {
+      id: `wallet:${address}`,
+      created_at: new Date(r.rows[0].first_login).toISOString(),
+      linked_accounts: [{ type: "wallet", address }],
+      wallets: [],
+    },
+  });
+}
+
 async function getUser(req: Request, res: Response) {
   const app = res.locals.app as App;
+  const id = String(req.params.user_id);
+  if (id.startsWith("wallet:")) {
+    return getWalletOnlyUser(req, res, id.slice("wallet:".length));
+  }
   const user = await getUserForCustomer(
     req.app.locals.db,
     app.customer_id,
@@ -100,7 +128,16 @@ async function getUser(req: Request, res: Response) {
     data: {
       id: user.user_id,
       created_at: new Date(user.created_at).toISOString(),
-      linked_accounts: [{ type: user.auth_type, email: user.email }],
+      linked_accounts: [
+        { type: user.auth_type, email: user.email },
+        ...(await getLinkedAccounts(req.app.locals.db, user.user_id)).map(
+          (l) => ({
+            type: l.type,
+            address: l.subject,
+            linked_at: new Date(l.created_at).toISOString(),
+          }),
+        ),
+      ],
       wallets: wallets.map((w) => ({
         chain: "bittensor",
         address: address(w.public_key_hex),

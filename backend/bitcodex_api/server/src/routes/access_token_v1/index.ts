@@ -23,11 +23,9 @@ const AccessTokenResponseSchema = registry.register(
   z.object({
     success: z.literal(true),
     data: z.object({
-      access_token: z
-        .string()
-        .openapi({
-          description: "EdDSA JWT; verify with /.well-known/jwks.json",
-        }),
+      access_token: z.string().openapi({
+        description: "EdDSA JWT; verify with /.well-known/jwks.json",
+      }),
       expires_in: z.number(),
     }),
   }),
