@@ -36,10 +36,7 @@ export const paths = (function () {
     __dirname,
     "../../../sdk/bitcodex_sdk_bittensor/",
   );
-  const sdk_server = path.join(
-    __dirname,
-    "../../../sdk/bitcodex_server/",
-  );
+  const sdk_server = path.join(__dirname, "../../../sdk/bitcodex_server/");
 
   const bittensor_chain = path.join(
     __dirname,

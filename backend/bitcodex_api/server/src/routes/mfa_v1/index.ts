@@ -4,12 +4,21 @@ import { ErrorCodeMap } from "@bitcodex/bitcodex-api-error-codes";
 import { registry } from "@bitcodex/bitcodex-api-openapi";
 import { ErrorResponseSchema } from "@bitcodex/bitcodex-api-openapi/common";
 import { decryptDataAsync, encryptDataAsync } from "@bitcodex/crypto-js/node";
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 
 import { getEd25519WalletById } from "@bitcodex-api/access_token/users";
+import {
+  base32Decode,
+  newTotpSecret,
+  otpauthUri,
+  verifyTotp,
+} from "@bitcodex-api/mfa/totp";
 import { userJwtMiddlewareV2 } from "@bitcodex-api/middleware/auth/cosmos_compat_auth";
 import { rateLimitMiddleware } from "@bitcodex-api/middleware/rate_limit";
-import { base32Decode, newTotpSecret, otpauthUri, verifyTotp } from "@bitcodex-api/mfa/totp";
 
 for (const [path, summary] of [
   ["/mfa/v1/status", "Is TOTP on, and the signing limit"],
@@ -26,8 +35,14 @@ for (const [path, summary] of [
     summary,
     responses: {
       200: { description: "OK" },
-      401: { description: "No session or wrong code", content: { "application/json": { schema: ErrorResponseSchema } } },
-      429: { description: "Too many attempts", content: { "application/json": { schema: ErrorResponseSchema } } },
+      401: {
+        description: "No session or wrong code",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      429: {
+        description: "Too many attempts",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
     },
   });
 }
@@ -41,15 +56,20 @@ const WINDOW_MS = 5 * 60_000;
 const MAX_FAILS = 5;
 function lockedOut(userId: string): boolean {
   const now = Date.now();
-  const recent = (failures.get(userId) ?? []).filter((t) => now - t < WINDOW_MS);
+  const recent = (failures.get(userId) ?? []).filter(
+    (t) => now - t < WINDOW_MS,
+  );
   failures.set(userId, recent);
   return recent.length >= MAX_FAILS;
 }
-const noteFailure = (userId: string) => failures.set(userId, [...(failures.get(userId) ?? []), Date.now()]);
+const noteFailure = (userId: string) =>
+  failures.set(userId, [...(failures.get(userId) ?? []), Date.now()]);
 
 async function resolveUser(req: Request, res: Response, next: NextFunction) {
   const walletId = res.locals.user?.wallet_id_ed25519;
-  const wallet = walletId ? await getEd25519WalletById(req.app.locals.db, walletId) : null;
+  const wallet = walletId
+    ? await getEd25519WalletById(req.app.locals.db, walletId)
+    : null;
   if (!wallet) {
     return fail(res, "WALLET_NOT_FOUND", "sign in with BitcodeX first");
   }
@@ -59,13 +79,25 @@ async function resolveUser(req: Request, res: Response, next: NextFunction) {
 }
 
 async function row(req: Request, userId: string) {
-  const r = await req.app.locals.db.query("SELECT * FROM user_mfa WHERE user_id = $1", [userId]);
+  const r = await req.app.locals.db.query(
+    "SELECT * FROM user_mfa WHERE user_id = $1",
+    [userId],
+  );
   return r.rows[0] as
-    | { totp_secret_enc: string; enabled: boolean; threshold_rao: string | null }
+    | {
+        totp_secret_enc: string;
+        enabled: boolean;
+        threshold_rao: string | null;
+      }
     | undefined;
 }
 
-async function checkCode(req: Request, res: Response, userId: string, requireEnabled: boolean): Promise<boolean> {
+async function checkCode(
+  req: Request,
+  res: Response,
+  userId: string,
+  requireEnabled: boolean,
+): Promise<boolean> {
   if (lockedOut(userId)) {
     fail(res, "RATE_LIMIT_EXCEEDED", "too many wrong codes; wait 5 minutes");
     return false;
@@ -75,7 +107,9 @@ async function checkCode(req: Request, res: Response, userId: string, requireEna
     fail(res, "INVALID_REQUEST", "TOTP is not set up");
     return false;
   }
-  const secret = base32Decode(await decryptDataAsync(r.totp_secret_enc, req.app.locals.encryption_secret));
+  const secret = base32Decode(
+    await decryptDataAsync(r.totp_secret_enc, req.app.locals.encryption_secret),
+  );
   if (!verifyTotp(secret, String(req.body?.code ?? ""))) {
     noteFailure(userId);
     fail(res, "INVALID_VERIFICATION_CODE", "wrong or expired code");
@@ -94,7 +128,10 @@ export function makeMfaRouterV1() {
     const r = await row(req, res.locals.mfaUserId);
     res.json({
       success: true,
-      data: { enabled: !!r?.enabled, threshold_rao: r?.enabled ? (r.threshold_rao ?? null) : null },
+      data: {
+        enabled: !!r?.enabled,
+        threshold_rao: r?.enabled ? (r.threshold_rao ?? null) : null,
+      },
     });
   });
 
@@ -102,10 +139,17 @@ export function makeMfaRouterV1() {
     const userId = res.locals.mfaUserId as string;
     const r = await row(req, userId);
     if (r?.enabled) {
-      return fail(res, "INVALID_REQUEST", "TOTP is already on; disable it first");
+      return fail(
+        res,
+        "INVALID_REQUEST",
+        "TOTP is already on; disable it first",
+      );
     }
     const secret = newTotpSecret();
-    const enc = await encryptDataAsync(secret, req.app.locals.encryption_secret);
+    const enc = await encryptDataAsync(
+      secret,
+      req.app.locals.encryption_secret,
+    );
     await req.app.locals.db.query(
       `INSERT INTO user_mfa (user_id, totp_secret_enc, enabled) VALUES ($1, $2, false)
        ON CONFLICT (user_id) DO UPDATE SET totp_secret_enc = $2, enabled = false, updated_at = now()`,
@@ -113,7 +157,10 @@ export function makeMfaRouterV1() {
     );
     return res.json({
       success: true,
-      data: { secret, otpauth_uri: otpauthUri(secret, res.locals.user?.email ?? userId) },
+      data: {
+        secret,
+        otpauth_uri: otpauthUri(secret, res.locals.user?.email ?? userId),
+      },
     });
   });
 
@@ -140,7 +187,11 @@ export function makeMfaRouterV1() {
     const userId = res.locals.mfaUserId as string;
     const raw = req.body?.threshold_rao;
     if (raw !== null && !(typeof raw === "string" && /^\d{1,30}$/.test(raw))) {
-      return fail(res, "INVALID_REQUEST", "threshold_rao must be a decimal string of rao, or null (always)");
+      return fail(
+        res,
+        "INVALID_REQUEST",
+        "threshold_rao must be a decimal string of rao, or null (always)",
+      );
     }
     if (!(await checkCode(req, res, userId, true))) {
       return undefined;
@@ -157,7 +208,9 @@ export function makeMfaRouterV1() {
     if (!(await checkCode(req, res, userId, true))) {
       return undefined;
     }
-    await req.app.locals.db.query("DELETE FROM user_mfa WHERE user_id = $1", [userId]);
+    await req.app.locals.db.query("DELETE FROM user_mfa WHERE user_id = $1", [
+      userId,
+    ]);
     return res.json({ success: true, data: { enabled: false } });
   });
 

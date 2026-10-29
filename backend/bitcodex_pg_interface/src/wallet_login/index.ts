@@ -49,7 +49,10 @@ export interface LinkedAccount {
   created_at: Date;
 }
 
-export async function getUserIdForWallet(db: Db, address: string): Promise<string | null> {
+export async function getUserIdForWallet(
+  db: Db,
+  address: string,
+): Promise<string | null> {
   const r = await db.query(
     "SELECT user_id FROM linked_accounts WHERE type = 'wallet' AND subject = $1",
     [address],
@@ -61,7 +64,9 @@ export async function linkWallet(
   db: Db,
   userId: string,
   address: string,
-): Promise<Result<"linked" | "already_linked" | "linked_to_other_user", string>> {
+): Promise<
+  Result<"linked" | "already_linked" | "linked_to_other_user", string>
+> {
   try {
     const existing = await getUserIdForWallet(db, address);
     if (existing === userId) {
@@ -80,7 +85,10 @@ export async function linkWallet(
   }
 }
 
-export async function getLinkedAccounts(db: Db, userId: string): Promise<LinkedAccount[]> {
+export async function getLinkedAccounts(
+  db: Db,
+  userId: string,
+): Promise<LinkedAccount[]> {
   const r = await db.query(
     "SELECT user_id, type, subject, created_at FROM linked_accounts WHERE user_id = $1 ORDER BY created_at",
     [userId],

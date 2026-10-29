@@ -113,11 +113,9 @@ export const AppCreatedSuccessResponseSchema = registry.register(
       api_key: z
         .string()
         .openapi({ description: "Public client key (x-api-key)." }),
-      app_secret: z
-        .string()
-        .openapi({
-          description: "Server secret. Shown ONCE; only its sha256 is stored.",
-        }),
+      app_secret: z.string().openapi({
+        description: "Server secret. Shown ONCE; only its sha256 is stored.",
+      }),
     }),
   }),
 );

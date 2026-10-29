@@ -88,8 +88,9 @@ const api = await ApiPromise.create({
   noInitWarn: true,
 });
 const chainType = (await api.rpc.system.chainType()).toString();
-if (chainType !== "Local" && chainType !== "Development")
+if (chainType !== "Local" && chainType !== "Development") {
   throw new Error(`refusing: chainType ${chainType}`);
+}
 const alice = new Keyring({ type: "sr25519", ss58Format: 42 }).addFromUri(
   "//Alice",
 );
@@ -100,8 +101,11 @@ const inBlock = (tx, signer) =>
         signer,
         { nonce: -1 },
         ({ status, dispatchError, txHash }) => {
-          if (dispatchError) rej(new Error(dispatchError.toString()));
-          else if (status.isInBlock) res(txHash.toHex());
+          if (dispatchError) {
+            rej(new Error(dispatchError.toString()));
+          } else if (status.isInBlock) {
+            res(txHash.toHex());
+          }
         },
       )
       .catch(rej),

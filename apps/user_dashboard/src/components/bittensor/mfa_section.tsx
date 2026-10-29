@@ -116,7 +116,9 @@ export const MfaSection: FC = () => {
               onClick={() =>
                 run(async () => {
                   const p = parseUnits(limit);
-                  if (!p.success) throw new Error(p.err);
+                  if (!p.success) {
+                    throw new Error(p.err);
+                  }
                   await call("threshold", {
                     code,
                     threshold_rao: p.data.toString(),

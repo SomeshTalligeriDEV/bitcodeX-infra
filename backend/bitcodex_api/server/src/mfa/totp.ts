@@ -47,7 +47,11 @@ export function hotp(secret: Buffer, counter: number, digits = 6): string {
   msg.writeBigUInt64BE(BigInt(counter));
   const h = createHmac("sha1", secret).update(msg).digest();
   const off = h[h.length - 1] & 0x0f;
-  const bin = ((h[off] & 0x7f) << 24) | (h[off + 1] << 16) | (h[off + 2] << 8) | h[off + 3];
+  const bin =
+    ((h[off] & 0x7f) << 24) |
+    (h[off + 1] << 16) |
+    (h[off + 2] << 8) |
+    h[off + 3];
   return String(bin % 10 ** digits).padStart(digits, "0");
 }
 
@@ -56,7 +60,11 @@ export function totp(secret: Buffer, unixSeconds: number, digits = 6): string {
 }
 
 /** Accepts the current step and one step either side (clock drift). */
-export function verifyTotp(secret: Buffer, code: string, unixSeconds = Date.now() / 1000): boolean {
+export function verifyTotp(
+  secret: Buffer,
+  code: string,
+  unixSeconds = Date.now() / 1000,
+): boolean {
   if (!/^\d{6}$/.test(code)) {
     return false;
   }
@@ -74,7 +82,11 @@ export function newTotpSecret(): string {
   return base32Encode(randomBytes(20));
 }
 
-export function otpauthUri(secretB32: string, account: string, issuer = "BitcodeX"): string {
+export function otpauthUri(
+  secretB32: string,
+  account: string,
+  issuer = "BitcodeX",
+): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
   return `otpauth://totp/${label}?secret=${secretB32}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
 }

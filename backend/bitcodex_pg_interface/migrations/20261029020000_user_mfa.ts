@@ -9,8 +9,12 @@ export async function up(knex: Knex): Promise<void> {
       t.boolean("enabled").notNullable().defaultTo(false);
       // Calls moving at least this many rao need a code; null = every signature.
       t.decimal("threshold_rao", 30, 0);
-      t.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now());
-      t.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(knex.fn.now());
+      t.timestamp("created_at", { useTz: true })
+        .notNullable()
+        .defaultTo(knex.fn.now());
+      t.timestamp("updated_at", { useTz: true })
+        .notNullable()
+        .defaultTo(knex.fn.now());
     });
   }
 }
