@@ -149,3 +149,21 @@ describe("describeCall", () => {
     expect(bytesToText("0x68656c6c6f")).toBe("hello");
   });
 });
+
+describe("registerLimit card", () => {
+  it("shows subnet, hotkey and the maximum cost in TAO", () => {
+    const card = describeCall(
+      call("subtensorModule", "registerLimit", {
+        netuid: 2,
+        hotkey: BOB,
+        limitPrice: 3_050_502,
+      }),
+    );
+    expect(card.known).toBe(true);
+    expect(card.rows.map((r) => r.value)).toEqual([
+      "Subnet 2",
+      BOB,
+      "0.003050502 TAO",
+    ]);
+  });
+});

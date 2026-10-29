@@ -253,6 +253,14 @@ const DESCRIBERS: Record<string, Describer> = {
       },
     ],
   }),
+  "subtensorModule.registerLimit": (a) => ({
+    title: "Register a hotkey on a subnet",
+    rows: [
+      { label: "Subnet", value: subnet(a.netuid) },
+      { label: "Hotkey", value: address(a.hotkey), mono: true },
+      { label: "Cost (at most)", value: amount(a.limitPrice, "TAO") },
+    ],
+  }),
   "subtensorModule.registerNetwork": (a) => ({
     title: "Create a subnet",
     rows: [
