@@ -57,6 +57,13 @@ COPY --from=api-deps --chown=bitcodex:bitcodex /src /app
 USER bitcodex
 WORKDIR /app/backend/bitcodex_api/server
 ENV NODE_ENV=production
+# Integrations the self-host leaves off. The env schema requires the keys to exist, so
+# hosts that cannot set empty values (Render) still start; compose overrides these.
+ENV SMTP_HOST="" SMTP_PORT="" SMTP_USER="" SMTP_PASS="" FROM_EMAIL="" \
+    EMAIL_VERIFICATION_EXPIRATION_MINUTES="10" \
+    S3_REGION="" S3_BUCKET="" S3_ACCESS_KEY_ID="" S3_SECRET_ACCESS_KEY="" \
+    TYPEFORM_WEBHOOK_SECRET="" TELEGRAM_BOT_TOKEN="" GITHUB_CLIENT_SECRET="" \
+    DAPP_DASHBOARD_URL="" JWT_EXPIRES_IN="1h" SERVER_PORT="4200" DB_PORT="5432"
 EXPOSE 4200
 CMD ["corepack", "yarn", "start"]
 
@@ -71,6 +78,7 @@ COPY --from=ksn-deps --chown=bitcodex:bitcodex /src /app
 USER bitcodex
 WORKDIR /app/key_share_node/server
 ENV NODE_ENV=production
+ENV TELEGRAM_BOT_TOKEN="" DUMP_DIR="/tmp/dumps" DB_PORT="5432"
 CMD ["corepack", "yarn", "start"]
 
 # ───────────── iframe (static) ─────────────
