@@ -6,6 +6,7 @@ import type {
 import { BITCODEX_SDK_TARGET } from "./target";
 import type { MsgEventContext } from "./types";
 import { BITCODEX_API_ENDPOINT } from "@bitcodex-attached/requests/endpoints";
+import { fetchWithRetry } from "@bitcodex-attached/requests/retry";
 import { useMemoryState } from "@bitcodex-attached/store/memory";
 
 type StoredConfig = Omit<BitcodeXAppConfig, "origin_allowed">;
@@ -20,7 +21,7 @@ export function loadAppConfig(apiKey: string): Promise<StoredConfig> {
     return hit.config;
   }
   const config = (async () => {
-    const res = await fetch(`${BITCODEX_API_ENDPOINT}/app_config/v1`, {
+    const res = await fetchWithRetry(`${BITCODEX_API_ENDPOINT}/app_config/v1`, {
       headers: { "x-api-key": apiKey },
     });
     const body = await res.json();
