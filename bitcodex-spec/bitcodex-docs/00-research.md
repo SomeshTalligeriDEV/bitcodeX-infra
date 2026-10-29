@@ -220,3 +220,14 @@ Notes:
   - the second 1 TAO against a 1.5 TAO daily limit was refused (429, Preview policy enforced by the agent server, not the chain);
   - 403 after the revoke.
 - **Bug found and fixed:** after a localnet restart (new genesis), long-running servers using the cached `getApi` connection hung forever (the faucet stopped answering). `getApi` now re-checks `chain_getBlockHash(0)` against the cached genesis with a 10 s timeout, reconnects once if it changed or does not answer, and times out the chainType call. Verified: localnet restarted under the running API, and the next faucet drip succeeded in 1 s with no API restart.
+
+### Testnet (verified 2026-10-29)
+- Official endpoints (bittensor.com/docs/concepts/network): testnet `wss://test.finney.opentensor.ai:443`, mainnet `wss://entrypoint-finney.opentensor.ai:443`, local `ws://127.0.0.1:9944`. The page lists **no testnet faucet**. Older community guides disagree (`btcli wallet faucet` vs "faucet is disabled on testnet"), so BitcodeX links none.
+- Live testnet, read-only probe:
+  - `system_chain` "Bittensor", **chainType `Development`**;
+  - genesis `0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105`;
+  - spec 486 (`node-subtensor`), txVersion 1, SS58 42, 9 decimals, symbol `testTAO`, ED 500;
+  - the same 13 signed extensions as localnet; `proxyFilterRuntimeApi`, `swapRuntimeApi`, `stakeInfoRuntimeApi` and `registerLimit` present; 600 subnets.
+- Mainnet, read-only (genesis + chainType only): genesis `0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03`, chainType `Live`. Now used to refuse it by name ("this endpoint is Bittensor MAINNET").
+- **FROST signatures are valid on testnet** (nothing spent): a FROST 2-of-2 signed `transferKeepAlive` from an unfunded account was rejected with `1010 Inability to pay some fees`, the same as an unfunded normal key. The control with a corrupted signature was rejected with `1010 Transaction has a bad signature`. Substrate checks the signature before fees, so the payload format and signature are accepted. A funded testnet transfer is still to do (needs testnet TAO).
+- Because testnet reports `Development`, the localnet rule's endpoint check matters. Verified: `getApi("bittensor:localnet", { rpcUrl: testnet })` → "endpoint … is not local".

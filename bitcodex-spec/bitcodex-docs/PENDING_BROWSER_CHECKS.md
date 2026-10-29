@@ -69,3 +69,8 @@ Record each result here with the tx hash, then tick it.
 - [ ] Grant SmallTransfer: the popup says "send TAO, only below 0.5 TAO per call".
 - [ ] Daily limit 1.5 (Preview): the second 1 TAO request is refused with the Preview message.
 - [ ] Revoke in the demo or dashboard: the next "Ask agent" gives "no Staking permission".
+
+## Testnet (set NEXT_PUBLIC_BITTENSOR_CHAIN_ID=bittensor:testnet in demo_web.env and user_dashboard.env, restart)
+- [ ] Demo and dashboard badges say "Testnet"; no "Get test TAO" button; the testnet funding note is shown.
+- [ ] Sign in: same coldkey address as on localnet (the key does not depend on the network).
+- [ ] With testnet TAO sent to the address: Send 0.1 TAO, popup shows Network "Testnet", tx included on testnet.

@@ -18,8 +18,8 @@ Every Real item below still needs one browser run with a real Google login (`PEN
 | Agent daily limit | Preview (enforced by agent server, not chain) | curl test |
 | Developer dashboard: apps, key, secret once, origins, login methods, theme, network | Real | HTTP end-to-end test |
 | Developer dashboard users table | Preview (per account, not per app) | HTTP test |
-| Faucet | Real (localnet only) | 1000 TAO in 1 block |
-| Testnet | Not built | endpoint/genesis not verified |
+| Faucet | Real (localnet only; hidden on testnet) | 1000 TAO in 1 block |
+| Testnet | Real (read + signature validity), funded transfer not yet done | official endpoint + genesis allowlist; 600 subnets read; FROST signature accepted by testnet's signature check without spending; apps pick the network with `NEXT_PUBLIC_BITTENSOR_CHAIN_ID`. No testnet faucet exists in the official docs, so the apps show a note instead of a link. A real testnet transfer needs testnet TAO. |
 | Email, passkey, wallet login (X04) | Not built | |
 | Server SDK (X10), MFA (X12), EVM address (X13) | Not built | |
 | npm packages `@bitcodex/sdk-core`, `sdk-bittensor`, `sdk-react`, `server` 0.1.0 | Real, packed, not published | `node scripts/release/build_packages.mjs` → `release/tarballs/`. Installed into a brand-new folder: imports work in Node, `@bitcodex/server` read live chain data, a sample React app typechecks. Licence is `UNLICENSED` until the owner picks one (no LICENSE file in the repo). With `skipLibCheck: false`, core types need optional peers viem / @keplr-wallet/types / @cosmjs/amino. |
