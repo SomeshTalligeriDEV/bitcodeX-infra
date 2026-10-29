@@ -9,6 +9,7 @@ import { signatureVerify } from "@polkadot/util-crypto";
 import { QRCodeSVG } from "qrcode.react";
 import { type FC, useEffect, useRef, useState } from "react";
 
+import { BittensorStakePanel } from "./bittensor_stake_panel";
 import styles from "./bittensor_widget.module.scss";
 import { Widget } from "@bitcodex-demo-web/components/widgets/widget_components";
 
@@ -32,11 +33,6 @@ async function faucetRequest<T>(path: string, init?: RequestInit): Promise<T> {
 function formatTao(rao: bigint): string {
   const frac = (rao % TAO).toString().padStart(9, "0").replace(/0+$/, "");
   return `${rao / TAO}${frac ? `.${frac}` : ""} TAO`;
-}
-
-function parseTao(input: string): bigint {
-  const [whole, frac = ""] = input.trim().split(".");
-  return BigInt(whole || "0") * TAO + BigInt(frac.padEnd(9, "0").slice(0, 9));
 }
 
 interface LogLine {
@@ -133,9 +129,7 @@ export const BittensorWidget: FC = () => {
       if (!api || !bittensorWallet) {
         throw new Error("not ready");
       }
-      const res = await bittensorWallet.signAndSend(
-        api.tx.balances.transferKeepAlive(to.trim(), parseTao(amount)),
-      );
+      const res = await bittensorWallet.sendTao(to.trim(), amount);
       return `${amount} TAO to ${to.trim()} tx=${res.txHash} block=${res.blockHash}`;
     });
 
@@ -325,6 +319,16 @@ export const BittensorWidget: FC = () => {
             web3Enable test
           </Button>
         </div>
+
+        {api && bittensorWallet && address && (
+          <BittensorStakePanel
+            api={api}
+            wallet={bittensorWallet}
+            address={address}
+            busy={busy}
+            run={run}
+          />
+        )}
 
         {log.length > 0 && (
           <div className={styles.log}>

@@ -75,3 +75,26 @@
   border-radius: 8px;
   background: #ffffff;
 }
+
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-secondary, rgba(128, 128, 128, 0.2));
+}
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.historyRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
