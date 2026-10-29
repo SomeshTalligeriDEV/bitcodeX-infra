@@ -1,0 +1,87 @@
+# Build the BitcodeX service images on GitHub's runners and push them to GHCR, so
+# deployment targets (CreateOS, any Docker host) pull ready images. Linux/amd64.
+name: images
+
+on:
+  push:
+    branches: ["bittensor/phase-0"]
+    paths:
+      - "selfhost/Dockerfile"
+      - ".github/workflows/images.yml"
+      - "backend/**"
+      - "key_share_node/**"
+      - "crypto/**"
+      - "lib/**"
+      - "common/**"
+      - "sdk/**"
+      - "embed/bitcodex_attached/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image names
+        id: names
+        run: echo "prefix=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/bitcodex" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: api
+          push: true
+          tags: |
+            ${{ steps.names.outputs.prefix }}-api:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Key share node image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: ksn
+          push: true
+          tags: |
+            ${{ steps.names.outputs.prefix }}-ksn:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-ksn:latest
+          cache-from: type=gha
+
+      # The iframe bakes its public settings in at build time; built only once the
+      # deployment's URLs exist as repository variables (Settings → Variables → Actions).
+      - name: Wallet iframe image
+        if: ${{ vars.BITCODEX_PUBLIC_API_URL != '' && vars.BITCODEX_GOOGLE_CLIENT_ID != '' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: iframe
+          push: true
+          build-args: |
+            VITE_BITCODEX_API_ENDPOINT=${{ vars.BITCODEX_PUBLIC_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ vars.BITCODEX_GOOGLE_CLIENT_ID }}
+            VITE_GITHUB_CLIENT_ID=${{ vars.BITCODEX_GITHUB_CLIENT_ID }}
+            VITE_BITTENSOR_ALLOWED_HOST_ORIGINS=${{ vars.BITCODEX_ALLOWED_ORIGINS }}
+            VITE_USER_DASHBOARD_ORIGINS=${{ vars.BITCODEX_DASHBOARD_ORIGIN }}
+          tags: |
+            ${{ steps.names.outputs.prefix }}-iframe:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-iframe:latest
+          cache-from: type=gha
