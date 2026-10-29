@@ -71,3 +71,12 @@
   word-break: break-all;
   background: var(--bg-secondary, rgba(128, 128, 128, 0.1));
 }
+
+.mfaInput {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary, #d0d5dd);
+  font-size: 18px;
+  letter-spacing: 4px;
+  text-align: center;
+}

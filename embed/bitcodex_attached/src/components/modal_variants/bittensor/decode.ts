@@ -97,3 +97,38 @@ export function permissionGrants(
       : [];
   return [...own, ...call.inner.flatMap(permissionGrants)];
 }
+
+const toBig = (v: unknown): bigint =>
+  typeof v === "number" ||
+  (typeof v === "string" && /^(0x[0-9a-fA-F]+|\d+)$/.test(v))
+    ? BigInt(v)
+    : BigInt(0);
+
+/**
+ * TAO (rao) a call tree moves out of the wallet, for the MFA limit (X12): transfers and
+ * stakes, including inside batch/proxy. `all` is true for transferAll (always needs MFA).
+ */
+export function movedRao(call: PlainCall): { rao: bigint; all: boolean } {
+  let rao = BigInt(0);
+  let all = false;
+  const id = `${call.section}.${call.method}`;
+  if (
+    id === "balances.transferKeepAlive" ||
+    id === "balances.transferAllowDeath"
+  ) {
+    rao += toBig(call.args.value);
+  } else if (id === "balances.transferAll") {
+    all = true;
+  } else if (
+    id === "subtensorModule.addStake" ||
+    id === "subtensorModule.addStakeLimit"
+  ) {
+    rao += toBig(call.args.amountStaked);
+  }
+  for (const c of call.inner) {
+    const r = movedRao(c);
+    rao += r.rao;
+    all = all || r.all;
+  }
+  return { rao, all };
+}

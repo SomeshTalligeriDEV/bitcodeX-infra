@@ -44,6 +44,22 @@ export interface BitcodeXAppConfig {
   origin_allowed: boolean;
 }
 
+/** MFA settings (X12), only from the user dashboard's origins. */
+export type BitcodeXWalletMsgMfa = {
+  target: "bitcodex_attached";
+  msg_type: "mfa";
+  payload: {
+    action: "status" | "enroll" | "confirm" | "threshold" | "disable";
+    body: Record<string, unknown>;
+  };
+};
+
+export type BitcodeXWalletMsgMfaAck = {
+  target: "bitcodex_sdk";
+  msg_type: "mfa_ack";
+  payload: Result<Record<string, unknown>, string>;
+};
+
 /** Wallet login (X04) calls, forwarded by the iframe to the API with the app key. */
 export type BitcodeXWalletMsgWalletLogin = {
   target: "bitcodex_attached";
@@ -323,6 +339,8 @@ export type BitcodeXWalletMsg =
   | BitcodeXWalletMsgGetPublicKey
   | BitcodeXWalletMsgGetPublicKeyAck
   | BitcodeXWalletMsgGetPublicKeyEd25519
+  | BitcodeXWalletMsgMfa
+  | BitcodeXWalletMsgMfaAck
   | BitcodeXWalletMsgWalletLogin
   | BitcodeXWalletMsgWalletLoginAck
   | BitcodeXWalletMsgGetAccessToken

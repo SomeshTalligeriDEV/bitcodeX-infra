@@ -29,6 +29,7 @@ import {
 } from "react";
 
 import styles from "./bittensor_home.module.scss";
+import { MfaSection } from "./mfa_section";
 import {
   IS_LOCALNET,
   NETWORK_NAME,
@@ -426,6 +427,8 @@ export const BittensorHome: FC = () => {
           move it.
         </div>
       </Section>
+
+      <MfaSection />
 
       <Section title="Security">
         <div className={styles.row}>

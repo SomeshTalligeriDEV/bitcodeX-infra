@@ -17,6 +17,7 @@ import { handleGetName } from "./get_name";
 import { handleGetPublicKey } from "./get_public_key";
 import { handleGetPublicKeyEd25519 } from "./get_public_key_ed25519";
 import { handleGetWalletInfo } from "./get_wallet_info";
+import { handleMfa } from "./mfa";
 import { handleOAuthInfoPassV2 } from "./oauth_info_pass";
 import { handleOpenModal } from "./open_modal";
 import { handleSetCodeVerifier } from "./set_code_verifier";
@@ -191,6 +192,11 @@ export function makeMsgHandler() {
 
       case "get_public_key": {
         await handleGetPublicKey(ctx);
+        break;
+      }
+
+      case "mfa": {
+        await handleMfa(ctx, message);
         break;
       }
 
