@@ -16,8 +16,22 @@ if (api.success) {
 }
 ```
 
-Available now: `verifySiwb`, `parseSiwbMessage`, `caip2ChainId`, `getApi` (refuses mainnet
+```ts
+// Access tokens: your frontend calls `bitcodexWallet.getAccessToken()` and sends it to you.
+import { verifyAccessToken, createServerClient } from "@bitcodex/server";
+const v = await verifyAccessToken(token, { appId: "YOUR_APP_ID", apiUrl: "https://api.example.com" });
+if (v.success) console.log(v.data.userId, v.data.address);
+
+// Server API with your app secret (never in a browser).
+const bitcodex = createServerClient({ apiUrl, appId, appSecret });
+const user = await bitcodex.getUser(v.data.userId);   // linked accounts + wallets
+const wallets = await bitcodex.getWallets(v.data.userId);
+```
+
+Available now: `verifyAccessToken` (EdDSA JWT via the API's JWKS; errors `token_expired`,
+`invalid_signature`, `wrong_audience`, `wrong_issuer`), `createServerClient` (`getUser`,
+`getWallets`, retries on 429/5xx), `verifySiwb`, `parseSiwbMessage`, `caip2ChainId`, `getApi` (refuses mainnet
 and unknown chains), `actAs`, `getProxies`, `getProxyFilter(s)`, `describePermission`,
 `getBalances`, `getStakes`, `getHotkeyInfo`, `listSubnets`.
 
-Not built yet: access-token verification (JWKS), `getUser`, `getWallets`.
+Users are scoped per developer account (all apps of one account see the same users).

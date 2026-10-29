@@ -6,14 +6,23 @@
 // bittensor-chain) are inlined into each package, JS and types, so a published package
 // depends only on public npm packages and its published siblings.
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { rollup } from "rollup";
 import { dts } from "rollup-plugin-dts";
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const OUT = path.join(ROOT, "release");
 const VERSION = "0.1.0";
 // The repo has no LICENSE file yet: the owner chooses the licence before publishing.
@@ -49,8 +58,13 @@ const PACKAGES = [
     types: { index: "dist/index.d.ts" },
     deps: {},
     // Type-only references from the EVM/Cosmos signing types; not needed for Bittensor.
-    optionalPeer: { viem: ">=2", "@keplr-wallet/types": ">=0.12", "@cosmjs/amino": ">=0.32" },
-    description: "BitcodeX core: embedded wallet iframe, login and events (chain-agnostic).",
+    optionalPeer: {
+      viem: ">=2",
+      "@keplr-wallet/types": ">=0.12",
+      "@cosmjs/amino": ">=0.32",
+    },
+    description:
+      "BitcodeX core: embedded wallet iframe, login and events (chain-agnostic).",
   },
   {
     name: "@bitcodex/sdk-bittensor",
@@ -80,7 +94,8 @@ const PACKAGES = [
       "@bitcodex/sdk-bittensor": `^${VERSION}`,
     },
     peer: { react: ">=18" },
-    description: "BitcodeX React provider and hooks (useBitcodeX, useBitcodeXBittensor).",
+    description:
+      "BitcodeX React provider and hooks (useBitcodeX, useBitcodeXBittensor).",
   },
   {
     name: "@bitcodex/server",
@@ -115,7 +130,9 @@ function isExternal(pkg) {
     if (sibling && sibling !== pkg.name) {
       return true;
     }
-    const base = id.startsWith("@") ? id.split("/").slice(0, 2).join("/") : id.split("/")[0];
+    const base = id.startsWith("@")
+      ? id.split("/").slice(0, 2).join("/")
+      : id.split("/")[0];
     return keep.has(base) || base === "react" || id.startsWith("react/");
   };
 }
@@ -148,10 +165,19 @@ function dropChains() {
 async function bundleJs(pkg, pkgOut) {
   const bundle = await rollup({
     input: Object.fromEntries(
-      Object.entries(pkg.entries).map(([k, v]) => [k, path.join(ROOT, pkg.dir, v)]),
+      Object.entries(pkg.entries).map(([k, v]) => [
+        k,
+        path.join(ROOT, pkg.dir, v),
+      ]),
     ),
     external: isExternal(pkg),
-    plugins: [dropChains(), nodeResolve({ preferBuiltins: true, exportConditions: ["import", "default"] })],
+    plugins: [
+      dropChains(),
+      nodeResolve({
+        preferBuiltins: true,
+        exportConditions: ["import", "default"],
+      }),
+    ],
     onwarn(w, warn) {
       if (w.code === "CIRCULAR_DEPENDENCY" || w.code === "THIS_IS_UNDEFINED") {
         return;
@@ -173,7 +199,10 @@ async function bundleJs(pkg, pkgOut) {
 async function bundleTypes(pkg, pkgOut) {
   const bundle = await rollup({
     input: Object.fromEntries(
-      Object.entries(pkg.types).map(([k, v]) => [k, path.join(ROOT, pkg.dir, v)]),
+      Object.entries(pkg.types).map(([k, v]) => [
+        k,
+        path.join(ROOT, pkg.dir, v),
+      ]),
     ),
     // Types: inline only @bitcodex/* workspace declarations; every npm package stays
     // an import (resolved from the consumer's node_modules).
@@ -182,7 +211,11 @@ async function bundleTypes(pkg, pkgOut) {
       !path.isAbsolute(id) &&
       !id.startsWith("\0") &&
       (!id.startsWith("@bitcodex/") || isExternal(pkg)(id)),
-    plugins: [dropChainsTypes(), workspaceTypes(), dts({ respectExternal: true })],
+    plugins: [
+      dropChainsTypes(),
+      workspaceTypes(),
+      dts({ respectExternal: true }),
+    ],
   });
   await bundle.write({
     dir: path.join(pkgOut, "dist"),
@@ -226,7 +259,8 @@ function dropChainsTypes() {
     name: "bitcodex-drop-chains-types",
     resolveId(source) {
       const base = source.split("/").slice(0, 2).join("/");
-      return DROPPED.includes(base) || DROPPED.some((d) => source.startsWith(`${d}/`))
+      return DROPPED.includes(base) ||
+        DROPPED.some((d) => source.startsWith(`${d}/`))
         ? `${ID}:${source}.d.ts`
         : null;
     },
@@ -243,7 +277,10 @@ function packageJson(pkg) {
   const exportsMap = {};
   for (const name of Object.keys(pkg.entries)) {
     const sub = name === "index" ? "." : `./${name}`;
-    exportsMap[sub] = { types: `./dist/${name}.d.ts`, import: `./dist/${name}.js` };
+    exportsMap[sub] = {
+      types: `./dist/${name}.d.ts`,
+      import: `./dist/${name}.js`,
+    };
   }
   return {
     name: pkg.name,
@@ -257,7 +294,15 @@ function packageJson(pkg) {
     exports: exportsMap,
     files: ["dist", "README.md", "NOTICE"],
     sideEffects: false,
-    keywords: ["bittensor", "subtensor", "wallet", "embedded-wallet", "mpc", "frost", "bitcodex"],
+    keywords: [
+      "bittensor",
+      "subtensor",
+      "wallet",
+      "embedded-wallet",
+      "mpc",
+      "frost",
+      "bitcodex",
+    ],
     repository: {
       type: "git",
       url: "git+https://github.com/SomeshTalligeriDEV/bitcodeX-infra.git",
@@ -266,9 +311,13 @@ function packageJson(pkg) {
     engines: pkg.node ? { node: pkg.node } : undefined,
     dependencies: Object.keys(pkg.deps).length ? pkg.deps : undefined,
     peerDependencies:
-      pkg.peer || pkg.optionalPeer ? { ...pkg.peer, ...pkg.optionalPeer } : undefined,
+      pkg.peer || pkg.optionalPeer
+        ? { ...pkg.peer, ...pkg.optionalPeer }
+        : undefined,
     peerDependenciesMeta: pkg.optionalPeer
-      ? Object.fromEntries(Object.keys(pkg.optionalPeer).map((k) => [k, { optional: true }]))
+      ? Object.fromEntries(
+          Object.keys(pkg.optionalPeer).map((k) => [k, { optional: true }]),
+        )
       : undefined,
     publishConfig: { access: "public" },
   };
@@ -301,13 +350,20 @@ for (const pkg of PACKAGES) {
   mkdirSync(pkgOut, { recursive: true });
   await bundleJs(pkg, pkgOut);
   await bundleTypes(pkg, pkgOut);
-  writeFileSync(path.join(pkgOut, "package.json"), `${JSON.stringify(packageJson(pkg), null, 2)}\n`);
+  writeFileSync(
+    path.join(pkgOut, "package.json"),
+    `${JSON.stringify(packageJson(pkg), null, 2)}\n`,
+  );
   writeFileSync(path.join(pkgOut, "README.md"), readme(pkg));
   cpSync(path.join(ROOT, "NOTICE"), path.join(pkgOut, "NOTICE"));
-  const out = execFileSync("npm", ["pack", "--pack-destination", path.join(OUT, "tarballs")], {
-    cwd: pkgOut,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const out = execFileSync(
+    "npm",
+    ["pack", "--pack-destination", path.join(OUT, "tarballs")],
+    {
+      cwd: pkgOut,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
   console.log(`packed ${pkg.name}: ${out.trim().split("\n").pop()}`);
 }

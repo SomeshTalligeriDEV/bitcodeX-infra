@@ -109,6 +109,10 @@ ensure_kv() {
 ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_SURI "//Alice"
 ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_RPC_URL "ws://127.0.0.1:9944"
 ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_AMOUNT_TAO "1000"
+# Access-token signing key (X10): Ed25519 PKCS8, base64. Generated once, never printed.
+if [[ -f "$CFG/bitcodex_api_server.env" ]] && ! grep -q "^BITCODEX_ACCESS_TOKEN_KEY=" "$CFG/bitcodex_api_server.env"; then
+  printf 'BITCODEX_ACCESS_TOKEN_KEY=%s\n' "$(openssl genpkey -algorithm ed25519 2>/dev/null | base64 | tr -d '\n')" >> "$CFG/bitcodex_api_server.env"
+fi
 ensure_kv "$CFG/demo_web.env" NEXT_PUBLIC_BITCODEX_API_ENDPOINT "http://localhost:4200"
 ensure_kv "$CFG/demo_web.env" DEMO_AGENT_SURI "//BitcodeXDemoAgent"
 ensure_kv "$CFG/demo_web.env" DEMO_AGENT_RPC_URL "ws://127.0.0.1:9944"
