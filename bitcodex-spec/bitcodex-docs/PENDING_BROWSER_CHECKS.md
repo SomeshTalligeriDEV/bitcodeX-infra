@@ -74,3 +74,11 @@ Record each result here with the tx hash, then tick it.
 - [ ] Demo and dashboard badges say "Testnet"; no "Get test TAO" button; the testnet funding note is shown.
 - [ ] Sign in: same coldkey address as on localnet (the key does not depend on the network).
 - [ ] With testnet TAO sent to the address: Send 0.1 TAO, popup shows Network "Testnet", tx included on testnet.
+
+## X04 · Wallet login and linked accounts (needs a browser with Talisman, SubWallet or the Polkadot.js extension)
+- [ ] `listExtensionAccounts()` lists the extension's accounts (not BitcodeX).
+- [ ] `loginWithWallet(account)`: the extension shows the Sign-In with Bittensor text; approve → access token; `@bitcodex/server` verifies it.
+- [ ] Signed in with Google: `linkWallet(account)` → the dashboard / `getUser` shows the wallet under linked accounts.
+
+## X10 · Access tokens (demo, signed in)
+- [ ] `bitcodexWallet.getAccessToken()` returns a token; `verifyAccessToken(token, { appId, apiUrl })` on a Node script returns the same user id and address.
