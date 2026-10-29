@@ -73,6 +73,13 @@ import type {
   StakeResult,
   UnstakeArgs,
 } from "./types";
+import {
+  type ExtensionAccount,
+  linkExtensionWallet,
+  listExtensionAccounts,
+  loginWithWallet,
+  type WalletLoginResult,
+} from "./wallet_login";
 
 export class BitcodeXBittensorWallet {
   readonly bitcodexWallet: BitcodeXWalletInterface;
@@ -463,6 +470,25 @@ export class BitcodeXBittensorWallet {
       throw new Error(tx.err);
     }
     return this.signAndSend(tx.data);
+  }
+
+  /** Substrate extension accounts in this browser (not BitcodeX itself). */
+  listExtensionAccounts(
+    appName = window.location.host,
+  ): Promise<ExtensionAccount[]> {
+    return listExtensionAccounts(appName);
+  }
+
+  /** Login with an extension wallet (Sign-In with Bittensor + server nonce). */
+  loginWithWallet(account: ExtensionAccount): Promise<WalletLoginResult> {
+    return loginWithWallet(this.bitcodexWallet, account);
+  }
+
+  /** Link an extension wallet to the signed-in BitcodeX user. */
+  linkWallet(
+    account: ExtensionAccount,
+  ): Promise<{ address: string; status: string }> {
+    return linkExtensionWallet(this.bitcodexWallet, account);
   }
 
   /** Transactions sent from this browser through BitcodeX, newest first. */

@@ -44,6 +44,22 @@ export interface BitcodeXAppConfig {
   origin_allowed: boolean;
 }
 
+/** Wallet login (X04) calls, forwarded by the iframe to the API with the app key. */
+export type BitcodeXWalletMsgWalletLogin = {
+  target: "bitcodex_attached";
+  msg_type: "wallet_login";
+  payload: {
+    action: "nonce" | "verify" | "link";
+    body: Record<string, unknown>;
+  };
+};
+
+export type BitcodeXWalletMsgWalletLoginAck = {
+  target: "bitcodex_sdk";
+  msg_type: "wallet_login_ack";
+  payload: Result<Record<string, unknown>, string>;
+};
+
 export type BitcodeXWalletMsgGetAccessToken = {
   target: "bitcodex_attached";
   msg_type: "get_access_token";
@@ -307,6 +323,8 @@ export type BitcodeXWalletMsg =
   | BitcodeXWalletMsgGetPublicKey
   | BitcodeXWalletMsgGetPublicKeyAck
   | BitcodeXWalletMsgGetPublicKeyEd25519
+  | BitcodeXWalletMsgWalletLogin
+  | BitcodeXWalletMsgWalletLoginAck
   | BitcodeXWalletMsgGetAccessToken
   | BitcodeXWalletMsgGetAccessTokenAck
   | BitcodeXWalletMsgGetAppConfig

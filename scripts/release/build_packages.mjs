@@ -74,7 +74,8 @@ const PACKAGES = [
     deps: {
       "@bitcodex/sdk-core": `^${VERSION}`,
       "@polkadot/api": POLKADOT["@polkadot/api"],
-      "@polkadot/extension-inject": POLKADOT["@polkadot/extension-inject"],
+      "@polkadot/extension-dapp": "0.64.1",
+"@polkadot/extension-inject": POLKADOT["@polkadot/extension-inject"],
       "@polkadot/types": POLKADOT["@polkadot/types"],
       "@polkadot/util": POLKADOT["@polkadot/util"],
       "@polkadot/util-crypto": POLKADOT["@polkadot/util-crypto"],

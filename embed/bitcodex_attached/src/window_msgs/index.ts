@@ -24,6 +24,7 @@ import { handleSetOAuthNonce } from "./set_oauth_nonce";
 import { handleSignOut } from "./sign_out";
 import { BITCODEX_SDK_TARGET } from "./target";
 import type { MsgEventContext } from "./types";
+import { handleWalletLogin } from "./wallet_login";
 import { setColorScheme } from "@bitcodex-attached/components/attached_initialized/color_scheme";
 import { MOBILE_NATIVE_ORIGIN } from "@bitcodex-attached/requests/endpoints";
 import { useAppState } from "@bitcodex-attached/store/app";
@@ -190,6 +191,11 @@ export function makeMsgHandler() {
 
       case "get_public_key": {
         await handleGetPublicKey(ctx);
+        break;
+      }
+
+      case "wallet_login": {
+        await handleWalletLogin(ctx, message);
         break;
       }
 

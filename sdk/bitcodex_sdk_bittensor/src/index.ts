@@ -70,3 +70,10 @@ export type {
   StakeResult,
   UnstakeArgs,
 } from "./types";
+export {
+  type ExtensionAccount,
+  linkExtensionWallet,
+  listExtensionAccounts,
+  loginWithWallet,
+  type WalletLoginResult,
+} from "./wallet_login";

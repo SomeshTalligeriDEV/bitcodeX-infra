@@ -1,7 +1,10 @@
 export interface BitcodeXUser {
   id: string;
   created_at: string;
-  linked_accounts: { type: string; email: string }[];
+  linked_accounts: (
+    | { type: string; email: string }
+    | { type: "wallet"; address: string; linked_at?: string }
+  )[];
   wallets: { chain: "bittensor"; address: string | null }[];
 }
 
