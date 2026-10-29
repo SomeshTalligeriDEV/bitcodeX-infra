@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
 import {
   type BitcodeXBittensorWallet,
@@ -15,6 +14,7 @@ import type { ApiPromise } from "@polkadot/api";
 import { type FC, useCallback, useEffect, useState } from "react";
 
 import styles from "./bittensor_widget.module.scss";
+import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 
 interface Props {
   api: ApiPromise;

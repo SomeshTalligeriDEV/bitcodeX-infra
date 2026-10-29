@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import {
@@ -14,6 +13,7 @@ import { type FC, useEffect, useMemo, useState } from "react";
 
 import styles from "./demo.module.scss";
 import { CHAIN_ID, NETWORK_NAME } from "@bitcodex-demo-web/bittensor_network";
+import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 import { ThemeButton } from "@bitcodex-demo-web/components/theme/theme_button";
 import { BittensorWidget } from "@bitcodex-demo-web/components/widgets/bittensor_widget/bittensor_widget";
 
@@ -33,7 +33,8 @@ const METHODS: { id: Method; label: string; hint: string }[] = [
     hint: "Talisman, SubWallet or Polkadot.js via Sign-In with Bittensor",
   },
 ];
-const ACCENTS = ["#ED6B25", "#7F56D9", "#2E90FA", "#12B76A", "#101828"];
+// "mono" = black-and-white (the BitcodeX default); the rest preview an app's brand colour.
+const ACCENTS = ["mono", "#7F56D9", "#2E90FA", "#12B76A", "#ED6B25"];
 
 interface Custom {
   methods: Method[];
@@ -145,7 +146,7 @@ const SignedOut: FC<{
       }
       await openSignInModal({
         loginMethods: social,
-        accentColor: custom.accent,
+        accentColor: custom.accent === "mono" ? null : custom.accent,
         logoUrl: custom.logoUrl.trim() || null,
         theme: custom.theme,
       });
@@ -189,7 +190,9 @@ const SignedOut: FC<{
       `// (developer dashboard → Apps). This page previews them:`,
       `openSignInModal({`,
       `  loginMethods: ${JSON.stringify(social)},`,
-      `  accentColor: "${custom.accent}",`,
+      custom.accent === "mono"
+        ? "  // accent: black and white (default)"
+        : `  accentColor: "${custom.accent}",`,
       `  theme: "${custom.theme}",${custom.logoUrl.trim() ? `\n  logoUrl: "${custom.logoUrl.trim()}",` : ""}`,
       `});`,
     ];
@@ -239,7 +242,12 @@ const SignedOut: FC<{
                 aria-label={c}
                 className={styles.swatch}
                 data-active={custom.accent === c}
-                style={{ background: c }}
+                style={{
+                  background:
+                    c === "mono"
+                      ? "linear-gradient(135deg, #000 50%, #fff 50%)"
+                      : c,
+                }}
                 onClick={() => setCustom({ ...custom, accent: c })}
               />
             ))}

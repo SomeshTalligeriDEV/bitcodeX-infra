@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
@@ -25,6 +24,7 @@ import {
   NETWORK_NAME,
   TESTNET_FUNDING_NOTE,
 } from "@bitcodex-demo-web/bittensor_network";
+import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 
 const TAO = BigInt(1_000_000_000);
 const API_ENDPOINT = process.env.NEXT_PUBLIC_BITCODEX_API_ENDPOINT;
