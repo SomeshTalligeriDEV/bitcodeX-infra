@@ -5,6 +5,8 @@ import {
 } from "@bitcodex/bitcodex-sdk-core";
 import {
   type Balances,
+  caip2ChainId,
+  createSiwbMessage,
   DEFAULT_SLIPPAGE_BPS,
   describeCall,
   type EventRecordLike,
@@ -15,6 +17,7 @@ import {
   parseUnits,
   quoteStake,
   quoteUnstake,
+  type SiwbFields,
   type StakePosition,
   type SubnetSummary,
   type SwapQuote,
@@ -51,6 +54,8 @@ import type {
   BittensorWalletEvent,
   BittensorWalletEventHandler,
   SendResult,
+  SignInWithBittensorArgs,
+  SignInWithBittensorResult,
   StakeArgs,
   StakeResult,
   UnstakeArgs,
@@ -347,6 +352,39 @@ export class BitcodeXBittensorWallet {
     } catch (err) {
       console.warn("[bittensor sdk] failed to record history:", err);
     }
+  }
+
+  /**
+   * Sign-In with Bittensor (CAIP-122 profile, see `@bitcodex/bittensor-chain` siwb.ts).
+   * The app's server issues `nonce` and checks the result with `verifySiwb`.
+   */
+  async signInWithBittensor(
+    args: SignInWithBittensorArgs,
+  ): Promise<SignInWithBittensorResult> {
+    const address = await this.connect();
+    const api = await this.api();
+    const issued = new Date();
+    const fields: SiwbFields = {
+      domain: args.domain ?? window.location.host,
+      address,
+      statement: args.statement,
+      uri: args.uri ?? window.location.origin,
+      version: "1",
+      chainId: caip2ChainId(api.genesisHash.toHex()),
+      nonce: args.nonce,
+      issuedAt: issued.toISOString(),
+      expirationTime: new Date(
+        issued.getTime() + (args.expirationMinutes ?? 10) * 60_000,
+      ).toISOString(),
+      requestId: args.requestId,
+      resources: args.resources,
+    };
+    const message = createSiwbMessage(fields);
+    if (!message.success) {
+      throw new Error(message.err);
+    }
+    const signature = await this.signMessage(message.data);
+    return { message: message.data, signature, address, fields };
   }
 
   /** Sign a message (wrapped in <Bytes> by the iframe); returns the 64-byte signature hex. */

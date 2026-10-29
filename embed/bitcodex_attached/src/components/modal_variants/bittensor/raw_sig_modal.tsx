@@ -2,6 +2,7 @@ import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { XCloseIcon } from "@bitcodex/bitcodex-common-ui/icons/x_close";
 import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
 import type { MakeBittensorRawSignData } from "@bitcodex/bitcodex-sdk-core";
+import { caip2ChainId, parseSiwbMessage } from "@bitcodex/bittensor-chain";
 import { hexToU8a, isHex, u8aToHex, u8aWrapBytes } from "@polkadot/util";
 import { type FC, useMemo } from "react";
 
@@ -53,12 +54,42 @@ export const RawSigModal: FC<RawSigModalProps> = ({
     return { bytes, text };
   }, [payload.data.message]);
 
+  // Sign-In with Bittensor: show the fields, and refuse a message that names another
+  // site (phishing) or another chain than the one this wallet is connected to.
+  const siwb = useMemo(
+    () => (message?.text ? parseSiwbMessage(message.text) : null),
+    [message],
+  );
+  const api = sig.apiState.status === "ready" ? sig.apiState.api : null;
+  const siwbProblem = (() => {
+    if (!siwb) {
+      return null;
+    }
+    let requesterHost: string | null = null;
+    try {
+      requesterHost = new URL(payload.origin).host;
+    } catch {
+      requesterHost = null;
+    }
+    if (siwb.domain !== requesterHost) {
+      return `This sign-in is for ${siwb.domain}, but ${payload.origin} is asking. Do not sign.`;
+    }
+    if (siwb.address !== sig.walletAddress) {
+      return "This sign-in is for a different account than your BitcodeX wallet.";
+    }
+    if (api && siwb.chainId !== caip2ChainId(api.genesisHash.toHex())) {
+      return "This sign-in is for a different network than the one BitcodeX is connected to.";
+    }
+    return null;
+  })();
+
   const refusal = !message
     ? "The message is not valid hex."
     : !sig.signerMatches
       ? "This request is for a different account than your BitcodeX wallet."
-      : null;
-  const isApproveEnabled = sig.hasKeys && !refusal && !sig.isLoading;
+      : siwbProblem;
+  const isApproveEnabled =
+    sig.hasKeys && !refusal && !sig.isLoading && (!siwb || !!api);
 
   async function onApprove() {
     if (getIsAborted() || !message) {
@@ -106,6 +137,28 @@ export const RawSigModal: FC<RawSigModalProps> = ({
           </SigSection>
 
           {refusal && <DangerBox>{refusal}</DangerBox>}
+
+          {siwb && (
+            <SigSection title="Sign in with Bittensor">
+              <SigRow label="Site" value={siwb.domain} />
+              {siwb.statement && (
+                <SigRow label="Statement" value={siwb.statement} />
+              )}
+              <SigRow label="URI" value={siwb.uri} />
+              <SigRow label="Chain" value={siwb.chainId} />
+              {siwb.nonce && <SigRow label="Nonce" value={siwb.nonce} />}
+              {siwb.issuedAt && (
+                <SigRow label="Issued at" value={siwb.issuedAt} />
+              )}
+              {siwb.expirationTime && (
+                <SigRow label="Expires" value={siwb.expirationTime} />
+              )}
+              <SigRow
+                label="Effect"
+                value="Proves you own this address. It cannot move funds."
+              />
+            </SigSection>
+          )}
 
           {message && (
             <SigSection

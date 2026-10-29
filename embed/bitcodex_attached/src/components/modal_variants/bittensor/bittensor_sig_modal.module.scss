@@ -60,3 +60,14 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.args {
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--bg-secondary, rgba(128, 128, 128, 0.1));
+}

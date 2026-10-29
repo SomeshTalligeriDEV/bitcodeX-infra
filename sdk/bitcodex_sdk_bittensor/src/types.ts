@@ -1,5 +1,9 @@
 import type { BitcodeXWalletInitArgs } from "@bitcodex/bitcodex-sdk-core";
-import type { BittensorChainId, SwapQuote } from "@bitcodex/bittensor-chain";
+import type {
+  BittensorChainId,
+  SiwbFields,
+  SwapQuote,
+} from "@bitcodex/bittensor-chain";
 
 import type { HistoryEntry, HistoryStore } from "./history";
 
@@ -64,4 +68,26 @@ export interface UnstakeArgs {
 
 export interface StakeResult extends SendResult {
   quote: SwapQuote;
+}
+
+export interface SignInWithBittensorArgs {
+  /** Server-issued, at least 8 alphanumeric characters (replay protection). */
+  nonce: string;
+  statement?: string;
+  /** Defaults to window.location.host. Must equal the requesting site's host. */
+  domain?: string;
+  /** Defaults to window.location.origin. */
+  uri?: string;
+  /** Defaults to 10. */
+  expirationMinutes?: number;
+  requestId?: string;
+  resources?: string[];
+}
+
+export interface SignInWithBittensorResult {
+  message: string;
+  /** 64-byte ed25519 signature over <Bytes>message</Bytes>, hex. */
+  signature: string;
+  address: string;
+  fields: SiwbFields;
 }

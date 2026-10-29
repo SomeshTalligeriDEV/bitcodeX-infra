@@ -3,7 +3,12 @@
 import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
-import { getApi, INJECTED_NAME, injectWeb3 } from "@bitcodex/sdk-bittensor";
+import {
+  getApi,
+  INJECTED_NAME,
+  injectWeb3,
+  verifySiwb,
+} from "@bitcodex/sdk-bittensor";
 import type { ApiPromise } from "@polkadot/api";
 import { signatureVerify } from "@polkadot/util-crypto";
 import { QRCodeSVG } from "qrcode.react";
@@ -161,6 +166,30 @@ export const BittensorWidget: FC = () => {
       return `verified=${verified.isValid} crypto=${verified.crypto} sig=${signature.slice(0, 18)}…`;
     });
 
+  const signInWithBittensor = () =>
+    run("Sign in with Bittensor", async () => {
+      if (!api || !bittensorWallet) {
+        throw new Error("not ready");
+      }
+      // A real app gets the nonce from its server and runs verifySiwb there.
+      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      const res = await bittensorWallet.signInWithBittensor({
+        nonce,
+        statement: "Sign in to the BitcodeX demo.",
+      });
+      const check = verifySiwb(res.message, res.signature, {
+        domain: window.location.host,
+        nonce,
+        genesisHash: api.genesisHash.toHex(),
+      });
+      if (!check.success) {
+        throw new Error(`verifySiwb failed: ${check.err}`);
+      }
+      return `verified=true crypto=${check.data.crypto} chain=${res.fields.chainId} nonce=${nonce}`;
+    });
+
   const web3EnableTest = () =>
     run("web3Enable", async () => {
       if (!api || !bittensorWallet) {
@@ -308,6 +337,15 @@ export const BittensorWidget: FC = () => {
             onClick={signMessage}
           >
             Sign message
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!api || !!busy}
+            isLoading={busy === "Sign in with Bittensor"}
+            onClick={signInWithBittensor}
+          >
+            Sign in with Bittensor
           </Button>
           <Button
             variant="secondary"
