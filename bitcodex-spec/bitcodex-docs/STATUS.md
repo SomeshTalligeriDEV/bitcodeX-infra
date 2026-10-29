@@ -22,6 +22,8 @@ Every Real item below still needs one browser run with a real Google login (`PEN
 | Testnet | Not built | endpoint/genesis not verified |
 | Email, passkey, wallet login (X04) | Not built | |
 | Server SDK (X10), MFA (X12), EVM address (X13) | Not built | |
-| npm packages, self-host compose, Playwright quickstart, demo instance | Not built | |
+| npm packages `@bitcodex/sdk-core`, `sdk-bittensor`, `sdk-react`, `server` 0.1.0 | Real, packed, not published | `node scripts/release/build_packages.mjs` → `release/tarballs/`. Installed into a brand-new folder: imports work in Node, `@bitcodex/server` read live chain data, a sample React app typechecks. Licence is `UNLICENSED` until the owner picks one (no LICENSE file in the repo). With `skipLibCheck: false`, core types need optional peers viem / @keplr-wallet/types / @cosmjs/amino. |
+| `@bitcodex/server`: token verification (JWKS), getUser, getWallets | Not built | X10 |
+| Self-host compose, Playwright quickstart, demo instance | Not built | |
 | Tensor Studio integration (X16) | Deferred | Studio not built |
 | Mainnet | Disabled by design | needs DKG + audit |

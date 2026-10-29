@@ -450,3 +450,4 @@ pkg/
 *.node
 crypto/*/*_addon/addon/index.js
 crypto/*/*_addon/addon/index.d.ts
+release/
