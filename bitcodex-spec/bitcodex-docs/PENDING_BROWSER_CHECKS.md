@@ -86,3 +86,9 @@ Record each result here with the tx hash, then tick it.
 ## X13 · Subtensor EVM (dashboard, Preview)
 - [ ] The section shows an EVM address (0x…, checksum) and its Subtensor mirror (5…).
 - [ ] "Send TAO to my EVM address" 1 TAO → the balance shown under the mirror rises by 1 TAO.
+
+## X12 · Two-step approval (dashboard → Two-step approval, Preview)
+- [ ] Set up: scan the QR with an authenticator app, confirm with its code → "On".
+- [ ] Set limit 10 TAO. In the demo, send 5 TAO → no code asked; send 15 TAO → the popup asks for the code; a wrong code shows an error and nothing is signed; the right code signs.
+- [ ] A `utility.batchAll` with two 6 TAO transfers (12 TAO) asks for the code.
+- [ ] From the demo (not the dashboard), an `mfa` message is refused ("only in the BitcodeX dashboard").
