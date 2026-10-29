@@ -3,7 +3,11 @@ import { XCloseIcon } from "@bitcodex/bitcodex-common-ui/icons/x_close";
 import { Spacing } from "@bitcodex/bitcodex-common-ui/spacing";
 import type { MakeBittensorExtrinsicSignData } from "@bitcodex/bitcodex-sdk-core";
 import {
+  describePermission,
+  getProxies,
+  getProxyFilter,
   payloadBytes,
+  proxyDeposit,
   quoteRegistration,
   wrapEd25519,
 } from "@bitcodex/bittensor-chain";
@@ -17,7 +21,12 @@ import {
   SigRow,
   SigSection,
 } from "./bittensor_sig_parts";
-import { decodeSignerPayload, formatTao, registrationNetuids } from "./decode";
+import {
+  decodeSignerPayload,
+  formatTao,
+  permissionGrants,
+  registrationNetuids,
+} from "./decode";
 import { useBittensorSignature } from "./use_bittensor_signature";
 import { CommonModal } from "@bitcodex-attached/components/modal_variants/common/common_modal";
 import { DemoView } from "@bitcodex-attached/components/modal_variants/common/make_signature/demo_view";
@@ -112,6 +121,45 @@ export const ExtrinsicSigModal: FC<ExtrinsicSigModalProps> = ({
     };
   }, [api, decoded]);
 
+  // Permission grants: what the delegate will be able to do, from the chain's own
+  // proxy filter, and the deposit reserved from this wallet.
+  const [grants, setGrants] = useState<
+    { proxyType: string; can: string[]; broad: boolean; deposit: string }[]
+  >([]);
+  useEffect(() => {
+    if (!api || !decoded?.success || !sig.walletAddress) {
+      return;
+    }
+    const wanted = permissionGrants(decoded.data.plain);
+    if (wanted.length === 0) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const existing = (await getProxies(api, sig.walletAddress as string))
+        .delegations.length;
+      const out = [];
+      for (const [i, g] of wanted.entries()) {
+        const filter = await getProxyFilter(api, g.proxyType);
+        const text = filter
+          ? describePermission(filter)
+          : { can: ["unknown permission type"], broad: true };
+        out.push({
+          proxyType: g.proxyType,
+          can: text.can,
+          broad: text.broad,
+          deposit: formatTao(proxyDeposit(api, existing + i)),
+        });
+      }
+      if (!cancelled) {
+        setGrants(out);
+      }
+    })().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [api, decoded, sig.walletAddress]);
+
   const refusal =
     sig.apiState.status === "refused"
       ? sig.apiState.reason
@@ -186,6 +234,33 @@ export const ExtrinsicSigModal: FC<ExtrinsicSigModalProps> = ({
               <CallView card={decoded.data.card} />
             </SigSection>
           )}
+
+          {grants.map((g) => (
+            <SigSection key={g.proxyType} title={`Permission: ${g.proxyType}`}>
+              {g.broad && (
+                <DangerBox>
+                  This is a broad permission. Only approve it for a key you
+                  fully trust.
+                </DangerBox>
+              )}
+              <SigRow
+                label="The app will be able to"
+                value={g.can.join("; ")}
+              />
+              <SigRow
+                label="It will not be able to"
+                value="do anything outside this list (the chain refuses it)"
+              />
+              <SigRow
+                label="Deposit (returned when revoked)"
+                value={g.deposit}
+              />
+              <SigRow
+                label="Revoke"
+                value="any time from your BitcodeX dashboard"
+              />
+            </SigSection>
+          ))}
 
           {Object.keys(regCosts).length > 0 && (
             <SigSection title="Registration cost">

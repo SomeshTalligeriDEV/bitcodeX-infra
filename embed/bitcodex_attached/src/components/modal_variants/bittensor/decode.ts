@@ -81,3 +81,19 @@ export function registrationNetuids(call: PlainCall): number[] {
       : [];
   return [...own, ...call.inner.flatMap(registrationNetuids)];
 }
+
+/** Every `proxy.addProxy` in the call tree: who gets which permission. */
+export function permissionGrants(
+  call: PlainCall,
+): { delegate: unknown; proxyType: string }[] {
+  const own =
+    call.section === "proxy" && call.method === "addProxy"
+      ? [
+          {
+            delegate: call.args.delegate,
+            proxyType: String(call.args.proxyType),
+          },
+        ]
+      : [];
+  return [...own, ...call.inner.flatMap(permissionGrants)];
+}
