@@ -8,14 +8,14 @@ Be honest about time: this is a big codebase. The hackathon target is **Phases 0
 | **1 · Rebrand + run** (day 1) | X01 | all services run locally with BitcodeX branding; BitcodeX's Solana demo still signs |
 | **2 · Bittensor wallet core** (day 1–2) | X02, X03, X14 | Google login creates a Bittensor address; faucet funds it; send TAO from the demo app with a decoded confirm modal |
 | **3 · Login + actions** (day 2–3) | X04 (email, Google, external wallet; passkey stretch), X05 (send, stake, sign message, history), X08 (hotkey register) | every demo step in 08-demo.md works from the UI |
-| **4 · Demo + integration** (day 3) | X15 demo app, X16 Bitcode Studio login, X07 export | 3-minute demo rehearsed; backup video recorded |
+| **4 · Demo + integration** (day 3) | X15 demo app, X16 Tensor Studio login (**deferred**: Tensor Studio, formerly Bitcode Studio, is not built yet), X07 export | 3-minute demo rehearsed; backup video recorded |
 | **5 · Platform** (after, or early finisher) | X09 proxies, X06 user dashboard, X11 dev dashboard, X10 server SDK | an AI agent stakes for a user through a Staking proxy |
 | **6 · Extras** | X12 MFA, X13 EVM address, Stage B rename | |
 
 ## Who does what (two builders)
 
 - **Builder 1 (M3):** Phase 0 probes, X02, X03, X05, X15.
-- **Builder 2 (M2):** X01 rebrand, OAuth apps + X04, X14 faucet, X08 hotkeys, then X16.
+- **Builder 2 (M2):** X01 rebrand, OAuth apps + X04, X14 faucet, X08 hotkeys. X16 deferred (Tensor Studio not built yet).
 - Sync at noon and evening: merge, run the demo path on a fresh localnet.
 
 ## Fallback if probe 3b fails

@@ -1,5 +1,7 @@
 # X16 · Bitcode Studio integration
 
+**Status: DEFERRED (2026-10-29).** Bitcode Studio is being renamed **Tensor Studio** and is not built yet; its spec kit (`F03-wallet-core.md`, the `Signer` interface) is not available. Resume when Tensor Studio exists.
+
 **Tier:** BUILD · **Phase:** 4 · **Owner:** Builder 2
 
 ## Goal

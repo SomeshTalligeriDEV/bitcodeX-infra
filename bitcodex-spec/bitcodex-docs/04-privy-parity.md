@@ -85,5 +85,5 @@ Tiers: **BUILD** (works live), **PREVIEW** (real screen, one simulated action, l
 | Stake to a validator on a subnet, see alpha | BUILD | X05 |
 | "Sign in with Bittensor" message standard for apps | BUILD | X05 |
 | Coldkey swap and hotkey swap screens | PREVIEW | X07 |
-| Bitcode Studio login and launch-signing | BUILD | X16 |
+| Tensor Studio (formerly Bitcode Studio) login and launch-signing | DEFERRED (Studio not built) | X16 |
 | Connect from btcli via extension bridge | ROADMAP | |
