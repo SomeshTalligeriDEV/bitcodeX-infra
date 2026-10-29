@@ -3,6 +3,7 @@
 import { BitcodeXProvider as BitcodeXSDKProvider } from "@bitcodex/bitcodex-sdk-react";
 import type { FC, PropsWithChildren } from "react";
 
+import { CHAIN_ID } from "@bitcodex-demo-web/bittensor_network";
 import { useThemeSync } from "@bitcodex-demo-web/hooks/use_theme_sync";
 
 const bitcodexConfig = {
@@ -11,7 +12,7 @@ const bitcodexConfig = {
   eth: true as const,
   cosmos: true as const,
   svm: { chainId: "solana:devnet" },
-  bittensor: { chainId: "bittensor:localnet" as const },
+  bittensor: { chainId: CHAIN_ID },
 };
 
 const InnerProvider: FC<PropsWithChildren> = ({ children }) => {

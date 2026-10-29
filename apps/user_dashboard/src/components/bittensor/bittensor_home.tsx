@@ -29,6 +29,11 @@ import {
 } from "react";
 
 import styles from "./bittensor_home.module.scss";
+import {
+  IS_LOCALNET,
+  NETWORK_NAME,
+  TESTNET_FUNDING_NOTE,
+} from "@bitcodex-user-dashboard/bittensor_network";
 import { BITCODEX_API_ENDPOINT } from "@bitcodex-user-dashboard/fetch";
 import { useSignOut } from "@bitcodex-user-dashboard/hooks/use_sign_out";
 import { useTaoPrice } from "@bitcodex-user-dashboard/hooks/use_tao_price";
@@ -191,14 +196,14 @@ export const BittensorHome: FC = () => {
       )}
       {error && <div className={styles.error}>Chain read failed: {error}</div>}
 
-      <Section title="Balance" badge="Localnet">
+      <Section title="Balance" badge={NETWORK_NAME}>
         <div className={styles.big}>
           {total === null ? "…" : formatTaoAmount(total)}
         </div>
         <div className={styles.muted}>
           {usd(total) ?? "USD unavailable (price API unreachable)"}
           {price &&
-            ` at $${price.usd} per TAO${price.stale ? " (last known price)" : ""}. Reference only: localnet TAO is test money.`}
+            ` at $${price.usd} per TAO${price.stale ? " (last known price)" : ""}. Reference only: ${NETWORK_NAME.toLowerCase()} TAO is test money.`}
         </div>
         {state && (
           <div className={styles.grid3}>
@@ -235,7 +240,7 @@ export const BittensorHome: FC = () => {
           >
             {showQr ? "Hide QR" : "QR"}
           </Button>
-          {BITCODEX_API_ENDPOINT && (
+          {BITCODEX_API_ENDPOINT && IS_LOCALNET && (
             <Button
               variant="secondary"
               size="sm"
@@ -263,6 +268,9 @@ export const BittensorHome: FC = () => {
             </Button>
           )}
         </div>
+        {!IS_LOCALNET && (
+          <div className={styles.muted}>{TESTNET_FUNDING_NOTE}</div>
+        )}
         {showQr && (
           <div className={styles.qr}>
             <QRCodeSVG value={address} size={160} />

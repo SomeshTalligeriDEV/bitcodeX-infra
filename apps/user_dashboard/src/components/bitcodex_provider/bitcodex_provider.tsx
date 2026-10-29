@@ -6,6 +6,7 @@ import {
 } from "@bitcodex/bitcodex-sdk-react";
 import { type FC, type PropsWithChildren, useEffect } from "react";
 
+import { CHAIN_ID } from "@bitcodex-user-dashboard/bittensor_network";
 import {
   BITCODEX_SDK_API_KEY,
   BITCODEX_SDK_ENDPOINT,
@@ -26,7 +27,7 @@ const bitcodexConfig = {
   svm: { chainId: SOLANA_MAINNET_CHAIN_ID },
   // Bittensor is the only chain shown; the others stay initialised (login and
   // connected-apps code depends on them) but have no UI.
-  bittensor: { chainId: "bittensor:localnet" as const },
+  bittensor: { chainId: CHAIN_ID },
 };
 
 const InnerProvider: FC<PropsWithChildren> = ({ children }) => {

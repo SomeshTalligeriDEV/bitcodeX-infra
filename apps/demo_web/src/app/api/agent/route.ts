@@ -41,7 +41,16 @@ const dayKey = (user: string) =>
 const fail = (status: number, msg: string) =>
   NextResponse.json({ success: false, msg }, { status });
 
+const LOCALNET_ONLY =
+  "the demo agent runs on localnet only (its key is a public dev key)";
+const onLocalnet = () =>
+  (process.env.NEXT_PUBLIC_BITTENSOR_CHAIN_ID || "bittensor:localnet") ===
+  "bittensor:localnet";
+
 export async function GET() {
+  if (!onLocalnet()) {
+    return fail(404, LOCALNET_ONLY);
+  }
   const pair = await agent();
   if (!pair) {
     return fail(404, "demo agent is off (set DEMO_AGENT_SURI)");
@@ -53,6 +62,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!onLocalnet()) {
+    return fail(404, LOCALNET_ONLY);
+  }
   const pair = await agent();
   if (!pair) {
     return fail(404, "demo agent is off (set DEMO_AGENT_SURI)");

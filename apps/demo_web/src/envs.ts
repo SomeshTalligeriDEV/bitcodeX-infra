@@ -5,6 +5,10 @@ export const EXAMPLE_ENV_FILE = "demo_web.env.example";
 
 export const envSchema = z.object({
   SERVER_PORT: z.string(),
+  // bittensor:localnet (default) or bittensor:testnet; mainnet is refused.
+  NEXT_PUBLIC_BITTENSOR_CHAIN_ID: z
+    .enum(["bittensor:localnet", "bittensor:testnet"])
+    .optional(),
   NEXT_PUBLIC_BITCODEX_SDK_ENDPOINT: z.string(),
   NEXT_PUBLIC_BITCODEX_DOCS_ENDPOINT: z.string(),
   NEXT_PUBLIC_S3_BUCKET_URL: z.string(),

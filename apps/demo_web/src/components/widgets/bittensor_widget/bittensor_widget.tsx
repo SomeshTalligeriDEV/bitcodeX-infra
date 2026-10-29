@@ -18,6 +18,12 @@ import { BittensorAgentPanel } from "./bittensor_agent_panel";
 import { BittensorHotkeysPanel } from "./bittensor_hotkeys_panel";
 import { BittensorStakePanel } from "./bittensor_stake_panel";
 import styles from "./bittensor_widget.module.scss";
+import {
+  CHAIN_ID,
+  IS_LOCALNET,
+  NETWORK_NAME,
+  TESTNET_FUNDING_NOTE,
+} from "@bitcodex-demo-web/bittensor_network";
 import { Widget } from "@bitcodex-demo-web/components/widgets/widget_components";
 
 const TAO = BigInt(1_000_000_000);
@@ -66,7 +72,7 @@ export const BittensorWidget: FC = () => {
   };
 
   useEffect(() => {
-    getApi("bittensor:localnet").then((res) => {
+    getApi(CHAIN_ID).then((res) => {
       if (res.success) {
         setApi(res.data);
       } else {
@@ -76,8 +82,8 @@ export const BittensorWidget: FC = () => {
   }, []);
 
   useEffect(() => {
-    // Only shown when the API's faucet is running and its chain checks out as localnet.
-    if (!API_ENDPOINT) {
+    // Only shown on localnet, when the API's faucet is running and checks out as localnet.
+    if (!API_ENDPOINT || !IS_LOCALNET) {
       return;
     }
     faucetRequest<FaucetStatus>("/status")
@@ -246,7 +252,7 @@ export const BittensorWidget: FC = () => {
           <Typography size="md" weight="semibold" color="primary">
             Bittensor wallet
           </Typography>
-          <span className={styles.badge}>Localnet</span>
+          <span className={styles.badge}>{NETWORK_NAME}</span>
         </div>
 
         <div>
@@ -283,6 +289,11 @@ export const BittensorWidget: FC = () => {
             <Typography size="sm" color="secondary">
               Balance: {balance === null ? "…" : formatTao(balance)}
             </Typography>
+            {!IS_LOCALNET && (
+              <Typography size="xs" color="tertiary">
+                {TESTNET_FUNDING_NOTE}
+              </Typography>
+            )}
             {faucet && address && (
               <Button
                 variant="secondary"
