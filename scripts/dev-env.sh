@@ -110,6 +110,8 @@ ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_SURI "//Alice"
 ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_RPC_URL "ws://127.0.0.1:9944"
 ensure_kv "$CFG/bitcodex_api_server.env" BITCODEX_FAUCET_AMOUNT_TAO "1000"
 ensure_kv "$CFG/demo_web.env" NEXT_PUBLIC_BITCODEX_API_ENDPOINT "http://localhost:4200"
+ensure_kv "$CFG/demo_web.env" DEMO_AGENT_SURI "//BitcodeXDemoAgent"
+ensure_kv "$CFG/demo_web.env" DEMO_AGENT_RPC_URL "ws://127.0.0.1:9944"
 ensure_kv "$CFG/bitcodex_attached.env" VITE_BITTENSOR_ALLOWED_HOST_ORIGINS "http://localhost:3200,http://localhost:3210"
 
 [[ -z "$G" ]] && echo "note: GOOGLE_CLIENT_ID not set; re-run with it (and --force) once the OAuth client exists."

@@ -14,6 +14,7 @@ import { signatureVerify } from "@polkadot/util-crypto";
 import { QRCodeSVG } from "qrcode.react";
 import { type FC, useEffect, useRef, useState } from "react";
 
+import { BittensorAgentPanel } from "./bittensor_agent_panel";
 import { BittensorHotkeysPanel } from "./bittensor_hotkeys_panel";
 import { BittensorStakePanel } from "./bittensor_stake_panel";
 import styles from "./bittensor_widget.module.scss";
@@ -369,6 +370,13 @@ export const BittensorWidget: FC = () => {
               run={run}
             />
             <BittensorHotkeysPanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+            <BittensorAgentPanel
               api={api}
               wallet={bittensorWallet}
               address={address}
