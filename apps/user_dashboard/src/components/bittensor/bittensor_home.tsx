@@ -402,6 +402,8 @@ export const BittensorHome: FC = () => {
         run={run}
       />
 
+      <EvmPreview wallet={wallet} busy={busy} run={run} />
+
       <Section title="Coldkey swap" badge="Preview">
         <div className={styles.muted}>
           Moves ALL TAO, stake and subnets of this coldkey to a new coldkey, in
@@ -514,6 +516,73 @@ const HotkeySwapPreview: FC<{
           }
         >
           Swap hotkey
+        </Button>
+      </div>
+    </Section>
+  );
+};
+
+/**
+ * Subtensor EVM (X13, Preview): real address derivation and balance; funding the EVM
+ * address is a real Subtensor transfer to its mirror. Signing from the EVM side is not
+ * wired yet, so there is no "send from EVM" button.
+ */
+const EvmPreview: FC<{
+  wallet: BitcodeXBittensorWallet;
+  busy: string | null;
+  run: (label: string, fn: () => Promise<string>) => Promise<void>;
+}> = ({ wallet, busy, run }) => {
+  const [acct, setAcct] = useState<{
+    evmAddress: string;
+    mirror: string;
+    balances: Balances;
+  } | null>(null);
+  const [amount, setAmount] = useState("1");
+  const load = useCallback(() => {
+    wallet
+      .getEvmAccount()
+      .then(setAcct)
+      .catch(() => setAcct(null));
+  }, [wallet]);
+  useEffect(() => {
+    load();
+  }, [load]);
+  if (!acct) {
+    return null;
+  }
+  return (
+    <Section title="Subtensor EVM" badge="Preview">
+      <div className={styles.muted}>
+        Your EVM address (from your BitcodeX secp256k1 key) and the Subtensor
+        account that holds its TAO. Sending from the EVM side is coming soon.
+      </div>
+      <div className={styles.label}>EVM address</div>
+      <span className={styles.mono}>{acct.evmAddress}</span>
+      <div className={styles.label}>Subtensor mirror</div>
+      <span className={styles.mono}>{acct.mirror}</span>
+      <div>Balance: {formatTaoAmount(acct.balances.free)}</div>
+      <div className={styles.row}>
+        <input
+          className={styles.input}
+          style={{ maxWidth: 120 }}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          aria-label="TAO"
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!!busy}
+          isLoading={busy === "Fund EVM"}
+          onClick={() =>
+            run("Fund EVM", async () => {
+              const res = await wallet.sendTao(acct.mirror, amount);
+              load();
+              return `${amount} TAO to your EVM address (via its mirror) tx=${res.txHash}`;
+            })
+          }
+        >
+          Send TAO to my EVM address
         </Button>
       </div>
     </Section>

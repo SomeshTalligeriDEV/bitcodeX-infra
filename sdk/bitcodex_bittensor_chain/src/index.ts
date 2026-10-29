@@ -1,6 +1,7 @@
 export * from "./address";
 export * from "./api";
 export * from "./describe";
+export * from "./evm";
 export * from "./hotkeys";
 export * from "./networks";
 export * from "./payload";

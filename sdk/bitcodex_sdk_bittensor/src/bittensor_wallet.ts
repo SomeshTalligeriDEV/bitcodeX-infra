@@ -14,6 +14,8 @@ import {
   decayedBurn,
   describeCall,
   type EventRecordLike,
+  evmAddressFromSecp256k1,
+  evmMirrorAddress,
   getApi,
   getBalances,
   getHotkeyInfo,
@@ -470,6 +472,29 @@ export class BitcodeXBittensorWallet {
       throw new Error(tx.err);
     }
     return this.signAndSend(tx.data);
+  }
+
+  /**
+   * Subtensor EVM (X13, Preview): the EVM address of this user's BitcodeX secp256k1 key,
+   * the Subtensor account that holds its TAO (h160 mirror, verified against the chain's
+   * address-mapping precompile), and that balance. EVM-side signing is not wired yet.
+   */
+  async getEvmAccount(): Promise<{
+    evmAddress: string;
+    mirror: string;
+    balances: Balances;
+  } | null> {
+    const pub = await this.bitcodexWallet.getPublicKey();
+    if (!pub) {
+      return null;
+    }
+    const evmAddress = evmAddressFromSecp256k1(pub);
+    const mirror = evmMirrorAddress(evmAddress);
+    return {
+      evmAddress,
+      mirror,
+      balances: await getBalances(await this.api(), mirror),
+    };
   }
 
   /** Substrate extension accounts in this browser (not BitcodeX itself). */
