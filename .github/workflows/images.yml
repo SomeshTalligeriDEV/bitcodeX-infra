@@ -16,6 +16,16 @@ on:
       - "sdk/**"
       - "embed/bitcodex_attached/**"
   workflow_dispatch:
+    inputs:
+      api_url:
+        description: Public API URL baked into the wallet iframe
+        default: https://bitcodex-api.onrender.com
+      google_client_id:
+        description: Google OAuth client ID (public)
+        default: 364536284636-r2befgs4lcmqmli2jrj2bh5u17ce077t.apps.googleusercontent.com
+      allowed_origins:
+        description: Comma-separated origins allowed to embed the wallet
+        default: http://localhost:3200
 
 permissions:
   contents: read
@@ -72,10 +82,10 @@ jobs:
             ${{ steps.names.outputs.prefix }}-ksn:latest
           cache-from: type=gha
 
-      # The iframe bakes its public settings in at build time; built only once the
-      # deployment's URLs exist as repository variables (Settings → Variables → Actions).
+      # The iframe bakes its public settings in at build time. Run the workflow by hand
+      # (inputs above) or set repository variables BITCODEX_* (needs admin).
       - name: Wallet iframe image
-        if: ${{ vars.BITCODEX_PUBLIC_API_URL != '' && vars.BITCODEX_GOOGLE_CLIENT_ID != '' }}
+        if: ${{ inputs.api_url != '' || (vars.BITCODEX_PUBLIC_API_URL != '' && vars.BITCODEX_GOOGLE_CLIENT_ID != '') }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -83,10 +93,10 @@ jobs:
           target: iframe
           push: true
           build-args: |
-            VITE_BITCODEX_API_ENDPOINT=${{ vars.BITCODEX_PUBLIC_API_URL }}
-            VITE_GOOGLE_CLIENT_ID=${{ vars.BITCODEX_GOOGLE_CLIENT_ID }}
+            VITE_BITCODEX_API_ENDPOINT=${{ inputs.api_url || vars.BITCODEX_PUBLIC_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ inputs.google_client_id || vars.BITCODEX_GOOGLE_CLIENT_ID }}
             VITE_GITHUB_CLIENT_ID=${{ vars.BITCODEX_GITHUB_CLIENT_ID }}
-            VITE_BITTENSOR_ALLOWED_HOST_ORIGINS=${{ vars.BITCODEX_ALLOWED_ORIGINS }}
+            VITE_BITTENSOR_ALLOWED_HOST_ORIGINS=${{ inputs.allowed_origins || vars.BITCODEX_ALLOWED_ORIGINS }}
             VITE_USER_DASHBOARD_ORIGINS=${{ vars.BITCODEX_DASHBOARD_ORIGIN }}
           tags: |
             ${{ steps.names.outputs.prefix }}-iframe:${{ github.sha }}
