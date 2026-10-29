@@ -116,6 +116,7 @@ export function createMockBitcodeXWallet(
     signIn: async () => {},
 
     signOut: async () => {},
+    getAccessToken: async () => null,
 
     getPublicKey: async () => publicKey,
 
