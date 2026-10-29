@@ -82,3 +82,7 @@ Record each result here with the tx hash, then tick it.
 
 ## X10 · Access tokens (demo, signed in)
 - [ ] `bitcodexWallet.getAccessToken()` returns a token; `verifyAccessToken(token, { appId, apiUrl })` on a Node script returns the same user id and address.
+
+## X13 · Subtensor EVM (dashboard, Preview)
+- [ ] The section shows an EVM address (0x…, checksum) and its Subtensor mirror (5…).
+- [ ] "Send TAO to my EVM address" 1 TAO → the balance shown under the mirror rises by 1 TAO.

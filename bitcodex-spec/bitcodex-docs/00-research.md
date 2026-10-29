@@ -231,3 +231,8 @@ Notes:
 - Mainnet, read-only (genesis + chainType only): genesis `0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03`, chainType `Live`. Now used to refuse it by name ("this endpoint is Bittensor MAINNET").
 - **FROST signatures are valid on testnet** (nothing spent): a FROST 2-of-2 signed `transferKeepAlive` from an unfunded account was rejected with `1010 Inability to pay some fees`, the same as an unfunded normal key. The control with a corrupted signature was rejected with `1010 Transaction has a bad signature`. Substrate checks the signature before fees, so the payload format and signature are accepted. A funded testnet transfer is still to do (needs testnet TAO).
 - Because testnet reports `Development`, the localnet rule's endpoint check matters. Verified: `getApi("bittensor:localnet", { rpcUrl: testnet })` → "endpoint … is not local".
+
+### Subtensor EVM address mapping (verified 2026-10-29)
+- Runtime: `type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>` (subtensor `runtime/src/lib.rs`), i.e. account = blake2_256("evm:" ++ h160).
+- Live check: `eth_call` to the address-mapping precompile `0x000000000000000000000000000000000000080c`, `addressMapping(address)` (selector 0x0494cd9a), on testnet for h160 `0xabab…cdcd` returned `0x8b1509c1…678279a0`, equal to the local blake2 result. SS58 mirror `5FD4mCAikVBFkQ7ND9FJcrSmNf6THmRWA5SqexmQGyczU8n1`.
+- BitcodeX: the EVM address comes from the user's existing Cait-Sith secp256k1 key (EIP-55 via `ethereumEncode`). Funding the EVM address = a Subtensor transfer to its mirror. EVM-side signing is not wired (Preview).
