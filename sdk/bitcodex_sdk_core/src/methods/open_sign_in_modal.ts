@@ -1,6 +1,7 @@
 import type {
   BitcodeXAppConfig,
   BitcodeXWalletWebInterface,
+  SignInModalOverrides,
 } from "@bitcodex-sdk-core/types";
 import { renderSignInModal } from "@bitcodex-sdk-core/ui/signin_modal";
 import { BITCODEX_ATTACHED_TARGET } from "@bitcodex-sdk-core/window_msg/target";
@@ -31,6 +32,7 @@ const state = { isModalOpen: false };
 
 export async function openSignInModal(
   this: BitcodeXWalletWebInterface,
+  options: SignInModalOverrides = {},
 ): Promise<void> {
   await this.waitUntilInitialized;
 
@@ -56,15 +58,17 @@ export async function openSignInModal(
         state.isModalOpen = false;
         reject(new Error("Sign in cancelled"));
       },
-      // The integrating app's explicit theme wins; else the dashboard setting.
-      theme: this._theme ?? app?.theme_mode ?? "system",
-      branding: app
-        ? {
-            loginMethods: app.login_methods,
-            accentColor: app.accent_color,
-            logoUrl: app.logo_url,
-          }
-        : undefined,
+      // Page overrides win, then the integrating app's theme, then the dashboard setting.
+      theme: options.theme ?? this._theme ?? app?.theme_mode ?? "system",
+      branding: {
+        loginMethods: options.loginMethods ?? app?.login_methods,
+        accentColor:
+          options.accentColor !== undefined
+            ? options.accentColor
+            : app?.accent_color,
+        logoUrl:
+          options.logoUrl !== undefined ? options.logoUrl : app?.logo_url,
+      },
     });
   });
 }

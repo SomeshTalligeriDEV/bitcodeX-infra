@@ -1,3 +1,4 @@
+import type { SignInModalOverrides } from "@bitcodex/bitcodex-sdk-core";
 import { useCallback, useContext } from "react";
 
 import { BitcodeXContext } from "../context";
@@ -31,14 +32,17 @@ export function useBitcodeX(): UseBitcodeXReturn {
     await state.wallet.signOut();
   }, [state.wallet]);
 
-  const openSignInModal = useCallback(async () => {
-    if (!state.wallet) {
-      throw new Error(
-        "[bitcodex-react] Cannot openSignInModal: wallet not initialized",
-      );
-    }
-    await state.wallet.openSignInModal();
-  }, [state.wallet]);
+  const openSignInModal = useCallback(
+    async (options?: SignInModalOverrides) => {
+      if (!state.wallet) {
+        throw new Error(
+          "[bitcodex-react] Cannot openSignInModal: wallet not initialized",
+        );
+      }
+      await state.wallet.openSignInModal(options);
+    },
+    [state.wallet],
+  );
 
   const setTheme = useCallback(
     async (theme: BitcodeXWalletTheme) => {
