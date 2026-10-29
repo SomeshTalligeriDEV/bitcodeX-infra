@@ -170,3 +170,15 @@ Notes:
 - `addStakeLimit` checks `limitPrice` against the price AFTER the swap: a limit between the average fill price and the end price failed with `subtensorModule.SlippageTooHigh`; above the end price it succeeded. End price = average² / spot.
 - Quote vs fill: emissions change the pool every block; a 50 TAO stake on a fresh subnet filled 0.13% below the quote one or two blocks later.
 - The localnet image runs 3 validator nodes in one container. After about 8 h on a 4-CPU / 8 GB Colima VM they used about 6.7 GB and reorged by up to 26 blocks. Transactions then failed as "bad signature" or never landed. A container restart fixed it (fresh chain; reseed with `seed_localnet.mjs`). Parallel test files sending from //Alice collide on the nonce ("temporarily banned"), so `test:localnet` runs with `--runInBand`.
+
+### Sign-In with Bittensor (researched 2026-10-29)
+- CAIP-122 (standards.chainagnostic.org/CAIPs/caip-122) defines the message template and data model, and requires each namespace to define a profile (signing algorithm, `type`, signing input). **The Polkadot namespace has no CAIP-122 profile** (`namespaces.chainagnostic.org/polkadot/caip122` returns 404).
+- CAIP-2 Polkadot chain id: `polkadot:` + the first 32 hex characters of the genesis hash, lowercase (namespaces.chainagnostic.org/polkadot/caip2). For the current localnet genesis that is `polkadot:da4f6b75d463bc28dc6d833bb07dbe35`.
+- CAIP-10 Polkadot account address: SS58 with the chain's own prefix (42 here).
+- BitcodeX profile (`sdk/bitcodex_bittensor_chain/src/siwb.ts`):
+  - message: the CAIP-122 template with blockchain name "Bittensor" and `Chain ID: polkadot:<ref>`;
+  - signing input: `<Bytes>message</Bytes>`;
+  - verification: `signatureVerify`, plus domain, nonce, chain and expiry / not-before checks.
+- A real FROST 2-of-2 ed25519 signature over a SIWB message verified against the live localnet genesis: `{"ok":true,"crypto":"ed25519"}`.
+- The iframe refuses to sign a SIWB message whose domain is not the requesting site's host (phishing), or whose address or chain differs from the wallet's.
+- Packaging fix found on the way: `@bitcodex/bittensor-chain` `dist` used extensionless relative imports, which plain Node ESM cannot load. `tsc-alias resolveFullPaths` now adds `.js`.
