@@ -45,3 +45,10 @@ Record each result here with the tx hash, then tick it.
 - [ ] The hotkey then shows "owned by this wallet · subnet N UID U".
 - [ ] Registering the same hotkey again is refused before signing ("already registered").
 - [ ] History shows "Register a hotkey on a subnet".
+
+## X07 · Export and recovery (user dashboard `http://localhost:3206`, Export)
+- [ ] Export → re-auth with Google → the Bittensor seed appears blurred; "Address this key opens" equals the wallet address.
+- [ ] Download keystore JSON with a password; import it with polkadot.js (`addFromJson` + password, or an extension's restore-from-JSON) → same address → sign a localnet transfer.
+- [ ] Network tab during export: no seed, no seed share in any request or response, except the server seed share in the `export_shares` response, which is by design.
+- [ ] Clear site data for localhost:3201 → log in again → same address (recovery from key share nodes).
+- [ ] Hotkey swap screen (Preview label): swap a registered hotkey on one subnet, cost 0.001 TAO shown = charged; the UID moves to the new hotkey.
