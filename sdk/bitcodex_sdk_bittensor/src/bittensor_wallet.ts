@@ -3,9 +3,28 @@ import {
   type BitcodeXWalletInterface,
   type BittensorSignerPayloadJSON,
 } from "@bitcodex/bitcodex-sdk-core";
-import { type EventRecordLike, toAddress } from "@bitcodex/bittensor-chain";
+import {
+  type Balances,
+  DEFAULT_SLIPPAGE_BPS,
+  describeCall,
+  type EventRecordLike,
+  getApi,
+  getBalances,
+  getStakes,
+  listSubnets,
+  parseUnits,
+  quoteStake,
+  quoteUnstake,
+  type StakePosition,
+  type SubnetSummary,
+  type SwapQuote,
+  toAddress,
+  toPlainCall,
+} from "@bitcodex/bittensor-chain";
 import type { Result } from "@bitcodex/stdlib-js";
+import type { ApiPromise } from "@polkadot/api";
 import type { SubmittableExtrinsic } from "@polkadot/api/types";
+import type { Call } from "@polkadot/types/interfaces";
 import type {
   Signer,
   SignerPayloadJSON,
@@ -13,8 +32,16 @@ import type {
   SignerResult,
 } from "@polkadot/types/types";
 import { isHex, stringToHex, u8aToHex } from "@polkadot/util";
+import { checkAddress } from "@polkadot/util-crypto";
 
 import { BittensorWalletEventEmitter } from "./emitter";
+import {
+  addEntry,
+  defaultHistoryStore,
+  type HistoryEntry,
+  type HistoryStore,
+  historyKey,
+} from "./history";
 import { requestSignature } from "./make_signature";
 import { extrinsicOutcome } from "./outcome";
 import type {
@@ -24,6 +51,9 @@ import type {
   BittensorWalletEvent,
   BittensorWalletEventHandler,
   SendResult,
+  StakeArgs,
+  StakeResult,
+  UnstakeArgs,
 } from "./types";
 
 export class BitcodeXBittensorWallet {
@@ -35,6 +65,8 @@ export class BitcodeXBittensorWallet {
   connecting = false;
 
   private readonly emitter = new BittensorWalletEventEmitter();
+  private readonly history: HistoryStore;
+  private readonly rpcUrl: string | undefined;
   private signId = 0;
 
   static init(
@@ -52,15 +84,21 @@ export class BitcodeXBittensorWallet {
     }
     return {
       success: true,
-      data: new BitcodeXBittensorWallet(coreRes.data, args.chain_id),
+      data: new BitcodeXBittensorWallet(coreRes.data, args.chain_id, {
+        rpcUrl: args.rpc_url,
+        history: args.history_store,
+      }),
     };
   }
 
   constructor(
     bitcodexWallet: BitcodeXWalletInterface,
     chainId: BitcodeXBittensorState["chainId"],
+    options: { rpcUrl?: string; history?: HistoryStore } = {},
   ) {
     this.bitcodexWallet = bitcodexWallet;
+    this.rpcUrl = options.rpcUrl;
+    this.history = options.history ?? defaultHistoryStore();
     this.state = { address: null, publicKeyRaw: null, chainId };
     this.signer = {
       signPayload: (payload) => this.signPayload(payload),
@@ -148,16 +186,24 @@ export class BitcodeXBittensorWallet {
             dispatchError,
             events as unknown as EventRecordLike[],
           );
-          if (!outcome.success) {
-            reject(new Error(`${outcome.err} (tx ${txHash.toHex()})`));
-            return;
-          }
-          resolve({
+          const result = {
             txHash: txHash.toHex(),
             blockHash: (status.isInBlock
               ? status.asInBlock
               : status.asFinalized
             ).toHex(),
+          };
+          this.record(
+            address,
+            tx,
+            result,
+            outcome.success ? null : outcome.err,
+          ).finally(() => {
+            if (!outcome.success) {
+              reject(new Error(`${outcome.err} (tx ${result.txHash})`));
+            } else {
+              resolve(result);
+            }
           });
         },
       )
@@ -166,6 +212,141 @@ export class BitcodeXBittensorWallet {
         })
         .catch(reject);
     });
+  }
+
+  /** Network-checked connection for this wallet's chain (same cache as `getApi`). */
+  async api(): Promise<ApiPromise> {
+    const res = await getApi(this.state.chainId, { rpcUrl: this.rpcUrl });
+    if (!res.success) {
+      throw new Error(res.err);
+    }
+    return res.data;
+  }
+
+  async getBalances(): Promise<Balances> {
+    return getBalances(await this.api(), await this.connect());
+  }
+
+  /** Stake per (hotkey, subnet), valued at what unstaking would return now. */
+  async getStakes(): Promise<StakePosition[]> {
+    return getStakes(await this.api(), await this.connect());
+  }
+
+  /** Live subnets with name, symbol, owner hotkey and spot price. */
+  async listSubnets(): Promise<SubnetSummary[]> {
+    return listSubnets(await this.api());
+  }
+
+  /** Expected alpha, fee, price impact and limit price; nothing is signed. */
+  async quoteStake(args: Omit<StakeArgs, "hotkey">): Promise<SwapQuote> {
+    const amount = mustParse(args.amountTao);
+    return quoteStake(
+      await this.api(),
+      args.netuid,
+      amount,
+      args.slippageBps ?? DEFAULT_SLIPPAGE_BPS,
+    );
+  }
+
+  async quoteUnstake(args: Omit<UnstakeArgs, "hotkey">): Promise<SwapQuote> {
+    const amount = mustParse(args.amountAlpha);
+    return quoteUnstake(
+      await this.api(),
+      args.netuid,
+      amount,
+      args.slippageBps ?? DEFAULT_SLIPPAGE_BPS,
+    );
+  }
+
+  /** `balances.transferKeepAlive`: never closes the sending account. */
+  async sendTao(to: string, amountTao: string): Promise<SendResult> {
+    const [valid, reason] = checkAddress(to, 42);
+    if (!valid) {
+      throw new Error(`not a Bittensor address: ${reason ?? to}`);
+    }
+    const api = await this.api();
+    return this.signAndSend(
+      api.tx.balances.transferKeepAlive(to, mustParse(amountTao)),
+    );
+  }
+
+  /**
+   * `subtensorModule.addStakeLimit` at the quoted price plus slippage. With
+   * `allowPartial` false (default) the chain rejects it if the price moves too far.
+   */
+  async stake(args: StakeArgs): Promise<StakeResult> {
+    const api = await this.api();
+    const quote = await this.quoteStake(args);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.addStakeLimit(
+        args.hotkey,
+        args.netuid,
+        quote.tao,
+        quote.limitPrice,
+        args.allowPartial ?? false,
+      ),
+    );
+    return { ...res, quote };
+  }
+
+  /** `subtensorModule.removeStakeLimit` at the quoted price minus slippage. */
+  async unstake(args: UnstakeArgs): Promise<StakeResult> {
+    const api = await this.api();
+    const quote = await this.quoteUnstake(args);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.removeStakeLimit(
+        args.hotkey,
+        args.netuid,
+        quote.alpha,
+        quote.limitPrice,
+        args.allowPartial ?? false,
+      ),
+    );
+    return { ...res, quote };
+  }
+
+  /** Transactions sent from this browser through BitcodeX, newest first. */
+  async getHistory(): Promise<HistoryEntry[]> {
+    const address = await this.connect();
+    return this.history.load(historyKey(this.state.chainId, address));
+  }
+
+  private async record(
+    address: string,
+    tx: SubmittableExtrinsic<"promise">,
+    result: SendResult,
+    error: string | null,
+  ) {
+    try {
+      const card = describeCall(toPlainCall(tx.method as unknown as Call));
+      let blockNumber: number | null = null;
+      try {
+        const api = await this.api();
+        blockNumber = (
+          await api.rpc.chain.getHeader(result.blockHash)
+        ).number.toNumber();
+      } catch {
+        // keep the entry without a block number
+      }
+      const key = historyKey(this.state.chainId, address);
+      const entry: HistoryEntry = {
+        chainId: this.state.chainId,
+        txHash: result.txHash,
+        blockHash: result.blockHash,
+        blockNumber,
+        status: error ? "failed" : "success",
+        error,
+        section: card.section,
+        method: card.method,
+        title: card.title,
+        rows: card.rows,
+        timestamp: Date.now(),
+      };
+      this.history.save(key, addEntry(this.history.load(key), entry));
+      this.emitter.emit("historyChanged", entry);
+    } catch (err) {
+      console.warn("[bittensor sdk] failed to record history:", err);
+    }
   }
 
   /** Sign a message (wrapped in <Bytes> by the iframe); returns the 64-byte signature hex. */
@@ -276,4 +457,15 @@ export class BitcodeXBittensorWallet {
       console.warn("[bittensor sdk] failed to load ed25519 key:", err);
     }
   };
+}
+
+function mustParse(amount: string): bigint {
+  const res = parseUnits(amount);
+  if (!res.success) {
+    throw new Error(res.err);
+  }
+  if (res.data <= BigInt(0)) {
+    throw new Error("amount must be greater than 0");
+  }
+  return res.data;
 }
