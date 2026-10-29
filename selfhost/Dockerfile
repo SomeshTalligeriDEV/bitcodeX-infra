@@ -65,7 +65,7 @@ WORKDIR /app/backend/bitcodex_api/server
 ENV NODE_ENV=production
 # Integrations the self-host leaves off. The env schema requires the keys to exist, so
 # hosts that cannot set empty values (Render) still start; compose overrides these.
-ENV SMTP_HOST="" SMTP_PORT="" SMTP_USER="" SMTP_PASS="" FROM_EMAIL="" \
+ENV SMTP_HOST="" SMTP_PORT="587" SMTP_USER="" SMTP_PASS="" FROM_EMAIL="" \
     EMAIL_VERIFICATION_EXPIRATION_MINUTES="10" \
     S3_REGION="" S3_BUCKET="" S3_ACCESS_KEY_ID="" S3_SECRET_ACCESS_KEY="" \
     TYPEFORM_WEBHOOK_SECRET="" TELEGRAM_BOT_TOKEN="" GITHUB_CLIENT_SECRET="" \
