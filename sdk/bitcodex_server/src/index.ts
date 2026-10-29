@@ -8,7 +8,8 @@
  *   failed inner call), `getProxies`, `getProxyFilter(s)`, `describePermission`
  * - read-only wallet data: `getBalances`, `getStakes`, `getHotkeyInfo`, `listSubnets`
  *
- * Not built yet (X10): access-token verification (JWKS), getUser, getWallets.
+ * - access tokens: `verifyAccessToken` (EdDSA JWT, keys from the API's JWKS)
+ * - server API: `createServerClient({ apiUrl, appId, appSecret })` → getUser, getWallets
  */
 export {
   type ActAsResult,
@@ -35,3 +36,17 @@ export {
   type VerifySiwbExpect,
   verifySiwb,
 } from "@bitcodex/bittensor-chain";
+
+export {
+  type AccessTokenError,
+  type VerifiedAccessToken,
+  type VerifyAccessTokenOptions,
+  verifyAccessToken,
+} from "./access_token";
+export {
+  BitcodeXApiError,
+  type BitcodeXUser,
+  type BitcodeXWallet,
+  createServerClient,
+  type ServerClientOptions,
+} from "./client";

@@ -44,6 +44,18 @@ export interface BitcodeXAppConfig {
   origin_allowed: boolean;
 }
 
+export type BitcodeXWalletMsgGetAccessToken = {
+  target: "bitcodex_attached";
+  msg_type: "get_access_token";
+  payload: null;
+};
+
+export type BitcodeXWalletMsgGetAccessTokenAck = {
+  target: "bitcodex_sdk";
+  msg_type: "get_access_token_ack";
+  payload: Result<{ access_token: string; expires_in: number }, string>;
+};
+
 export type BitcodeXWalletMsgGetAppConfig = {
   target: "bitcodex_attached";
   msg_type: "get_app_config";
@@ -295,6 +307,8 @@ export type BitcodeXWalletMsg =
   | BitcodeXWalletMsgGetPublicKey
   | BitcodeXWalletMsgGetPublicKeyAck
   | BitcodeXWalletMsgGetPublicKeyEd25519
+  | BitcodeXWalletMsgGetAccessToken
+  | BitcodeXWalletMsgGetAccessTokenAck
   | BitcodeXWalletMsgGetAppConfig
   | BitcodeXWalletMsgGetAppConfigAck
   | BitcodeXWalletMsgGetPublicKeyEd25519Ack

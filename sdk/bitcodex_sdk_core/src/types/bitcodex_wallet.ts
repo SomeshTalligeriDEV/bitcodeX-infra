@@ -59,6 +59,8 @@ export interface BitcodeXWalletInterface {
   signOut: () => Promise<void>;
   getPublicKey: () => Promise<string | null>;
   getPublicKeyEd25519: () => Promise<string | null>;
+  /** Access token for your backend (verify with @bitcodex/server). Null when signed out. */
+  getAccessToken: () => Promise<string | null>;
   getEmail: () => Promise<string | null>;
   getName: () => Promise<string | null>;
   getWalletInfo: () => Promise<WalletInfo | null>;

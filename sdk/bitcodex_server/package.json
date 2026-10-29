@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@bitcodex/bittensor-chain": "workspace:*"
+    "@bitcodex/bittensor-chain": "workspace:*",
+    "jose": "5.9.6"
   },
   "devDependencies": {
     "del-cli": "^6.0.0",

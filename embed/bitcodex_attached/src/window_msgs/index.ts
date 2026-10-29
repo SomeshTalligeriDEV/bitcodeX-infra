@@ -7,6 +7,7 @@ import type {
 import { handleGetAppConfig } from "./app_config";
 import { handleExportPrivateKey } from "./export_private_key";
 import { handleGenerateOAuthUrl } from "./generate_oauth_url";
+import { handleGetAccessToken } from "./get_access_token";
 import { handleGetAuthType } from "./get_auth_type";
 import { handleGetConnectedApps } from "./get_connected_apps";
 import { handleGetCosmosChain } from "./get_cosmos_chain_info";
@@ -189,6 +190,11 @@ export function makeMsgHandler() {
 
       case "get_public_key": {
         await handleGetPublicKey(ctx);
+        break;
+      }
+
+      case "get_access_token": {
+        await handleGetAccessToken(ctx);
         break;
       }
 
