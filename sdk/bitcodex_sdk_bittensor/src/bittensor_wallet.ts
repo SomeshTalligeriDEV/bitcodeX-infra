@@ -5,6 +5,8 @@ import {
 } from "@bitcodex/bitcodex-sdk-core";
 import {
   type Balances,
+  buildAddProxy,
+  buildRemoveProxy,
   caip2ChainId,
   checkRegistration,
   createSiwbMessage,
@@ -16,10 +18,12 @@ import {
   getBalances,
   getHotkeyInfo,
   getOwnedHotkeys,
+  getProxies,
   getStakes,
   type HotkeyInfo,
   hotkeySwapCost,
   listSubnets,
+  type ProxyState,
   parseUnits,
   quoteRegistration,
   quoteStake,
@@ -409,6 +413,56 @@ export class BitcodeXBittensorWallet {
       ),
     );
     return { ...res, cost };
+  }
+
+  /** Active on-chain delegations (proxies) of this coldkey, with the reserved deposit. */
+  async getProxies(): Promise<ProxyState> {
+    return getProxies(await this.api(), await this.connect());
+  }
+
+  /**
+   * Let `delegate` (an app or agent key) act for this coldkey with one ProxyType
+   * (validated against chain metadata, e.g. "Staking", "SmallTransfer").
+   */
+  async grantProxy(args: {
+    delegate: string;
+    proxyType: string;
+    delayBlocks?: number;
+  }): Promise<SendResult> {
+    const api = await this.api();
+    const [valid, reason] = checkAddress(args.delegate, 42);
+    if (!valid) {
+      throw new Error(`not a Bittensor address: ${reason ?? args.delegate}`);
+    }
+    const tx = buildAddProxy(
+      api,
+      args.delegate,
+      args.proxyType,
+      args.delayBlocks ?? 0,
+    );
+    if (!tx.success) {
+      throw new Error(tx.err);
+    }
+    return this.signAndSend(tx.data);
+  }
+
+  /** Remove one delegation; its deposit is returned. */
+  async revokeProxy(args: {
+    delegate: string;
+    proxyType: string;
+    delayBlocks?: number;
+  }): Promise<SendResult> {
+    const api = await this.api();
+    const tx = buildRemoveProxy(
+      api,
+      args.delegate,
+      args.proxyType,
+      args.delayBlocks ?? 0,
+    );
+    if (!tx.success) {
+      throw new Error(tx.err);
+    }
+    return this.signAndSend(tx.data);
   }
 
   /** Transactions sent from this browser through BitcodeX, newest first. */
