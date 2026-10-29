@@ -323,6 +323,10 @@ export const modalStyles = css`
   }
 
   /* Provider Button */
+  .bitcodex-provider-btn:hover {
+    border-color: var(--bitcodex-accent, var(--bitcodex-border-primary));
+  }
+
   .bitcodex-provider-btn {
     display: flex;
     justify-content: center;
@@ -331,7 +335,7 @@ export const modalStyles = css`
     width: 100%;
     height: 40px;
     padding: 10px 14px;
-    border: 1px solid var(--bitcodex-border-primary);
+    border: 1px solid var(--bitcodex-accent, var(--bitcodex-border-primary));
     border-radius: var(--bitcodex-radius-md);
     background: var(--bitcodex-bg-primary);
     cursor: pointer;

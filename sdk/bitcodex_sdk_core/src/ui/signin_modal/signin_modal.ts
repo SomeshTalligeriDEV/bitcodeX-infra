@@ -3,7 +3,12 @@ import { CloseIcon } from "./components/icons";
 import { createProgressView } from "./components/progress_view";
 import { createSocialsView } from "./components/socials_view";
 import { htmlFromString } from "./dom_utils";
-import type { ProgressState, ResolvedTheme, SignInModalTheme } from "./types";
+import type {
+  ProgressState,
+  ResolvedTheme,
+  SignInModalBranding,
+  SignInModalTheme,
+} from "./types";
 import type { SignInType } from "@bitcodex-sdk-core/types/oauth";
 
 export interface SignInModalController {
@@ -16,6 +21,7 @@ export interface SignInModalProps {
   onSelect: (provider: SignInType) => Promise<void>;
   onClose: () => void;
   theme?: SignInModalTheme;
+  branding?: SignInModalBranding;
 }
 
 type ViewType = "default" | "socials";
@@ -81,6 +87,7 @@ export function createSignInModal(
       contentWrapper.appendChild(
         createDefaultView({
           theme: resolvedTheme,
+          branding: props.branding,
           onSelect: handleSelect,
           onShowSocials: () => {
             currentView = "socials";

@@ -4,6 +4,7 @@ import type {
   BitcodeXWalletMsgGetConnectedApps,
 } from "@bitcodex/bitcodex-sdk-core";
 
+import { handleGetAppConfig } from "./app_config";
 import { handleExportPrivateKey } from "./export_private_key";
 import { handleGenerateOAuthUrl } from "./generate_oauth_url";
 import { handleGetAuthType } from "./get_auth_type";
@@ -188,6 +189,11 @@ export function makeMsgHandler() {
 
       case "get_public_key": {
         await handleGetPublicKey(ctx);
+        break;
+      }
+
+      case "get_app_config": {
+        await handleGetAppConfig(ctx);
         break;
       }
 

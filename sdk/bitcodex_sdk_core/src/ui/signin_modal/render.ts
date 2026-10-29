@@ -10,11 +10,14 @@ export function renderSignInModal(options: SignInModalOptions) {
     throw new Error("renderSignInModal cannot be called in SSR environment");
   }
 
-  const { onSelect, onClose, theme = "system" } = options;
+  const { onSelect, onClose, theme = "system", branding } = options;
 
   const container = document.createElement("div");
   container.id = SIGNIN_MODAL_CONTAINER_ID;
   container.dataset.theme = resolveTheme(theme);
+  if (branding?.accentColor && /^#[0-9a-fA-F]{6}$/.test(branding.accentColor)) {
+    container.style.setProperty("--bitcodex-accent", branding.accentColor);
+  }
 
   const shadow = container.attachShadow({ mode: "closed" });
 
@@ -47,6 +50,7 @@ export function renderSignInModal(options: SignInModalOptions) {
     onSelect: handleSelect,
     onClose: handleClose,
     theme,
+    branding,
   });
 
   const cleanupTheme = observeTheme(theme, (resolved) => {

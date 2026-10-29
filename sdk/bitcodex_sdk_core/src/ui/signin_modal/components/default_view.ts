@@ -1,14 +1,17 @@
 import { htmlFromString } from "../dom_utils";
 import { S3_LOGO_URL, S3_LOGO_WITH_NAME_URL } from "../icons";
-import type { ResolvedTheme } from "../types";
+import type { ResolvedTheme, SignInModalBranding } from "../types";
 import {
   AppleSmallIcon,
   ChevronRightIcon,
+  DiscordIcon,
   EmailIcon,
   ExternalLinkIcon,
   GithubIcon,
   GoogleIcon,
+  TelegramIcon,
   TelegramSmallIcon,
+  XIcon,
   XSmallIcon,
 } from "./icons";
 import { createProviderButton } from "./provider_button";
@@ -19,10 +22,22 @@ export interface DefaultViewOptions {
   theme: ResolvedTheme;
   onSelect: (provider: SignInType) => void;
   onShowSocials: () => void;
+  branding?: SignInModalBranding;
 }
 
+const PROVIDERS: Record<
+  string,
+  { label: string; icon: () => SVGSVGElement; type: SignInType }
+> = {
+  google: { label: "Google", icon: GoogleIcon, type: "google" },
+  github: { label: "GitHub", icon: GithubIcon, type: "github" },
+  x: { label: "X", icon: XIcon, type: "x" },
+  telegram: { label: "Telegram", icon: TelegramIcon, type: "telegram" },
+  discord: { label: "Discord", icon: DiscordIcon, type: "discord" },
+};
+
 export function createDefaultView(options: DefaultViewOptions): HTMLDivElement {
-  const { theme, onSelect, onShowSocials } = options;
+  const { theme, onSelect, onShowSocials, branding } = options;
 
   const el = htmlFromString<HTMLDivElement>(`
     <div class="bitcodex-default-view">
@@ -52,6 +67,38 @@ export function createDefaultView(options: DefaultViewOptions): HTMLDivElement {
   `);
 
   const providerList = el.querySelector(".bitcodex-provider-list")!;
+
+  // App logo from the developer dashboard (validated http(s) URL), set via the DOM.
+  if (branding?.logoUrl && /^https?:\/\//.test(branding.logoUrl)) {
+    const img = el.querySelector(
+      ".bitcodex-logo-wrapper img",
+    ) as HTMLImageElement;
+    img.src = branding.logoUrl;
+    img.alt = "App logo";
+    img.removeAttribute("width");
+    img.style.maxHeight = "32px";
+  }
+
+  // Login methods configured for this app: exactly these, in this order.
+  if (branding?.loginMethods && branding.loginMethods.length > 0) {
+    for (const name of branding.loginMethods) {
+      const p = PROVIDERS[name];
+      if (p) {
+        providerList.append(
+          createProviderButton({
+            icon: p.icon(),
+            label: p.label,
+            onClick: () => onSelect(p.type),
+          }),
+        );
+      }
+    }
+    el.querySelector(".bitcodex-external-icon")!.appendChild(
+      ExternalLinkIcon(),
+    );
+    return el;
+  }
+
   if (EMAIL_LOGIN_ENABLED) {
     providerList.append(
       createProviderButton({
