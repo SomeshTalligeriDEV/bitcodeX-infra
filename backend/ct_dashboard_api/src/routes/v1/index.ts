@@ -1,6 +1,13 @@
 import express from "express";
 
 import { acceptInvitation } from "./accept_invitation";
+import {
+  createApp,
+  getAppUsersRoute,
+  listApps,
+  rotateAppSecret,
+  updateAppRoute,
+} from "./apps";
 import { cancelInvitation } from "./cancel_invitation";
 import { changePassword } from "./change_password";
 import { createApiKey } from "./create_api_key";
@@ -56,6 +63,29 @@ export function makeCustomerRouter() {
 
   router.post("/customer/info", customerJwtMiddleware, getCustomerInfo);
   router.post("/customer/api_keys", customerJwtMiddleware, getCustomerApiKeys);
+
+  // X11 apps: any team member can read; changes need the admin role.
+  router.post("/apps/list", customerJwtMiddleware, resolveTeamMember, listApps);
+  router.post(
+    "/apps/users",
+    customerJwtMiddleware,
+    resolveTeamMember,
+    getAppUsersRoute,
+  );
+  for (const [path, handler] of [
+    ["/apps/create", createApp],
+    ["/apps/update", updateAppRoute],
+    ["/apps/rotate_secret", rotateAppSecret],
+  ] as const) {
+    router.post(
+      path,
+      rateLimit,
+      customerJwtMiddleware,
+      resolveTeamMember,
+      requireAdmin,
+      handler,
+    );
+  }
 
   router.post(
     "/customer/api_keys/create",

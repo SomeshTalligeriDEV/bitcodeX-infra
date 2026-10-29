@@ -28,7 +28,8 @@
     "./referrals": "./src/referrals/index.ts",
     "./commit_reveal": "./src/commit_reveal/index.ts",
     "./user_customer_connections": "./src/user_customer_connections/index.ts",
-    "./knexfile": "./knexfile.ts"
+    "./knexfile": "./knexfile.ts",
+    "./apps": "./src/apps/index.ts"
   },
   "dependencies": {
     "@bitcodex/bitcodex-types": "workspace:*",
