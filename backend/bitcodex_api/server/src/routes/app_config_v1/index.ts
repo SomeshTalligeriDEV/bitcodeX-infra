@@ -34,32 +34,26 @@ registry.registerPath({
 async function getAppConfig(req: Request, res: Response) {
   const apiKey = req.headers["x-api-key"];
   if (typeof apiKey !== "string" || apiKey.length === 0) {
-    return res
-      .status(ErrorCodeMap.UNAUTHORIZED)
-      .json({
-        success: false,
-        code: "UNAUTHORIZED",
-        msg: "x-api-key header required",
-      });
+    return res.status(ErrorCodeMap.UNAUTHORIZED).json({
+      success: false,
+      code: "UNAUTHORIZED",
+      msg: "x-api-key header required",
+    });
   }
   const app = await getAppForApiKey(req.app.locals.db, apiKey);
   if (!app.success) {
-    return res
-      .status(ErrorCodeMap.UNKNOWN_ERROR)
-      .json({
-        success: false,
-        code: "UNKNOWN_ERROR",
-        msg: "app lookup failed",
-      });
+    return res.status(ErrorCodeMap.UNKNOWN_ERROR).json({
+      success: false,
+      code: "UNKNOWN_ERROR",
+      msg: "app lookup failed",
+    });
   }
   if (!app.data) {
-    return res
-      .status(ErrorCodeMap.INVALID_AUTH_TOKEN)
-      .json({
-        success: false,
-        code: "INVALID_AUTH_TOKEN",
-        msg: "unknown or inactive API key",
-      });
+    return res.status(ErrorCodeMap.INVALID_AUTH_TOKEN).json({
+      success: false,
+      code: "INVALID_AUTH_TOKEN",
+      msg: "unknown or inactive API key",
+    });
   }
   // Short cache: dashboard changes show up within a minute.
   res.setHeader("Cache-Control", "public, max-age=30");

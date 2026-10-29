@@ -10,9 +10,12 @@ import {
   bearerTokenMiddleware,
   commitRevealMiddleware,
 } from "@bitcodex-ksn-server/middlewares";
+import { rateLimitMiddleware } from "@bitcodex-ksn-server/middlewares/rate_limit";
 
 export function makeKeyshareV2Router() {
   const router = Router();
+  // Per-IP limit on key share routes (keygen, sign-in, reshare).
+  router.use(rateLimitMiddleware({ windowSeconds: 60, maxRequests: 300 }));
 
   router.post(
     "/",
