@@ -34,6 +34,14 @@ export const LeftBar: FC = () => {
           }
           active={pathname === paths.home}
         />
+        <MenuItem
+          href={paths.apps}
+          label="Apps"
+          Icon={
+            <HomeOutlinedIcon color="var(--gray-400)" className={styles.icon} />
+          }
+          active={pathname === paths.apps}
+        />
         <div className={styles.menuItemWithBadge}>
           <MenuItem
             href={paths.team}
