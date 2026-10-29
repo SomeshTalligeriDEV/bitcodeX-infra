@@ -203,3 +203,20 @@ Notes:
 - Hotkey swap: `swapHotkey(hotkey, newHotkey, netuid: Option<u16>)`. All subnets charged exactly `KeySwapCost` = 100000000 rao (0.1 TAO); one subnet exactly `KeySwapOnSubnetCost` = 1000000 rao. Events `HotkeySwapped` / `HotkeySwappedOnSubnet`; the UID moves to the new hotkey.
 - Coldkey swap: `announceColdkeySwap(newColdkeyHash: H256)`, then `swapColdkeyAnnounced(newColdkey)` after `ColdkeySwapAnnouncementDelay` (50 blocks on localnet); `disputeColdkeySwap`, `clearColdkeySwapAnnouncement`. `scheduleSwapColdkey` is marked deprecated in metadata. The mainnet delay is not verified here.
 - Dev machine limit: this Mac has 8 GB RAM and the Colima VM was allowed all 8 GB. The 3-node localnet grew to 4.5 GB, swap filled (8.4 / 9.2 GB), the Mac hung and the typecheck was OOM-killed (exit 137). Mitigations: restart the localnet container (back to about 340 MB), stop the frontends when not testing in the browser, and `BITCODEX_CI_CONCURRENCY=2 yarn ci typecheck`.
+
+### X09 permissions and connection robustness (verified 2026-10-29)
+- What each ProxyType allows comes from the chain: `api.call.proxyFilterRuntimeApi.getProxyFilters(null)`. Names are hex-encoded bytes, and the mode is allow/deny with optional `paramLessThan` constraints.
+  - **SmallTransfer** allows `transfer_keep_alive` / `transfer_allow_death` with `value < 500000000` (0.5 TAO), and `transfer_stake` / `transfer_stake_and_hotkey` with `alpha_amount < 500000000`.
+  - **Staking** allows add/remove/move/swap stake (and the limit variants) plus `unstake_all*`.
+  - **Registration** allows `register`, `register_limit`, `burned_register`, `pow_register`.
+- Deposit for one delegation = `proxyDepositBase + proxyDepositFactor`; each further delegation adds `proxyDepositFactor`.
+- X09 acceptance passed on localnet (`tests/permissions.localnet.test.ts`, agent = its own sr25519 key, via `actAs` = `proxy.proxy` + `ProxyExecuted` check):
+  - Staking: the agent staked 1 TAO for the user; the agent's transfer was rejected with `CallFiltered`.
+  - SmallTransfer: 0.4 TAO OK, 0.6 TAO `CallFiltered`.
+  - Revoke: the deposit came back exactly; the next agent action gave `NotProxy`.
+- Demo agent route (`apps/demo_web/src/app/api/agent`, key `//BitcodeXDemoAgent` from env), tested with curl and a test user:
+  - 403 before the grant;
+  - after the Staking grant, staked 1 TAO with no user popup, tx `0x6425465f80bc55548dd405f807799a9216ea524653a2f06d91b1e0d2de73e894`;
+  - the second 1 TAO against a 1.5 TAO daily limit was refused (429, Preview policy enforced by the agent server, not the chain);
+  - 403 after the revoke.
+- **Bug found and fixed:** after a localnet restart (new genesis), long-running servers using the cached `getApi` connection hung forever (the faucet stopped answering). `getApi` now re-checks `chain_getBlockHash(0)` against the cached genesis with a 10 s timeout, reconnects once if it changed or does not answer, and times out the chainType call. Verified: localnet restarted under the running API, and the next faucet drip succeeded in 1 s with no API restart.

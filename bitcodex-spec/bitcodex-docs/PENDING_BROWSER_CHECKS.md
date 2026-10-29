@@ -62,3 +62,10 @@ Record each result here with the tx hash, then tick it.
 - [ ] Hotkey swap (Preview): swap one subnet, cost 0.001 TAO; UID moves.
 - [ ] Coldkey swap (Preview): explainer shows this network's delay (50 blocks on localnet); there is no execute button.
 - [ ] Export key → Bittensor section only (see X07 checks). Sign out works.
+
+## X09 · App and agent permissions (demo, "Agent permissions" panel; restart demo so DEMO_AGENT_SURI is loaded)
+- [ ] Grant Staking: the popup shows "Permission: Staking", what the app can do (stake, unstake, move, swap…), what it cannot, and the deposit (0.06 + 0.033 TAO read from chain).
+- [ ] "Ask agent to stake 1 TAO": no popup; the stake appears under "Your stake" and in the dashboard.
+- [ ] Grant SmallTransfer: the popup says "send TAO, only below 0.5 TAO per call".
+- [ ] Daily limit 1.5 (Preview): the second 1 TAO request is refused with the Preview message.
+- [ ] Revoke in the demo or dashboard: the next "Ask agent" gives "no Staking permission".
