@@ -1,6 +1,11 @@
 import { CopyButton } from "@bitcodex/bitcodex-common-ui/copy_button";
-import type { BitcodeXWalletProtectedMsgs } from "@bitcodex/bitcodex-sdk-core";
-import type { CurveType } from "@bitcodex/bitcodex-types/crypto";
+import type {
+  BitcodeXWalletProtectedMsgs,
+  ExportKeyType,
+} from "@bitcodex/bitcodex-sdk-core";
+import { Keyring } from "@polkadot/keyring";
+import { hexToU8a } from "@polkadot/util";
+import { cryptoWaitReady } from "@polkadot/util-crypto";
 import {
   type FC,
   useCallback,
@@ -62,8 +67,111 @@ const EyeOffIcon: FC = () => {
   );
 };
 
-const VALID_KEY_TYPES: ReadonlySet<string> = new Set(["secp256k1", "ed25519"]);
+const VALID_KEY_TYPES: ReadonlySet<string> = new Set([
+  "secp256k1",
+  "ed25519",
+  "bittensor",
+]);
 const MAX_KEY_REQUEST_ATTEMPTS = 3;
+
+/**
+ * Bittensor export extras, computed only in this iframe: the address the seed opens
+ * (must equal the wallet address) and a password-encrypted polkadot.js keystore JSON.
+ * Nothing here is sent over the network.
+ */
+const BittensorExportExtras: FC<{ seedHex: string }> = ({ seedHex }) => {
+  const [address, setAddress] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    cryptoWaitReady().then(() => {
+      if (!cancelled) {
+        const pair = new Keyring({
+          type: "ed25519",
+          ss58Format: 42,
+        }).addFromSeed(hexToU8a(seedHex));
+        setAddress(pair.address);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [seedHex]);
+
+  const download = () => {
+    if (password.length < 8) {
+      setErr("Use a password of at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setErr("Passwords do not match.");
+      return;
+    }
+    setErr(null);
+    const pair = new Keyring({ type: "ed25519", ss58Format: 42 }).addFromSeed(
+      hexToU8a(seedHex),
+      { name: "BitcodeX coldkey" },
+    );
+    const json = JSON.stringify(pair.toJson(password), null, 2);
+    const url = URL.createObjectURL(
+      new Blob([json], { type: "application/json" }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bitcodex-coldkey-${pair.address}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setPassword("");
+    setConfirm("");
+  };
+
+  return (
+    <div className={styles.bittensorExtras}>
+      <div className={styles.warning}>
+        Anyone with this seed or the keystore file and its password controls all
+        TAO, stake and subnets of this coldkey. BitcodeX cannot undo a theft.
+        Never paste it into a website.
+      </div>
+      <div className={styles.label}>Address this key opens</div>
+      <div className={styles.mono}>{address ?? "…"}</div>
+      <div className={styles.label}>Import</div>
+      <div className={styles.help}>
+        Keystore JSON: in a Substrate wallet extension choose "Restore from JSON
+        backup" and enter the password. Raw seed (developers):{" "}
+        <code>
+          new Keyring({"{"} type: "ed25519", ss58Format: 42 {"}"}
+          ).addFromSeed(seed)
+        </code>
+        . Key type is ed25519, not sr25519.
+      </div>
+      <input
+        className={styles.input}
+        type="password"
+        placeholder="Keystore password (8+ characters)"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <input
+        className={styles.input}
+        type="password"
+        placeholder="Repeat password"
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+      />
+      {err && <div className={styles.errText}>{err}</div>}
+      <button
+        type="button"
+        className={styles.downloadButton}
+        onClick={download}
+      >
+        Download keystore JSON
+      </button>
+    </div>
+  );
+};
 
 export const ExportDisplay: FC = () => {
   // Force light theme — this route is loaded directly (not through AttachedInitialized),
@@ -83,7 +191,8 @@ export const ExportDisplay: FC = () => {
 
   const keyType = useMemo(() => {
     const raw = new URLSearchParams(window.location.search).get("key_type");
-    const parsed = raw && VALID_KEY_TYPES.has(raw) ? (raw as CurveType) : null;
+    const parsed =
+      raw && VALID_KEY_TYPES.has(raw) ? (raw as ExportKeyType) : null;
     return parsed;
   }, []);
 
@@ -286,6 +395,7 @@ export const ExportDisplay: FC = () => {
       >
         Copy to Clipboard
       </CopyButton>
+      {keyType === "bittensor" && <BittensorExportExtras seedHex={keyValue} />}
     </div>
   );
 };

@@ -3127,6 +3127,7 @@ __metadata:
     "@keplr-wallet/types": "npm:0.12.297"
     "@keplr-wallet/unit": "npm:0.12.297"
     "@polkadot/api": "npm:17.0.2"
+    "@polkadot/keyring": "npm:14.0.3"
     "@polkadot/types": "npm:17.0.2"
     "@polkadot/util": "npm:14.0.3"
     "@polkadot/util-crypto": "npm:14.0.3"

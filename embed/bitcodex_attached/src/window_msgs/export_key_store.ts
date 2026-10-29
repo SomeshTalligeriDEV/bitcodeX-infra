@@ -1,10 +1,22 @@
-import type { CurveType } from "@bitcodex/bitcodex-types/crypto";
+import type { ExportKeyType } from "@bitcodex/bitcodex-sdk-core";
 
 import { postLog } from "@bitcodex-attached/requests/logging";
 
 export interface ExportedKeys {
   secp256k1: string;
   ed25519: string;
+  /** Bittensor coldkey: the 32-byte ed25519 seed as 0x hex (polkadot.js addFromSeed). */
+  bittensor: string;
+}
+
+const KEY_TYPES: ReadonlySet<string> = new Set([
+  "secp256k1",
+  "ed25519",
+  "bittensor",
+]);
+
+function isKeyType(v: unknown): v is ExportKeyType {
+  return typeof v === "string" && KEY_TYPES.has(v);
 }
 
 const CLEANUP_TIMEOUT_MS = 30 * 1000; // 30 seconds (must exceed dashboard's 20s iframe load timeout)
@@ -21,6 +33,7 @@ let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
 const inFlight: Record<string, ReturnType<typeof setTimeout> | null> = {
   secp256k1: null,
   ed25519: null,
+  bittensor: null,
 };
 
 function clearCleanupTimer(): void {
@@ -40,7 +53,12 @@ function clearAllInFlightLocks(): void {
 }
 
 function clearIfEmpty(): void {
-  if (storedKeys && !storedKeys.secp256k1 && !storedKeys.ed25519) {
+  if (
+    storedKeys &&
+    !storedKeys.secp256k1 &&
+    !storedKeys.ed25519 &&
+    !storedKeys.bittensor
+  ) {
     storedKeys = null;
     clearCleanupTimer();
   }
@@ -55,18 +73,18 @@ function startCleanupTimer(): void {
   }, CLEANUP_TIMEOUT_MS);
 }
 
-function lockKey(keyType: CurveType): void {
+function lockKey(keyType: ExportKeyType): void {
   inFlight[keyType] = setTimeout(() => {
     // ACK never arrived — unlock so retries can succeed
     inFlight[keyType] = null;
   }, IN_FLIGHT_TIMEOUT_MS);
 }
 
-function isKeyLocked(keyType: CurveType): boolean {
+function isKeyLocked(keyType: ExportKeyType): boolean {
   return inFlight[keyType] !== null;
 }
 
-function confirmKey(keyType: CurveType): void {
+function confirmKey(keyType: ExportKeyType): void {
   if (inFlight[keyType]) {
     clearTimeout(inFlight[keyType]);
     inFlight[keyType] = null;
@@ -87,8 +105,8 @@ function handleWindowMessage(event: MessageEvent): void {
     return;
   }
   if (data.type === REQUEST_KEY_MSG) {
-    const keyType = data.key_type as string;
-    if (keyType !== "secp256k1" && keyType !== "ed25519") {
+    const keyType = data.key_type;
+    if (!isKeyType(keyType)) {
       return;
     }
     if (storedKeys?.[keyType] && !isKeyLocked(keyType)) {
@@ -109,8 +127,8 @@ function handleWindowMessage(event: MessageEvent): void {
       });
     }
   } else if (data.type === ACK_KEY_MSG) {
-    const keyType = data.key_type as string;
-    if (keyType !== "secp256k1" && keyType !== "ed25519") {
+    const keyType = data.key_type;
+    if (!isKeyType(keyType)) {
       return;
     }
     confirmKey(keyType);
@@ -129,7 +147,7 @@ export function setExportedKeys(keys: ExportedKeys): void {
 }
 
 /** One-shot read: returns the key and removes it from the store. */
-export function consumeExportedKey(keyType: CurveType): string | null {
+export function consumeExportedKey(keyType: ExportKeyType): string | null {
   if (!storedKeys || !storedKeys[keyType]) {
     return null;
   }
@@ -142,7 +160,10 @@ export function consumeExportedKey(keyType: CurveType): string | null {
 /**
  * Send an ACK directly to the frame that delivered the key.
  */
-function sendAck(source: MessageEventSource | null, keyType: CurveType): void {
+function sendAck(
+  source: MessageEventSource | null,
+  keyType: ExportKeyType,
+): void {
   try {
     (source as Window)?.postMessage(
       { type: ACK_KEY_MSG, key_type: keyType },
@@ -158,7 +179,9 @@ function sendAck(source: MessageEventSource | null, keyType: CurveType): void {
  * Used by the visible iframe to fetch a key stored in the hidden iframe.
  * Sends an ACK on successful receipt so the holder can clear the key.
  */
-export function requestExportedKey(keyType: CurveType): Promise<string | null> {
+export function requestExportedKey(
+  keyType: ExportKeyType,
+): Promise<string | null> {
   const local = consumeExportedKey(keyType);
   if (local) {
     return Promise.resolve(local);

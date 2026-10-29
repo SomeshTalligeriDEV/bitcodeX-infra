@@ -197,11 +197,20 @@ export async function handleExportPrivateKey(
     keypairBytes.set(seedBytes, 0);
     keypairBytes.set(pubkeyBytes, seedBytes.length);
     const ed25519Keypair = bs58.encode(keypairBytes);
+    // Bittensor coldkey export: the raw 32-byte seed. polkadot.js
+    // `Keyring({ type: "ed25519" }).addFromSeed(seed)` gives the same SS58 address as the
+    // FROST group key (verified, 00-research.md "X07 export").
+    const bittensorSeed = `0x${Array.from(seedBytes, (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    // Wipe the byte copies; only the display strings remain, in memory, for 30 s at most.
+    seedBytes.fill(0);
+    keypairBytes.fill(0);
+    recoveredSeed.fill(0);
 
     // 9. Store keys in module-level memory and signal success (no key data sent)
     setExportedKeys({
       secp256k1: secp256k1PrivateKey,
       ed25519: ed25519Keypair,
+      bittensor: bittensorSeed,
     });
     console.log(`${LOG_PREFIX} export complete, keys stored`);
     sendAck({ success: true });
