@@ -8,3 +8,13 @@ docker-compose.yml
 *.log
 *.env
 .env.*
+.git
+target
+**/target
+release
+scratch
+**/dist
+**/pkg
+**/.next
+selfhost/.env
+selfhost/secrets
