@@ -8,4 +8,5 @@ export * from "./plain_call";
 export * from "./proxy";
 export * from "./signature";
 export * from "./siwb";
+export * from "./swap";
 export * from "./wallet_data";

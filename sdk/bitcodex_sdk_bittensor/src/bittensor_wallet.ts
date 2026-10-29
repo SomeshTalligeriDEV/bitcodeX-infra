@@ -18,6 +18,7 @@ import {
   getOwnedHotkeys,
   getStakes,
   type HotkeyInfo,
+  hotkeySwapCost,
   listSubnets,
   parseUnits,
   quoteRegistration,
@@ -373,6 +374,41 @@ export class BitcodeXBittensorWallet {
       quotedMax: quote.cost,
       charged: decayedBurn(parentBurn, quote.params),
     };
+  }
+
+  /**
+   * Replace a hotkey (public addresses only) on one subnet or on all subnets
+   * (`netuid` null). Cost from chain constants; registrations and stake move over.
+   */
+  async swapHotkey(args: {
+    hotkey: string;
+    newHotkey: string;
+    netuid: number | null;
+  }): Promise<SendResult & { cost: bigint }> {
+    const api = await this.api();
+    const coldkey = await this.connect();
+    const [valid, reason] = checkAddress(args.newHotkey, 42);
+    if (!valid) {
+      throw new Error(
+        `not a Bittensor hotkey address: ${reason ?? args.newHotkey}`,
+      );
+    }
+    if (args.newHotkey === args.hotkey) {
+      throw new Error("the new hotkey must differ from the old one");
+    }
+    const owner = (await getHotkeyInfo(api, args.hotkey)).owner;
+    if (owner !== coldkey) {
+      throw new Error("this wallet does not own the old hotkey");
+    }
+    const cost = hotkeySwapCost(api, args.netuid);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.swapHotkey(
+        args.hotkey,
+        args.newHotkey,
+        args.netuid,
+      ),
+    );
+    return { ...res, cost };
   }
 
   /** Transactions sent from this browser through BitcodeX, newest first. */

@@ -16,6 +16,7 @@ import {
   getOwnedHotkeys,
   quoteRegistration,
 } from "@bitcodex-bittensor-chain/hotkeys";
+import { hotkeySwapCost } from "@bitcodex-bittensor-chain/swap";
 
 const RUN = process.env.BITTENSOR_LOCALNET === "1";
 const d = RUN ? describe : describe.skip;
@@ -175,5 +176,48 @@ d("hotkeys (localnet)", () => {
     const res2 = await checkRegistration(api, other, netuid, validator);
     expect(res.success ? null : res.err).toMatch(/already registered|owned/);
     expect(res2.success ? null : res2.err).toMatch(/different coldkey/);
+  });
+
+  it("charges exactly the chain's swap cost and moves the UID", async () => {
+    const coldkey = new Keyring({
+      type: "ed25519",
+      ss58Format: 42,
+    }).addFromMnemonic(mnemonicGenerate());
+    const sr = new Keyring({ type: "sr25519", ss58Format: 42 });
+    const oldHk = sr.addFromMnemonic(mnemonicGenerate()).address;
+    const newHk = sr.addFromMnemonic(mnemonicGenerate()).address;
+    await send(
+      api.tx.balances.transferKeepAlive(coldkey.address, BigInt(20) * TAO),
+      alice,
+    );
+    const q = await quoteRegistration(api, netuid);
+    await send(
+      api.tx.subtensorModule.registerLimit(netuid, oldHk, q.cost),
+      coldkey,
+    );
+
+    const { block, fee } = await send(
+      api.tx.subtensorModule.swapHotkey(oldHk, newHk, netuid),
+      coldkey,
+    );
+    const header = await api.rpc.chain.getHeader(block);
+    const free = async (at: Hash) =>
+      (
+        (await (
+          await api.at(at)
+        ).query.system.account(coldkey.address)) as unknown as {
+          data: { free: { toBigInt(): bigint } };
+        }
+      ).data.free.toBigInt();
+    const charged = (await free(header.parentHash)) - (await free(block)) - fee;
+    expect(charged).toBe(hotkeySwapCost(api, netuid));
+    const info = await getHotkeyInfo(api, newHk);
+    expect(info.owner).toBe(coldkey.address);
+    expect(info.subnets.some((s) => s.netuid === netuid)).toBe(true);
+    expect(
+      (await getHotkeyInfo(api, oldHk)).subnets.some(
+        (s) => s.netuid === netuid,
+      ),
+    ).toBe(false);
   });
 });
