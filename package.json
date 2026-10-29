@@ -62,7 +62,8 @@
       "crypto/teddsa/api_lib",
       "crypto/teddsa/frost_ed25519_cosmos_compat_wasm",
       "sandbox/bitcodex_sandbox_rialo",
-      "sandbox/bitcodex_sandbox_sol"
+      "sandbox/bitcodex_sandbox_sol",
+      "sdk/bitcodex_server"
     ]
   },
   "packageManager": "yarn@4.12.0",

@@ -4116,6 +4116,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@bitcodex/server@workspace:sdk/bitcodex_server":
+  version: 0.0.0-use.local
+  resolution: "@bitcodex/server@workspace:sdk/bitcodex_server"
+  dependencies:
+    "@bitcodex/bittensor-chain": "workspace:*"
+    del-cli: "npm:^6.0.0"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
+
 "@bitcodex/stdlib-js@workspace:*, @bitcodex/stdlib-js@workspace:lib/stdlib_js":
   version: 0.0.0-use.local
   resolution: "@bitcodex/stdlib-js@workspace:lib/stdlib_js"

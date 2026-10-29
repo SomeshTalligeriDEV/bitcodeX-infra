@@ -101,6 +101,8 @@ const FRIENDLY: Record<string, string> = {
   "SubtensorModule.move_stake": "move stake",
   "SubtensorModule.swap_stake": "swap stake between subnets",
   "SubtensorModule.transfer_stake": "give stake to another wallet",
+  "SubtensorModule.transfer_stake_and_hotkey":
+    "give stake (with its hotkey) to another wallet",
   "SubtensorModule.burned_register": "register hotkeys",
   "SubtensorModule.register_limit": "register hotkeys",
 };
