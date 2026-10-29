@@ -239,3 +239,11 @@ export async function getAppUsers(
     return { success: false, err: String(error) };
   }
 }
+
+/** Server-to-server lookup by app id alone (the caller then proves the app secret). */
+export async function getAppByIdOnly(
+  db: Db,
+  appId: string,
+): Promise<Result<App | null, string>> {
+  return one<App>(db, "SELECT * FROM apps WHERE app_id = $1", [appId]);
+}

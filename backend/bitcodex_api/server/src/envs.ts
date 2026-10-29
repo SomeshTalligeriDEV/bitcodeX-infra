@@ -57,4 +57,8 @@ export const envSchema = z.object({
   BITCODEX_FAUCET_SURI: z.string().optional(),
   BITCODEX_FAUCET_RPC_URL: z.string().optional(),
   BITCODEX_FAUCET_AMOUNT_TAO: z.string().optional(),
+
+  // X10 access tokens: Ed25519 PKCS8 PEM (or base64 of it), issuer claim.
+  BITCODEX_ACCESS_TOKEN_KEY: z.string().optional(),
+  BITCODEX_ACCESS_TOKEN_ISSUER: z.string().optional(),
 });

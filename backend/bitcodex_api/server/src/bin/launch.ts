@@ -9,6 +9,7 @@ import { LOCALNET_RPC_URL } from "@bitcodex/bittensor-chain";
 import { loadEnv, verifyEnv } from "@bitcodex/dotenv";
 import knex from "knex";
 
+import { initAccessTokenKey } from "@bitcodex-api/access_token/keys";
 import { makeApp } from "@bitcodex-api/app";
 import { ENV_FILE_NAME, envSchema } from "@bitcodex-api/envs";
 import { Faucet, setFaucet } from "@bitcodex-api/faucet";
@@ -103,6 +104,10 @@ async function main() {
     );
     console.log("Faucet enabled (localnet only)");
   }
+
+  await initAccessTokenKey(envs.BITCODEX_ACCESS_TOKEN_KEY, (m) =>
+    state.logger.warn(m),
+  );
 
   const app = makeApp(state);
 
