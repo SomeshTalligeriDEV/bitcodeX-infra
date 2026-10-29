@@ -4,6 +4,7 @@ export * from "./describe";
 export * from "./hotkeys";
 export * from "./networks";
 export * from "./payload";
+export * from "./permissions";
 export * from "./plain_call";
 export * from "./proxy";
 export * from "./signature";
