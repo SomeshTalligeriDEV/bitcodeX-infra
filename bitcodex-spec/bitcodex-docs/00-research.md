@@ -182,3 +182,16 @@ Notes:
 - A real FROST 2-of-2 ed25519 signature over a SIWB message verified against the live localnet genesis: `{"ok":true,"crypto":"ed25519"}`.
 - The iframe refuses to sign a SIWB message whose domain is not the requesting site's host (phishing), or whose address or chain differs from the wallet's.
 - Packaging fix found on the way: `@bitcodex/bittensor-chain` `dist` used extensionless relative imports, which plain Node ESM cannot load. `tsc-alias resolveFullPaths` now adds `.js`.
+
+### X08 registration cost (verified to the rao, localnet 2026-10-29)
+- **Cause of the 0.19% gap from probe 3d:** `on_initialize` decays every subnet's `Burn` once per block, before extrinsics run (subtensor `subnets/registration.rs` `update_registration_prices_for_networks`). So a registration is charged the *next* block's decayed price, not the stored `Burn`. `BurnHalfLife` = 360 blocks gives f = 0.5^(1/360) = 0.998076 per block, which is the 0.1924% gap.
+- **Exact formula,** ported from `utils/misc.rs`:
+  - `decay_factor_q32(360)` = 4286705684 (Q32);
+  - next burn = clamp((burn × f) >> 32, `MinBurn`, `MaxBurn`).
+- 8 of 8 block-to-block predictions were exact. A registration's actual charge equalled the prediction: 3050502 rao, plus the 1070891 rao tx fee.
+- Total charge = burned share + collateral top-up = the full decayed price for a fresh hotkey (`subnets/collateral.rs` `pay_registration`). `CollateralLockShare` is 0 on localnet, so nothing is kept as collateral there.
+- `MaxRegistrationsPerBlock` = 1. `registerLimit(netuid, hotkey, limitPrice)` exists and fails with `RegistrationPriceLimitExceeded` when the price is above the limit.
+- **"Shown = charged":** the shown price is exact only for inclusion in the next block; each later block makes it 0.19% cheaper. So the popup and demo show the next-block cost live (recomputed every block). The SDK submits `registerLimit` capped at the shown cost, so it never charges more, and reports the exact `charged` from chain state after inclusion. Test example: shown 1542910, landed 2 blocks later, charged 1536979 = the parent's burn decayed one block.
+- Storage: `Owner(hotkey)` (Default; the all-zero account means unowned), `OwnedHotkeys(coldkey)`, `Uids(netuid, hotkey)` (Optional), `IsNetworkMember(hotkey, netuid)`.
+- Hotkey creation (bittensor.com/docs/concepts/wallets): `btcli wallet new-hotkey -w my_coldkey -H my_hotkey`, "on a trusted workstation"; `btcli wallet show` prints public keys.
+- Localnet stability: with the demo compiling at the same time, the 3-node localnet hit 800% CPU and logged 195 fork/reorg events in 15 min. Two tests timed out; a rerun passed 55/55.

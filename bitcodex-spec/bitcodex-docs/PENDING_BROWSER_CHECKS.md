@@ -38,3 +38,10 @@ Record each result here with the tx hash, then tick it.
 ## Sign-In with Bittensor
 - [ ] Demo "Sign in with Bittensor": the popup shows Site `localhost:3200`, URI, Chain `polkadot:<genesis prefix>`, nonce, issued and expiry times, and "cannot move funds"; result `verified=true crypto=ed25519`.
 - [ ] A SIWB message whose domain is another site (sent from the demo with `domain: "evil.example"`, e.g. via the browser console) shows the red "Do not sign" warning and Approve stays disabled.
+
+## X08 · Hotkeys and registration (demo, Hotkeys panel)
+- [ ] Create a hotkey with btcli on a machine (or a test sr25519 address), "Add" it with a label: shows "not owned yet · not registered".
+- [ ] Register it on the seeded subnet: the popup shows the "Register a hotkey" card and a live "Registration cost, if included in the next block". After inclusion the log shows "charged X (shown max Y)" with X = the popup cost if it landed in the next block, never more.
+- [ ] The hotkey then shows "owned by this wallet · subnet N UID U".
+- [ ] Registering the same hotkey again is refused before signing ("already registered").
+- [ ] History shows "Register a hotkey on a subnet".

@@ -16,6 +16,6 @@ A BitcodeX coldkey can own and register miner/validator hotkeys without the hotk
 4. Never offer "create hotkey here" in the BitcodeX UI (hard rule).
 
 ## Acceptance checks
-- [ ] Register a fresh sr25519 hotkey on a localnet subnet from a BitcodeX coldkey; UID appears.
-- [ ] The hotkey shows as owned by the BitcodeX coldkey in chain storage.
-- [ ] Burn cost shown equals the amount charged.
+- [ ] Register a fresh sr25519 hotkey on a localnet subnet from a BitcodeX coldkey; UID appears. (Chain side passed 2026-10-29 with an ed25519 coldkey, `tests/hotkeys.localnet.test.ts`; from a BitcodeX coldkey via the demo: pending Google sign-in.)
+- [ ] The hotkey shows as owned by the BitcodeX coldkey in chain storage. (Chain side passed: `Owner(hotkey)` = coldkey, in `OwnedHotkeys(coldkey)`; via the demo: pending.)
+- [x] Burn cost shown equals the amount charged, for inclusion in the next block. The gap was the per-block decay (00-research.md "X08 registration cost"). The cost is shown live per block, the call is capped with `registerLimit`, and the exact charge is reported after inclusion; verified to the rao.
