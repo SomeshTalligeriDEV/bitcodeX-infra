@@ -121,5 +121,15 @@ services:
       - key: BITCODEX_API_BASE_URL
         sync: false
 
-# The wallet iframe is added after the first deploy (DEPLOY_RENDER.md step 6): its
-# image bakes in the API URL, so it cannot be built before the API has an address.
+  # Wallet iframe: the image bakes in the API URL and Google client ID (images.yml,
+  # run by hand with inputs), so it exists only after the API has an address.
+  - type: web
+    name: bitcodex-iframe
+    runtime: image
+    plan: free
+    image:
+      url: ghcr.io/someshtalligeridev/bitcodex-iframe:latest
+      creds:
+        fromRegistryCreds:
+          name: ghcr
+    healthCheckPath: /health
