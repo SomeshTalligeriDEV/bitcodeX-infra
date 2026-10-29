@@ -9,11 +9,15 @@ first request after a pause takes about a minute. Free Postgres expires after 30
 Fine for a demo; for real users move the four services to Starter (about $7 each per
 month) and the database to a paid plan.
 
-## 1. Images on GHCR
+## 1. Images on GHCR (private) and a Render registry credential
 1. GitHub → repo → **Actions** → **images** → the latest run must be green.
-2. GitHub → your profile → **Packages** → `bitcodex-api` → **Package settings** →
-   **Change visibility → Public**. Same for `bitcodex-ksn`. (Or keep them private and add
-   a GHCR registry credential in Render and reference it in `render.yaml`.)
+2. The packages stay private (they inherit the private repo). Create a read-only token:
+   GitHub → profile → **Settings → Developer settings → Personal access tokens →
+   Tokens (classic) → Generate new token (classic)**, scope **`read:packages`** only,
+   expiry 30 days.
+3. Render → **Account Settings → Registry Credentials → Add**: name **`ghcr`**, registry
+   **GitHub Container Registry**, username = your GitHub username, password = that token.
+   (Enter the token only in Render, never in chat or in the repo.)
 
 ## 2. Access-token signing key (on your machine)
 ```bash
