@@ -18,7 +18,13 @@ RUN corepack enable
 COPY . .
 RUN yarn install --immutable
 # Same build steps as CI (AGENTS.md): addons + WASM, internal packages, SDKs.
-RUN yarn ci build_cs && yarn ci build_frost && yarn ci build_pkgs && yarn ci build_sdk
+# Only the SDKs the services and the iframe import (core, chain, eth, cosmos); the
+# Solana, React and React Native SDKs are not part of any server image.
+RUN yarn ci build_cs && yarn ci build_frost && yarn ci build_pkgs \
+    && yarn workspace @bitcodex/bitcodex-sdk-core build \
+    && yarn workspace @bitcodex/bittensor-chain build \
+    && yarn workspace @bitcodex/bitcodex-sdk-eth build \
+    && yarn workspace @bitcodex/bitcodex-sdk-cosmos build
 
 # Iframe settings are baked in at build time (Vite).
 ARG VITE_BITCODEX_API_ENDPOINT
