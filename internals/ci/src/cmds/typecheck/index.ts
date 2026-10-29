@@ -40,7 +40,10 @@ export async function typeCheck(..._args: any[]) {
     paths.example_svm_nextjs,
   ];
 
-  const concurrency = DEFAULT_CONCURRENCY;
+  // Low-memory machines (8 GB with the localnet VM): BITCODEX_CI_CONCURRENCY=2.
+  const fromEnv = Number(process.env.BITCODEX_CI_CONCURRENCY);
+  const concurrency =
+    Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : DEFAULT_CONCURRENCY;
 
   console.log(
     "Type checking, total (%s), concurrency (%s)",
