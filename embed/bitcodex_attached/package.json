@@ -16,7 +16,8 @@
     "typecheck": "tsc",
     "format": "yarn exec biome format --write",
     "lint": "yarn exec biome lint --write",
-    "check": "yarn exec biome check --write"
+    "check": "yarn exec biome check --write",
+    "serve_built": "tsx ./src/bin/serve_built.ts"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.18.1",
