@@ -9,9 +9,7 @@ import { useThemeSync } from "@bitcodex-demo-web/hooks/use_theme_sync";
 const bitcodexConfig = {
   apiKey: "72bd2afd04374f86d563a40b814b7098e5ad6c7f52d3b8f84ab0c3d05f73ac6c",
   sdkEndpoint: process.env.NEXT_PUBLIC_BITCODEX_SDK_ENDPOINT,
-  eth: true as const,
-  cosmos: true as const,
-  svm: { chainId: "solana:devnet" },
+  // Bittensor only: the EVM, Cosmos and Solana SDKs are not loaded in this demo.
   bittensor: { chainId: CHAIN_ID },
 };
 

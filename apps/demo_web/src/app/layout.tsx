@@ -25,8 +25,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BitcodeX Demo",
-  description: "BitcodeX Demo",
+  title: "BitcodeX · Embedded Bittensor wallets",
+  description:
+    "Sign in with Google and get a Bittensor coldkey: send TAO, stake, register hotkeys.",
   icons: {
     icon: "/bitcodex_favicon.svg",
   },
@@ -36,11 +37,6 @@ export const metadata: Metadata = {
     title: "BitcodeX Demo",
     description: "BitcodeX Demo",
     siteName: "BitcodeX Demo",
-    images: [
-      {
-        url: "http://localhost:9000/bitcodex-assets/assets/bitcodex-demo-og-image.png",
-      },
-    ],
   },
 };
 

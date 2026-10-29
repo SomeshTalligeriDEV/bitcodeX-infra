@@ -2,6 +2,7 @@
 
 import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import {
   getApi,
@@ -12,7 +13,7 @@ import {
 import type { ApiPromise } from "@polkadot/api";
 import { signatureVerify } from "@polkadot/util-crypto";
 import { QRCodeSVG } from "qrcode.react";
-import { type FC, useEffect, useRef, useState } from "react";
+import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { BittensorAgentPanel } from "./bittensor_agent_panel";
 import { BittensorHotkeysPanel } from "./bittensor_hotkeys_panel";
@@ -24,7 +25,6 @@ import {
   NETWORK_NAME,
   TESTNET_FUNDING_NOTE,
 } from "@bitcodex-demo-web/bittensor_network";
-import { Widget } from "@bitcodex-demo-web/components/widgets/widget_components";
 
 const TAO = BigInt(1_000_000_000);
 const API_ENDPOINT = process.env.NEXT_PUBLIC_BITCODEX_API_ENDPOINT;
@@ -55,6 +55,7 @@ interface LogLine {
 
 export const BittensorWidget: FC = () => {
   const { bittensorWallet, address } = useBitcodeXBittensor();
+  const { email, signOut } = useBitcodeX();
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [balance, setBalance] = useState<bigint | null>(null);
   const [to, setTo] = useState("");
@@ -246,171 +247,242 @@ export const BittensorWidget: FC = () => {
     });
 
   return (
-    <Widget>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <Typography size="md" weight="semibold" color="primary">
-            Bittensor wallet
-          </Typography>
-          <span className={styles.badge}>{NETWORK_NAME}</span>
+    <div className={styles.page}>
+      <section className={styles.accountCard}>
+        <div className={styles.accountTop}>
+          <div className={styles.avatar} aria-hidden="true">
+            {(email ?? "B").slice(0, 1).toUpperCase()}
+          </div>
+          <div className={styles.accountWho}>
+            <Typography size="lg" weight="semibold" color="primary">
+              Your Bittensor wallet
+            </Typography>
+            <Typography size="sm" color="tertiary">
+              {email ? `Signed in as ${email}` : "Signed in"} · coldkey secured
+              by a 2-of-2 threshold key
+            </Typography>
+          </div>
+          <span className={styles.networkPill}>
+            <span className={styles.dot} />
+            {NETWORK_NAME}
+          </span>
         </div>
 
-        <div>
-          <Typography size="xs" color="tertiary">
-            Coldkey address
-          </Typography>
-          <div className={styles.row}>
-            <span className={styles.mono}>{address ?? "…"}</span>
-            {address && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigator.clipboard.writeText(address)}
-                >
-                  Copy
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowQr((v) => !v)}
-                >
-                  {showQr ? "Hide QR" : "Receive (QR)"}
-                </Button>
-              </>
+        <div className={styles.accountBody}>
+          <div className={styles.balanceBlock}>
+            <span className={styles.caption}>Balance</span>
+            <span className={styles.balance}>
+              {balance === null ? "…" : formatTao(balance)}
+            </span>
+            {!IS_LOCALNET && (
+              <span className={styles.note}>{TESTNET_FUNDING_NOTE}</span>
             )}
+          </div>
+          <div className={styles.addressBlock}>
+            <span className={styles.caption}>Coldkey address</span>
+            <span className={styles.address} title={address ?? ""}>
+              {address ?? "…"}
+            </span>
+            <div className={styles.row}>
+              {address && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(address)}
+                  >
+                    Copy
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowQr((v) => !v)}
+                  >
+                    {showQr ? "Hide QR" : "Receive"}
+                  </Button>
+                </>
+              )}
+              {faucet && address && (
+                <Button
+                  size="sm"
+                  disabled={!!busy}
+                  isLoading={busy === "Get test TAO"}
+                  onClick={getTestTao}
+                >
+                  Get {faucet.amountTao} test TAO
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                Sign out
+              </Button>
+            </div>
           </div>
           {address && showQr && (
             <div className={styles.qr}>
-              <QRCodeSVG value={address} size={168} />
+              <QRCodeSVG value={address} size={148} />
             </div>
           )}
-          <div className={styles.row}>
-            <Typography size="sm" color="secondary">
-              Balance: {balance === null ? "…" : formatTao(balance)}
-            </Typography>
-            {!IS_LOCALNET && (
-              <Typography size="xs" color="tertiary">
-                {TESTNET_FUNDING_NOTE}
-              </Typography>
-            )}
-            {faucet && address && (
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={!!busy}
-                isLoading={busy === "Get test TAO"}
-                onClick={getTestTao}
-              >
-                Get {faucet.amountTao} test TAO
-              </Button>
-            )}
-          </div>
         </div>
+      </section>
 
-        <div className={styles.row}>
+      <div className={styles.grid}>
+        <Card
+          title="Send TAO"
+          desc="A transfer signed by the user's coldkey. The BitcodeX popup shows the amount, destination and fee before anything is signed."
+          code={`await bittensorWallet.sendTao("${to.trim() || "5F…"}", "${amount}");`}
+        >
           <input
             className={styles.input}
-            placeholder="Destination (5…)"
+            placeholder="Destination address (5…)"
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />
-          <input
-            className={styles.input}
-            style={{ maxWidth: 110 }}
-            placeholder="TAO"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <Button
-            size="sm"
-            disabled={!api || !to || !!busy}
-            isLoading={busy === "Send TAO"}
-            onClick={sendTao}
-          >
-            Send TAO
-          </Button>
-        </div>
-
-        <div className={styles.actions}>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!api || !!busy}
-            isLoading={busy === "Long payload"}
-            onClick={signLongPayload}
-          >
-            Sign long payload
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!!busy}
-            isLoading={busy === "Sign message"}
-            onClick={signMessage}
-          >
-            Sign message
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!api || !!busy}
-            isLoading={busy === "Sign in with Bittensor"}
-            onClick={signInWithBittensor}
-          >
-            Sign in with Bittensor
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!api || !!busy}
-            isLoading={busy === "web3Enable"}
-            onClick={web3EnableTest}
-          >
-            web3Enable test
-          </Button>
-        </div>
-
-        {api && bittensorWallet && address && (
-          <>
-            <BittensorStakePanel
-              api={api}
-              wallet={bittensorWallet}
-              address={address}
-              busy={busy}
-              run={run}
+          <div className={styles.row}>
+            <input
+              className={styles.input}
+              style={{ maxWidth: 120 }}
+              placeholder="TAO"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
             />
-            <BittensorHotkeysPanel
-              api={api}
-              wallet={bittensorWallet}
-              address={address}
-              busy={busy}
-              run={run}
-            />
-            <BittensorAgentPanel
-              api={api}
-              wallet={bittensorWallet}
-              address={address}
-              busy={busy}
-              run={run}
-            />
-          </>
-        )}
-
-        {log.length > 0 && (
-          <div className={styles.log}>
-            {log.map((line, i) => (
-              <span
-                // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
-                key={i}
-                className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
-              >
-                {line.text}
-              </span>
-            ))}
+            <Button
+              size="sm"
+              disabled={!api || !to || !!busy}
+              isLoading={busy === "Send TAO"}
+              onClick={sendTao}
+            >
+              Send TAO
+            </Button>
           </div>
-        )}
+        </Card>
+
+        <Card
+          title="Sign and verify"
+          desc="Messages, Sign-In with Bittensor (CAIP-122) and a >256-byte transaction, all approved in the popup."
+          code={`const sig = await bittensorWallet.signMessage("hello");
+const { message, signature } =
+  await bittensorWallet.signInWithBittensor({ nonce });
+// server: verifySiwb(message, signature, { domain, nonce, genesisHash })`}
+        >
+          <div className={styles.actions}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!!busy}
+              isLoading={busy === "Sign message"}
+              onClick={signMessage}
+            >
+              Sign message
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "Sign in with Bittensor"}
+              onClick={signInWithBittensor}
+            >
+              Sign in with Bittensor
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "Long payload"}
+              onClick={signLongPayload}
+            >
+              Sign long transaction
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "web3Enable"}
+              onClick={web3EnableTest}
+            >
+              Works with dApps (web3Enable)
+            </Button>
+          </div>
+        </Card>
       </div>
-    </Widget>
+
+      {api && bittensorWallet && address && (
+        <div className={styles.grid}>
+          <BittensorStakePanel
+            api={api}
+            wallet={bittensorWallet}
+            address={address}
+            busy={busy}
+            run={run}
+          />
+          <BittensorHotkeysPanel
+            api={api}
+            wallet={bittensorWallet}
+            address={address}
+            busy={busy}
+            run={run}
+          />
+          <BittensorAgentPanel
+            api={api}
+            wallet={bittensorWallet}
+            address={address}
+            busy={busy}
+            run={run}
+          />
+          <section className={styles.subsection}>
+            <Typography size="md" weight="semibold" color="primary">
+              Activity
+            </Typography>
+            <Typography size="xs" color="tertiary">
+              Every call and its on-chain result. Never key material.
+            </Typography>
+            {log.length === 0 && (
+              <span className={styles.note}>
+                Nothing yet. Try an action above.
+              </span>
+            )}
+            <div className={styles.log}>
+              {log.map((line, i) => (
+                <span
+                  // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
+                  key={i}
+                  className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
+                >
+                  {line.text}
+                </span>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Card: FC<{
+  title: string;
+  desc: string;
+  code: string;
+  children: ReactNode;
+}> = ({ title, desc, code, children }) => {
+  const [showCode, setShowCode] = useState(false);
+  return (
+    <section className={styles.subsection}>
+      <div className={styles.cardHead}>
+        <Typography size="md" weight="semibold" color="primary">
+          {title}
+        </Typography>
+        <button
+          type="button"
+          className={styles.codeToggle}
+          onClick={() => setShowCode((v) => !v)}
+        >
+          {showCode ? "Hide code" : "Show code"}
+        </button>
+      </div>
+      <Typography size="xs" color="tertiary">
+        {desc}
+      </Typography>
+      {showCode ? <pre className={styles.code}>{code}</pre> : children}
+    </section>
   );
 };
