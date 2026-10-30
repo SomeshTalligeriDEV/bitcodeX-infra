@@ -28,54 +28,60 @@ Write the two addresses down. Then check:
       permission all need a **fresh** user the first time, so use a second Gmail or
       "Sign out" and use a new account for the real take.
 
-## 2. Shot list (about 3:30, raw recording time)
+## 2. How the video is made (three parts)
 
-| Time | Where | What you do (move the mouse slowly, pause about 1 s after each result) |
+| Part | Who | What it shows | Length |
+|---|---|---|---|
+| 1. Intro | **automatic** (`record_public.mjs`) | Title, then the customizable login window on the live site | 31 s |
+| 2. Logged-in features | **you record** | Google login, wallet, faucet, send, sign, stake, hotkeys, permissions | about 2:20 |
+| 3. Docs and end | **automatic** | The documentation tour and the end card | 45 s |
+
+Parts 1 and 3 are already built (real clicks on https://bitcodex-demo.vercel.app, only a drawn
+cursor added) in `~/Desktop/BitcodeX-demo-video/`. To re-record them (after a site change):
+
+```bash
+mkdir ~/vrec && cd ~/vrec && npm init -y && npm i playwright && npx playwright install chromium
+cp <repo>/scripts/video/record_public.mjs . && node record_public.mjs https://bitcodex-demo.vercel.app out
+# then see "Build" below; captions_public.txt is generated from out/marks.json
+```
+
+## 3. Your part: shot list (about 2:20, start the recording just before the Google click)
+
+Use the local stack from the pre-flight. Move the mouse slowly and pause about 1 s after each result.
+
+| Time | Where | What you do |
 |---|---|---|
-| 0:00 | `localhost:3200` signed out | Hold still for 7 s so the title caption can sit. |
-| 0:07 | Customize sidebar | Click **Dark** then **Light** background. Click two accent swatches, then back to black and white. Switch **Google** off and on. |
-| 0:15 | Center login card | Point at the card: it follows the settings. Click **Explore the Docs** hover only, do not click yet. |
-| 0:24 | Login card | Click **Google**, pick the account, wait for the popup to close. |
-| 0:36 | Account card | Show the address starting with **5**. Click **Copy**, then **Receive** (QR), then hide it. |
-| 0:48 | Account card | Balance is 0. Click **Get 1000 test TAO**. Watch the balance change live. |
-| 1:02 | **Send TAO** card | Paste the RECIPIENT address, enter `1`. Click **Show code** (2 s), then **Send**. In the popup read the amount, destination and fee, then **Approve**. |
-| 1:20 | Result and **Activity** | Show the tx hash and the new Activity row. |
-| 1:32 | **Sign and verify** card | Type a message, **Sign**, show **Verified**. |
-| 1:48 | **Stake** card | Pick subnet 2, enter `5`, show the quote and slippage, click **Stake**, approve. |
-| 2:08 | **Your stake** | Show the position and the changed balance. |
-| 2:24 | **Hotkeys** panel | Paste the HOTKEY address, **Add**. Pick subnet 2, show the cost, **Register**, approve. Show UID in the list. |
-| 2:44 | **Agent permissions** | Grant the `SmallTransfer` permission, show it listed, then **Revoke**. |
-| 3:02 | Right card, then back | Scroll to the top, click **Copy to Clipboard** on the export card. |
-| 3:14 | `/docs` | Click **Explore the Docs**. Show Quickstart, then scroll the Wallet API table. Stop on the Status page. |
-| 3:30 | End | Stop recording. |
+| 0:00 | `localhost:3200` | Click **Google**, pick the test account, wait for the popup to close. |
+| 0:10 | Account card | Show the address starting with **5**. Click **Copy**, then **Receive** (QR), then hide it. |
+| 0:22 | Account card | Balance is 0. Click **Get 1000 test TAO** and watch the balance change. |
+| 0:36 | **Send TAO** | Paste the RECIPIENT address, enter `1`, click **Show code** (2 s), then **Send**. In the popup read the amount, destination and fee, then **Approve**. |
+| 0:54 | Result and **Activity** | Show the tx hash and the new Activity row. |
+| 1:06 | **Sign and verify** | Type a message, **Sign**, show **Verified**. |
+| 1:22 | **Stake** | Subnet 2, amount `5`, show the quote and slippage, **Stake**, approve. |
+| 1:42 | **Your stake** | Show the position and the changed balance. |
+| 1:58 | **Hotkeys** | Paste the HOTKEY address, **Add**. Pick subnet 2, show the cost, **Register**, approve, show the UID. |
+| 2:18 | **Agent permissions** | Grant `SmallTransfer`, show it listed, then **Revoke**. Stop recording. |
 
-**Optional 25 s add-on** (user dashboard, `localhost:3206`): export key and the two-factor
-setting. Only add it if you have time to rehearse it; keep the video under 4 minutes.
+Record with **⇧⌘5** (Record Selected Portion over the browser, no microphone, show mouse clicks).
+The browser window must be 16:9 (for example 1600×900).
 
-## 3. Record
-
-- macOS: press **⇧⌘5**, choose **Record Selected Portion** (drag over the browser) or the
-  full screen, **Options → Save to Desktop**, **no microphone**, **Show Mouse Clicks** on.
-  Stop with the menu-bar button. This gives a `.mov`.
-- One continuous take is easiest. If you slip, pause 3 s, repeat the step, and cut that part
-  later; the script keeps timing simple if you just redo the whole take.
-
-## 4. Build the finished video
+## 4. Build
 
 ```bash
-# Watch the raw clip once and note the times at which each step really starts.
-# Edit scripts/video/captions.txt so each caption matches your clip (times are RAW times).
-scripts/video/build_video.sh ~/Desktop/raw.mov ~/Desktop/bitcodex-demo.mp4
+cd <repo>
+# Your part: no title or end card; captions from captions_login_part.txt (edit the times to your take)
+CAPTIONS=captions_login_part.txt TITLE_SECS=0 END_SECS=0 \
+  scripts/video/build_video.sh ~/Desktop/my_raw.mov ~/Desktop/BitcodeX-demo-video/part2_login.mp4
+
+# Join all three into the final video
+scripts/video/assemble.sh ~/Desktop/BitcodeX-demo-video/BitcodeX-demo.mp4 \
+  ~/Desktop/BitcodeX-demo-video/part1_intro.mp4 \
+  ~/Desktop/BitcodeX-demo-video/part2_login.mp4 \
+  ~/Desktop/BitcodeX-demo-video/part3_docs.mp4
 ```
 
-You get a 1080p H.264 MP4 with a 3 s title card, burned-in captions that fade in and out, a
-4 s end card, and **no audio track**. Captions are plain text; change any wording freely.
-
-Need to cut dead time first (trim the start, remove a mistake)?
-
-```bash
-ffmpeg -ss 00:00:04 -to 00:03:35 -i raw.mov -c copy trimmed.mov     # trim ends
-```
+The result is 1080p H.264, silent, about 3:35. Trim dead time first if needed:
+`TRIM_START=2.5 TRIM_END=150 ...` (raw seconds) in front of the build command.
 
 ## 5. Final checks before you publish
 
