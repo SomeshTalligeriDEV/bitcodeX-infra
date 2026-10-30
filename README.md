@@ -1,87 +1,176 @@
-# BitcodeX Infrastructure
+<div align="center">
 
-Embedded wallet infrastructure for Bittensor applications.
+# BitcodeX
 
-BitcodeX is being developed to help applications offer wallet onboarding, user-approved signing, and account management through a shared SDK and self-hosted services.
+### Embedded wallets for Bittensor
 
-> **Status:** Early development. Bittensor transaction signing and the complete local deployment are not yet verified end to end. This repository is not production-ready.
+Sign in with Google. Get a real Bittensor wallet. Approve every action in a readable popup.<br>
+No extension. No seed phrase. No single party that can move your funds.
 
-## Planned capabilities
+[![Live demo](https://img.shields.io/badge/live%20demo-bitcodex--demo.vercel.app-000000?style=for-the-badge)](https://bitcodex-demo.vercel.app)
+[![Docs](https://img.shields.io/badge/docs-read%20now-000000?style=for-the-badge)](https://bitcodex-demo.vercel.app/docs)
 
-- Email and social authentication for wallet onboarding.
-- Threshold Ed25519 signing for Bittensor coldkey accounts.
-- An isolated wallet interface for reviewing and approving signatures.
-- Distributed backup fragments for recovering the client signing share.
-- SDK integration for addresses, messages, and transaction signing.
-- Developer tools for application configuration and account management.
+![Bittensor](https://img.shields.io/badge/Bittensor-testnet%20%2B%20local-111827)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-FROST%20%E2%86%92%20WASM-DEA584?logo=rust&logoColor=black)
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![License](https://img.shields.io/badge/license-Apache--2.0-2563EB)
+![Status](https://img.shields.io/badge/status-early%20release%20(testnet)-F59E0B)
 
-Hotkeys remain separate from the threshold coldkey system. The planned application stores hotkey public addresses, while operational hotkeys are managed on the machines that use them.
+</div>
 
-## Architecture
+> **Early release.** BitcodeX runs on the **local test chain and Bittensor testnet only**.
+> Mainnet is disabled until an independent security audit. Do not use it with real funds.
 
-| Component | Responsibility |
-| --- | --- |
-| Application SDK | Connect applications to wallet authentication and signing |
-| Wallet interface | Show transaction details and request user approval |
-| Signing API | Participate in threshold signing and manage sessions |
-| Key-share nodes | Store recovery fragments for the client share |
-| PostgreSQL | Persist application, wallet, and service records |
-| Object storage | Serve application assets and uploaded metadata |
-| Email service | Deliver supported verification and application emails |
-| Bittensor connection | Read chain state and submit signed extrinsics |
+---
 
-Normal signing is intended to require both the client and server participants. Initial key generation, recovery, export, and browser storage need separate security review before deployment.
+## Why
 
-## Development direction
+Bittensor turns machine intelligence into a market: subnets compete to deliver useful work
+and are paid in **TAO**. Everything on it starts with a wallet, and that wallet is a heavy
+front door: a browser extension or a command-line tool, a seed phrase, two kinds of keys.
+Most people who would use a Bittensor-powered app never get past it.
 
-The first milestone is a reproducible local environment and a verified signing flow. Bittensor integration will then add chain configuration, SS58 addresses, runtime-aware transaction decoding, fee previews, and signed-extrinsic submission.
+BitcodeX does for Bittensor what Privy does for Ethereum and Solana: **log in with an account
+you already have, get a wallet, approve each action in a popup that says what it does.**
 
-The planned local infrastructure uses PostgreSQL, S3-compatible object storage, and a development email inbox. Wallet authentication requires its own identity-provider configuration; an SMTP inbox alone does not implement social or passwordless login.
+Read the full story, architecture and feature matrix in **[BITCODEX.md](BITCODEX.md)**.
 
-Initial validation targets local and test networks. Mainnet support is outside the current acceptance scope.
+## What you get
 
-## Roadmap
+| | |
+|---|---|
+| **Login** | Google, and any Bittensor wallet (Talisman, SubWallet, Polkadot.js) via Sign-In with Bittensor |
+| **Wallet** | A real Bittensor address (starts with `5`), balances, history |
+| **Money** | Send TAO, stake and unstake with exact quotes and slippage |
+| **Hotkeys** | Add, register on a subnet at the exact on-chain cost, read UIDs |
+| **Permissions** | Let an app or AI agent act for a user through on-chain proxies, revocable any time |
+| **Safety** | Confirmation popup with plain-English cards and the fee; red warning for unknown calls |
+| **Developers** | React SDK, server token verification, developer dashboard, self-host in one command |
 
-1. Establish the local build and service baseline.
-2. Configure application-owned authentication and infrastructure.
-3. Verify threshold Ed25519 signatures against Bittensor transaction payloads.
-4. Add transaction review and SDK integration.
-5. Validate recovery, export, and operational controls.
-6. Complete security review before production use.
+## Quickstart
 
-## Repository status
+```bash
+BASE=https://bitcodex-demo.vercel.app/downloads
+npm install \
+  $BASE/bitcodex-sdk-react-0.1.0.tgz \
+  $BASE/bitcodex-sdk-bittensor-0.1.0.tgz \
+  $BASE/bitcodex-sdk-core-0.1.0.tgz
+```
 
-This repository contains the wallet SDKs, signing services, recovery nodes, embedded interface, dashboards, and development tooling. Product names and source paths use the BitcodeX namespace.
+```tsx
+import { BitcodeXProvider, useBitcodeX } from "@bitcodex/sdk-react";
+import { useBitcodeXBittensor } from "@bitcodex/sdk-react/bittensor";
 
-| Directory | Contents |
-| --- | --- |
-| \`sdk/\` | Core, chain adapters, React and mobile integrations |
-| \`crypto/\` | Threshold-signature primitives and bindings |
-| \`backend/\` | API, database access and dashboard routes |
-| \`key_share_node/\` | Recovery-fragment services |
-| \`embed/\` | Wallet authentication, approval and signing interface |
-| \`apps/\` | Demo, dashboards and documentation |
-| \`bitcodex-spec/bitcodex-docs/\` | Architecture, implementation plans and findings |
+// 1. Wrap your app
+<BitcodeXProvider
+  config={{
+    apiKey: process.env.NEXT_PUBLIC_BITCODEX_API_KEY!,
+    sdkEndpoint: "https://wallet.your-domain.com", // your wallet frame
+    bittensor: { chainId: "bittensor:testnet" },
+  }}
+>
+  <App />
+</BitcodeXProvider>;
 
-### Local development
+// 2. Log in and send
+const { signIn } = useBitcodeX();
+const { bittensorWallet } = useBitcodeXBittensor();
+await signIn("google");
+await bittensorWallet.sendTao("5F…destination", "0.1"); // the user approves in a popup
+```
 
-Use Node.js 22+, the pinned Yarn 4 release, the pinned Rust toolchain, wasm-pack, and PostgreSQL. Build native/WASM dependencies before the SDKs:
+Full guide: **[bitcodex-demo.vercel.app/docs](https://bitcodex-demo.vercel.app/docs)**. The
+packages are hosted on the demo site so anyone can install them with no account, and are being
+published to npm as `@bitcodex/*`.
 
-\`\`\`sh
-corepack yarn install --immutable
-corepack yarn ci build_cs
-corepack yarn ci build_frost
-corepack yarn ci build_pkgs
-corepack yarn ci build_sdk
-corepack yarn ci typecheck
-\`\`\`
+## How it works
 
-See [development setup](documentation/install_and_run.md) and [self-hosting](apps/docs_web/docs/v0/standalone/self-hosting-standalone.md). Provider IDs and credentials must be supplied by your deployment. The inherited registration shutdown guard remains in place pending a separate functional change; a fresh end-to-end signup is not yet an acceptance result.
+```mermaid
+flowchart LR
+  subgraph App["Your app (browser)"]
+    SDK["@bitcodex/sdk-react"]
+    Frame["Wallet frame (iframe)<br/>holds the user's key share"]
+    SDK <--> Frame
+  end
+  Frame -->|"HTTPS"| API["BitcodeX API"]
+  API --> N1["Key share node 1"]
+  API --> N2["Key share node 2"]
+  N1 --- DB[("PostgreSQL")]
+  N2 --- DB
+  API --- DB
+  Frame -->|"signed transactions"| Chain[("Bittensor chain<br/>local · testnet")]
+  Backend["Your backend"] -->|"verifyAccessToken"| API
+```
 
-### Licensing
+The user's key is a threshold **Ed25519** key split 2-of-2 between their browser and the
+server (**FROST**). A signature needs both halves, and the full private key is not rebuilt to
+sign. The result is an ordinary Bittensor address that works in every tool. Hotkeys stay on the
+miner or validator machine and are never created here.
 
-See [LICENSE](LICENSE) and [NOTICE](NOTICE). Bundled third-party components retain their individual notices and licenses.
+## Which network each feature runs on
+
+| Feature | Local chain | Testnet |
+|---|---|---|
+| Login, key creation, signing | Tested end to end | Signature accepted by the testnet's own check |
+| Send, stake, register a hotkey, permissions | Tested with real transfers (62 tests) | Same code; **needs testnet TAO**, funded run not done yet |
+| Faucet | Built in | None exists in the official docs; ask the Bittensor community |
+| Mainnet | Disabled by design | Disabled by design |
+
+## Run it yourself
+
+| Goal | Command |
+|---|---|
+| Develop locally | `scripts/dev-up.sh` (add `--fast` for production builds) |
+| One machine, one command | `selfhost/setup.sh` ([guide](bitcodex-spec/bitcodex-docs/SELF_HOST.md)) |
+| Render, free to try | `render.yaml` ([guide](bitcodex-spec/bitcodex-docs/DEPLOY_RENDER.md)) |
+
+Requires Node 22+, Yarn 4 (`corepack enable`), Rust and `wasm-pack` to build from source,
+and Docker for the local database and test chain.
+
+```bash
+corepack enable && yarn install --immutable
+yarn ci build_cs && yarn ci build_frost    # WASM crypto
+yarn ci build_pkgs && yarn ci build_sdk    # packages and SDKs
+yarn ci typecheck
+```
+
+## Repository
+
+```
+sdk/              SDKs: core, bittensor, react, server, chain helpers
+embed/            wallet frame (iframe)
+backend/          API, OpenAPI schemas, database migrations
+key_share_node/   the two key share nodes
+crypto/           Rust threshold signatures (WASM and Node addon)
+apps/             demo and docs, user dashboard, developer dashboard
+selfhost/         Docker setup          render.yaml   Render blueprint
+scripts/          dev, release, video and check scripts
+```
 
 ## Security
 
-Do not commit credentials, private keys, key shares, authentication tokens, or signing nonces. Use dedicated development accounts and test networks while the integration is under construction.
+Only the wallet frame signs, and every signature shows a confirmation first. The frame answers
+only to sites on an app's allowed-origins list, the network is detected from the chain's genesis
+hash (never a name), and no key share, seed or token is logged. Found a vulnerability? Please
+report it privately to the maintainers instead of opening a public issue.
+
+## Status
+
+- **Built:** everything above marked tested, plus hosted demo, docs, self-host and Render deploy.
+- **Preview:** two-factor code before large spends, hotkey swap, coldkey swap explainer,
+  Subtensor EVM address.
+- **Not built:** email login, passkey login, a wallet button inside the BitcodeX popup.
+- **Known limits:** Render's free plan sleeps after 15 minutes; a full browser run of every path
+  with real logins is still being completed.
+
+## Contributing
+
+Issues and pull requests are welcome. Commits and PR titles use `<scope>: <description>`
+(lowercase, imperative, for example `sdk: add proxy quote helper`). Before opening a PR run
+`yarn ci typecheck` and `yarn exec biome check .`. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[Apache License 2.0](LICENSE). Third-party components keep their own licences; see
+[NOTICE](NOTICE).

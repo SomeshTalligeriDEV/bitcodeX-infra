@@ -25,8 +25,9 @@ const ROOT = path.resolve(
 );
 const OUT = path.join(ROOT, "release");
 const VERSION = "0.1.0";
-// The repo has no LICENSE file yet: the owner chooses the licence before publishing.
-const LICENSE = process.env.BITCODEX_LICENSE || "UNLICENSED";
+// Apache-2.0, chosen by the owner (matches the upstream licence). LICENSE and NOTICE are
+// copied into every package.
+const LICENSE = process.env.BITCODEX_LICENSE || "Apache-2.0";
 
 const POLKADOT = {
   "@polkadot/api": "17.0.2",
@@ -293,7 +294,7 @@ function packageJson(pkg) {
     module: "./dist/index.js",
     types: "./dist/index.d.ts",
     exports: exportsMap,
-    files: ["dist", "README.md", "NOTICE"],
+    files: ["dist", "README.md", "LICENSE", "NOTICE"],
     sideEffects: false,
     keywords: [
       "bittensor",
@@ -356,6 +357,7 @@ for (const pkg of PACKAGES) {
     `${JSON.stringify(packageJson(pkg), null, 2)}\n`,
   );
   writeFileSync(path.join(pkgOut, "README.md"), readme(pkg));
+  cpSync(path.join(ROOT, "LICENSE"), path.join(pkgOut, "LICENSE"));
   cpSync(path.join(ROOT, "NOTICE"), path.join(pkgOut, "NOTICE"));
   const out = execFileSync(
     "npm",
