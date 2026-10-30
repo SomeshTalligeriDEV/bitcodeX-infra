@@ -2,11 +2,6 @@
 
 import { GoogleIcon } from "@bitcodex/bitcodex-common-ui/icons/google_icon";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
-import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
-import type {
-  ExtensionAccount,
-  WalletLoginResult,
-} from "@bitcodex/sdk-bittensor";
 import { type FC, useState } from "react";
 
 import {
@@ -15,7 +10,9 @@ import {
   exportSnippet,
   GITHUB_ENABLED,
   type Method,
+  SOON_PROVIDERS,
 } from "./custom";
+import { NetworkPulse } from "./network_pulse";
 import styles from "./signed_out.module.scss";
 import { NETWORK_NAME } from "@bitcodex-demo-web/bittensor_network";
 
@@ -29,22 +26,30 @@ const Switch: FC<{
   label: string;
   hint?: string;
   checked: boolean;
-  onChange: () => void;
-}> = ({ label, hint, checked, onChange }) => (
+  onChange?: () => void;
+  soon?: boolean;
+}> = ({ label, hint, checked, onChange, soon }) => (
   <button
     type="button"
     role="switch"
     aria-checked={checked}
+    aria-disabled={soon}
+    disabled={soon}
     className={styles.switchRow}
+    data-soon={soon}
     onClick={onChange}
   >
     <span>
       <strong>{label}</strong>
       {hint && <span className={styles.hint}>{hint}</span>}
     </span>
-    <span className={styles.track} data-on={checked}>
-      <span className={styles.thumb} />
-    </span>
+    {soon ? (
+      <span className={styles.soonTag}>Soon</span>
+    ) : (
+      <span className={styles.track} data-on={checked}>
+        <span className={styles.thumb} />
+      </span>
+    )}
   </button>
 );
 
@@ -52,13 +57,10 @@ const Switch: FC<{
 export const SignedOut: FC<{
   custom: Custom;
   setCustom: (c: Custom) => void;
-  onWalletLogin: (s: WalletLoginResult) => void;
-}> = ({ custom, setCustom, onWalletLogin }) => {
+}> = ({ custom, setCustom }) => {
   const { signIn } = useBitcodeX();
-  const { bittensorWallet } = useBitcodeXBittensor();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<ExtensionAccount[] | null>(null);
   const [copied, setCopied] = useState(false);
 
   const has = (m: Method) => custom.methods.includes(m);
@@ -85,20 +87,6 @@ export const SignedOut: FC<{
     }
   };
 
-  const findWallets = () =>
-    run("wallets", async () => {
-      if (!bittensorWallet) {
-        throw new Error("BitcodeX is not ready");
-      }
-      const list = await bittensorWallet.listExtensionAccounts("BitcodeX demo");
-      if (list.length === 0) {
-        throw new Error(
-          "No Bittensor wallet extension found. Install Talisman, SubWallet or the Polkadot.js extension and allow this site.",
-        );
-      }
-      setAccounts(list);
-    });
-
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(exportSnippet(custom));
@@ -118,8 +106,7 @@ export const SignedOut: FC<{
         };
   // The card previews the chosen look; "system" follows the page theme.
   const cardTheme = custom.theme === "system" ? undefined : custom.theme;
-  const none =
-    !has("google") && !(GITHUB_ENABLED && has("github")) && !has("wallet");
+  const none = !has("google") && !(GITHUB_ENABLED && has("github"));
 
   return (
     <div className={styles.layout}>
@@ -180,19 +167,16 @@ export const SignedOut: FC<{
           checked={has("google")}
           onChange={() => toggle("google")}
         />
-        {GITHUB_ENABLED && (
-          <Switch
-            label="GitHub"
-            checked={has("github")}
-            onChange={() => toggle("github")}
-          />
-        )}
         <Switch
-          label="Bittensor wallet"
-          hint="Talisman, SubWallet, Polkadot.js"
-          checked={has("wallet")}
-          onChange={() => toggle("wallet")}
+          label="GitHub"
+          hint={GITHUB_ENABLED ? undefined : "Needs a GitHub OAuth app"}
+          checked={GITHUB_ENABLED && has("github")}
+          onChange={() => toggle("github")}
+          soon={!GITHUB_ENABLED}
         />
+        {SOON_PROVIDERS.map((p) => (
+          <Switch key={p.id} label={p.label} checked={false} soon />
+        ))}
 
         <h3 className={styles.sectionTitle}>Network</h3>
         <div className={styles.network}>
@@ -232,57 +216,57 @@ export const SignedOut: FC<{
                 <span>{busy === "google" ? "Opening Google…" : "Google"}</span>
               </button>
             )}
-            {GITHUB_ENABLED && has("github") && (
-              <button
-                type="button"
-                className={styles.method}
-                disabled={!!busy}
-                onClick={() => run("github", () => signIn("github"))}
-              >
-                <span className={styles.badge}>GH</span>
-                <span>{busy === "github" ? "Opening GitHub…" : "GitHub"}</span>
-              </button>
-            )}
-            {has("wallet") && !accounts && (
-              <button
-                type="button"
-                className={styles.method}
-                disabled={!!busy}
-                onClick={findWallets}
-              >
-                <span className={styles.badge}>τ</span>
-                <span>
-                  {busy === "wallets"
-                    ? "Looking for wallets…"
-                    : "Continue with a wallet"}
-                </span>
-              </button>
-            )}
-            {has("wallet") &&
-              accounts?.map((a) => (
+            {GITHUB_ENABLED ? (
+              has("github") && (
                 <button
                   type="button"
-                  key={`${a.source}:${a.address}`}
                   className={styles.method}
                   disabled={!!busy}
-                  onClick={() =>
-                    run("wallet-login", async () => {
-                      if (!bittensorWallet) {
-                        throw new Error("BitcodeX is not ready");
-                      }
-                      onWalletLogin(await bittensorWallet.loginWithWallet(a));
-                    })
-                  }
+                  onClick={() => run("github", () => signIn("github"))}
                 >
-                  <span className={styles.badge}>τ</span>
-                  <span className={styles.accountText}>
-                    <strong>{a.name ?? "Account"}</strong>
-                    <small>
-                      {a.address.slice(0, 8)}…{a.address.slice(-6)} · {a.source}
-                    </small>
+                  <span className={styles.badge}>GH</span>
+                  <span>
+                    {busy === "github" ? "Opening GitHub…" : "GitHub"}
                   </span>
                 </button>
+              )
+            ) : (
+              <button
+                type="button"
+                className={styles.method}
+                disabled
+                data-soon="true"
+              >
+                <span className={styles.badge}>GH</span>
+                <span>GitHub</span>
+                <span className={styles.soonTag}>Soon</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.method}
+              disabled
+              data-soon="true"
+            >
+              <span className={styles.badge}>DC</span>
+              <span>Discord</span>
+              <span className={styles.soonTag}>Soon</span>
+            </button>
+            <div
+              className={styles.chips}
+              aria-label="More sign-in options, coming soon"
+            >
+              {SOON_PROVIDERS.filter((p) => p.id !== "discord").map((p) => (
+                <span
+                  key={p.id}
+                  className={styles.chip}
+                  title={`${p.label}: coming soon`}
+                >
+                  {p.mark}
+                </span>
               ))}
+              <span className={styles.chipsNote}>More socials soon</span>
+            </div>
             {none && (
               <p className={styles.empty}>
                 Turn on a login method on the left to see it here.
@@ -321,6 +305,7 @@ export const SignedOut: FC<{
             {copied ? "Copied ✓" : "Copy to Clipboard"}
           </button>
         </div>
+        <NetworkPulse />
       </aside>
     </div>
   );

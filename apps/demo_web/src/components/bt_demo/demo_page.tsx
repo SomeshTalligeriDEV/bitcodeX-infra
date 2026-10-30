@@ -2,19 +2,12 @@
 
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
-import {
-  formatTaoAmount,
-  getApi,
-  getBalances,
-  type WalletLoginResult,
-} from "@bitcodex/sdk-bittensor";
 import { type FC, useEffect, useState } from "react";
 
 import { type Custom, DEFAULT_CUSTOM } from "./custom";
 import styles from "./demo.module.scss";
 import { SignedOut } from "./signed_out";
-import { CHAIN_ID, NETWORK_NAME } from "@bitcodex-demo-web/bittensor_network";
-import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
+import { NETWORK_NAME } from "@bitcodex-demo-web/bittensor_network";
 import { ThemeButton } from "@bitcodex-demo-web/components/theme/theme_button";
 import { BittensorWidget } from "@bitcodex-demo-web/components/widgets/bittensor_widget/bittensor_widget";
 
@@ -23,9 +16,6 @@ const REPO = "https://github.com/SomeshTalligeriDEV/bitcodeX-infra";
 export const DemoPage: FC = () => {
   const { isSignedIn, isReady } = useBitcodeX();
   const { isReady: isBittensorReady } = useBitcodeXBittensor();
-  const [walletSession, setWalletSession] = useState<WalletLoginResult | null>(
-    null,
-  );
   const [custom, setCustom] = useState<Custom>(DEFAULT_CUSTOM);
   const ready = isReady && isBittensorReady;
 
@@ -72,17 +62,8 @@ export const DemoPage: FC = () => {
           </div>
         ) : isSignedIn ? (
           <SignedIn />
-        ) : walletSession ? (
-          <WalletSessionView
-            session={walletSession}
-            onExit={() => setWalletSession(null)}
-          />
         ) : (
-          <SignedOut
-            custom={custom}
-            setCustom={setCustom}
-            onWalletLogin={setWalletSession}
-          />
+          <SignedOut custom={custom} setCustom={setCustom} />
         )}
       </main>
     </div>
@@ -188,48 +169,3 @@ const SignedIn: FC = () => {
 };
 
 /** Logged in with an extension wallet (no embedded key): verified address + balance. */
-const WalletSessionView: FC<{
-  session: WalletLoginResult;
-  onExit: () => void;
-}> = ({ session, onExit }) => {
-  const [balance, setBalance] = useState<string | null>(null);
-  useEffect(() => {
-    getApi(CHAIN_ID).then(async (r) => {
-      if (r.success) {
-        setBalance(
-          formatTaoAmount((await getBalances(r.data, session.address)).free),
-        );
-      }
-    });
-  }, [session.address]);
-  return (
-    <div className={styles.walletSession}>
-      <div className={styles.userCard}>
-        <h2 className={styles.panelTitle}>Signed in with your wallet</h2>
-        <p className={styles.muted}>
-          You proved control of this address with Sign-In with Bittensor.
-          Signing stays in your extension ({session.source}).
-        </p>
-        <div className={styles.kv}>
-          <span>Address</span>
-          <span className={styles.mono}>{session.address}</span>
-        </div>
-        <div className={styles.kv}>
-          <span>Balance</span>
-          <span>{balance ?? "…"}</span>
-        </div>
-        <div className={styles.kv}>
-          <span>User</span>
-          <span className={styles.mono}>{session.userId}</span>
-        </div>
-        <div className={styles.kv}>
-          <span>Access token</span>
-          <span>issued by BitcodeX, verify with @bitcodex/server</span>
-        </div>
-        <Button variant="secondary" size="sm" onClick={onExit}>
-          Sign out
-        </Button>
-      </div>
-    </div>
-  );
-};
