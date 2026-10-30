@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Publish the four packages to npm, in dependency order. Run from anywhere.
 #
-#   NPM_OTP=123456 scripts/release/publish.sh        # 6-digit code from your authenticator app
+#   scripts/release/publish.sh                        # asks for the 6-digit code per package
+#   NPM_OTP=123456 scripts/release/publish.sh        # or pass one code (non-interactive)
 #   scripts/release/publish.sh --dry-run             # show what would be published
 #
 # Needs: `npm login` done, two-factor authentication enabled on the npm account, and the
@@ -29,7 +30,12 @@ for pkg in sdk-core sdk-bittensor sdk-react server; do
     echo "skip $name@$ver (already on npm)"
     continue
   fi
+  otp="${NPM_OTP:-}"
+  # In an interactive Terminal, ask for a fresh code for each package (they expire in ~30 s).
+  if [ -z "$otp" ] && [ -z "$DRY" ] && [ -t 0 ]; then
+    read -r -p "6-digit code from your authenticator for $name: " otp
+  fi
   echo "publishing $name@$ver $DRY"
-  (cd "$dir" && npm publish --access public $DRY ${NPM_OTP:+--otp "$NPM_OTP"})
+  (cd "$dir" && npm publish --access public $DRY ${otp:+--otp "$otp"})
 done
 echo "done."
