@@ -34,7 +34,7 @@ Write the two addresses down. Then check:
 |---|---|---|---|
 | 1. Intro | **automatic** (`record_public.mjs`) | Title, then the customizable login window on the live site | 31 s |
 | 2. Logged-in features | **you record** | Google login, wallet, faucet, send, sign, stake, hotkeys, permissions | about 2:20 |
-| 3. Docs and end | **automatic** | The documentation tour and the end card | 45 s |
+| 3. Docs and end | **automatic** | The documentation tour and the end card | 38 s |
 
 Parts 1 and 3 are already built (real clicks on https://bitcodex-demo.vercel.app, only a drawn
 cursor added) in `~/Desktop/BitcodeX-demo-video/`. To re-record them (after a site change):
@@ -80,7 +80,7 @@ scripts/video/assemble.sh ~/Desktop/BitcodeX-demo-video/BitcodeX-demo.mp4 \
   ~/Desktop/BitcodeX-demo-video/part3_docs.mp4
 ```
 
-The result is 1080p H.264, silent, about 3:35. Trim dead time first if needed:
+The result is 1080p H.264, silent, about 3:30. Trim dead time first if needed:
 `TRIM_START=2.5 TRIM_END=150 ...` (raw seconds) in front of the build command.
 
 ## 5. Final checks before you publish
