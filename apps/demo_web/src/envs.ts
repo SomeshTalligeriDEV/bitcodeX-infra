@@ -12,8 +12,10 @@ export const envSchema = z.object({
     .enum(["bittensor:localnet", "bittensor:testnet"])
     .optional(),
   NEXT_PUBLIC_BITCODEX_SDK_ENDPOINT: z.string(),
-  NEXT_PUBLIC_BITCODEX_DOCS_ENDPOINT: z.string(),
-  NEXT_PUBLIC_S3_BUCKET_URL: z.string(),
+  // The app's public API key from the BitcodeX dashboard or the bootstrap script.
+  NEXT_PUBLIC_BITCODEX_API_KEY: z.string().optional(),
+  NEXT_PUBLIC_BITCODEX_DOCS_ENDPOINT: z.string().optional(),
+  NEXT_PUBLIC_S3_BUCKET_URL: z.string().optional(),
   // BitcodeX API, used for the localnet test-TAO faucet. Unset hides "Get test TAO".
   NEXT_PUBLIC_BITCODEX_API_ENDPOINT: z.string().optional(),
 });
