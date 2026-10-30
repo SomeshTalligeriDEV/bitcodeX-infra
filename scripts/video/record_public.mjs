@@ -6,10 +6,13 @@
 //   node record_public.mjs [site] [outdir]
 //
 // Writes outdir/public.webm and outdir/marks.json (caption text + start second of each step).
-import { mkdirSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
-const SITE = (process.argv[2] ?? "https://bitcodex-demo.vercel.app").replace(/\/$/, "");
+const SITE = (process.argv[2] ?? "https://bitcodex-demo.vercel.app").replace(
+  /\/$/,
+  "",
+);
 const OUT = process.argv[3] ?? "out";
 mkdirSync(OUT, { recursive: true });
 
@@ -37,7 +40,9 @@ const wait = (ms) => page.waitForTimeout(ms);
 
 await page.addInitScript(() => {
   const mk = () => {
-    if (document.getElementById("__cur")) return;
+    if (document.getElementById("__cur")) {
+      return;
+    }
     const c = document.createElement("div");
     c.id = "__cur";
     c.style.cssText =
@@ -45,27 +50,56 @@ await page.addInitScript(() => {
       "background:rgba(255,255,255,.95);border:2.5px solid #09090b;box-shadow:0 2px 10px rgba(0,0,0,.35);" +
       "pointer-events:none;z-index:2147483647;transition:transform .12s ease;";
     document.documentElement.appendChild(c);
-    addEventListener("mousemove", (e) => (c.style.left = e.clientX + "px", c.style.top = e.clientY + "px"), true);
-    addEventListener("mousedown", () => (c.style.transform = "scale(.7)"), true);
-    addEventListener("mouseup", () => (c.style.transform = "scale(1)"), true);
+    addEventListener(
+      "mousemove",
+      (e) => {
+        c.style.left = `${e.clientX}px`;
+        c.style.top = `${e.clientY}px`;
+      },
+      true,
+    );
+    addEventListener(
+      "mousedown",
+      () => {
+        c.style.transform = "scale(.7)";
+      },
+      true,
+    );
+    addEventListener(
+      "mouseup",
+      () => {
+        c.style.transform = "scale(1)";
+      },
+      true,
+    );
   };
-  if (document.readyState === "loading") addEventListener("DOMContentLoaded", mk);
-  else mk();
+  if (document.readyState === "loading") {
+    addEventListener("DOMContentLoaded", mk);
+  } else {
+    mk();
+  }
 });
 
-let cx = 960, cy = 540;
+let cx = 960,
+  cy = 540;
 async function moveTo(loc) {
   await loc.scrollIntoViewIfNeeded();
   const b = await loc.boundingBox();
-  if (!b) throw new Error("not visible");
-  const x = b.x + b.width / 2, y = b.y + b.height / 2;
+  if (!b) {
+    throw new Error("not visible");
+  }
+  const x = b.x + b.width / 2,
+    y = b.y + b.height / 2;
   await page.mouse.move(x, y, { steps: 38 });
-  cx = x; cy = y;
+  cx = x;
+  cy = y;
   await wait(280);
 }
 async function click(loc) {
   await moveTo(loc);
-  await page.mouse.down(); await wait(90); await page.mouse.up();
+  await page.mouse.down();
+  await wait(90);
+  await page.mouse.up();
 }
 async function scrollBy(px, ms = 1800) {
   const steps = 30;
@@ -83,7 +117,9 @@ await wait(900);
 mark("BitcodeX: embedded wallets for Bittensor");
 await wait(5500);
 
-mark("Customize the login window: background, accent colour and sign-in methods");
+mark(
+  "Customize the login window: background, accent colour and sign-in methods",
+);
 await click(page.getByRole("button", { name: "Dark background" }));
 await wait(1900);
 await click(page.getByRole("button", { name: "Light background" }));
@@ -121,9 +157,21 @@ const nav = async (name, text, down = 700) => {
   await scrollBy(down, 2600);
   await wait(1000);
 };
-await nav("Quickstart", "Quickstart: install, wrap your app, add login, send a transaction", 700);
-await nav("Wallet API", "Wallet API: send, stake, hotkeys, permissions and signing", 900);
-await nav("Security model", "The key is split between your browser and servers: never in one place", 800);
+await nav(
+  "Quickstart",
+  "Quickstart: install, wrap your app, add login, send a transaction",
+  700,
+);
+await nav(
+  "Wallet API",
+  "Wallet API: send, stake, hotkeys, permissions and signing",
+  900,
+);
+await nav(
+  "Security model",
+  "The key is split between your browser and servers: never in one place",
+  800,
+);
 await wait(1800);
 mark("END");
 
@@ -133,5 +181,8 @@ await browser.close();
 const src = await video.path();
 renameSync(src, `${OUT}/public.webm`);
 writeFileSync(`${OUT}/marks.json`, JSON.stringify(marks, null, 2));
-writeFileSync(`${OUT}/trim_start.txt`, String(Math.max(0, marks[0].t - 0.6).toFixed(2)));
+writeFileSync(
+  `${OUT}/trim_start.txt`,
+  String(Math.max(0, marks[0].t - 0.6).toFixed(2)),
+);
 console.log(`recorded ${(marks.at(-1).t).toFixed(0)} s -> ${OUT}/public.webm`);
