@@ -1,14 +1,14 @@
-# @bitcodex/sdk-react
+# @adityaghgh/sdk-react
 
 React provider and hooks for BitcodeX on Bittensor.
 
 ```bash
-npm install @bitcodex/sdk-core @bitcodex/sdk-bittensor @bitcodex/sdk-react
+npm install @adityaghgh/sdk-core @adityaghgh/sdk-bittensor @adityaghgh/sdk-react
 ```
 
 ```tsx
-import { BitcodeXProvider, useBitcodeX } from "@bitcodex/sdk-react";
-import { useBitcodeXBittensor } from "@bitcodex/sdk-react/bittensor";
+import { BitcodeXProvider, useBitcodeX } from "@adityaghgh/sdk-react";
+import { useBitcodeXBittensor } from "@adityaghgh/sdk-react/bittensor";
 
 <BitcodeXProvider config={{ apiKey: "YOUR_API_KEY", sdkEndpoint: "https://wallet.example.com", bittensor: { chainId: "bittensor:localnet" } }}>
   <App />

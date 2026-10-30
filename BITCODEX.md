@@ -58,8 +58,8 @@ popup.** The key is split so that no single party, including us, can move a user
 ```
   Your app (React)                                  Your servers
   ┌───────────────────────────────┐                ┌──────────────────────────────┐
-  │ @bitcodex/sdk-react             │     HTTPS      │ BitcodeX API                 │
-  │ @bitcodex/sdk-bittensor         │───────────────▶│  login · sessions · signing  │
+  │ @adityaghgh/sdk-react             │     HTTPS      │ BitcodeX API                 │
+  │ @adityaghgh/sdk-bittensor         │───────────────▶│  login · sessions · signing  │
   │                               │                │  access tokens · dev apps    │
   │  ┌─────────────────────────┐  │                └───────────┬──────────────────┘
   │  │ Wallet frame (iframe)    │  │                            │ co-signing
@@ -136,7 +136,7 @@ Everything shown by the demo is read live from the chain: no mock balances, no s
 
 ```bash
 BASE=https://bitcodex-demo.vercel.app/downloads
-npm install $BASE/bitcodex-sdk-react-0.1.0.tgz $BASE/bitcodex-sdk-bittensor-0.1.0.tgz $BASE/bitcodex-sdk-core-0.1.0.tgz
+npm install $BASE/adityaghgh-sdk-react-0.1.0.tgz $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz $BASE/adityaghgh-sdk-core-0.1.0.tgz
 ```
 
 ```tsx

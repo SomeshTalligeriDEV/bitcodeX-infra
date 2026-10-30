@@ -96,7 +96,7 @@ export default function Page() {
 
       <h2>useBitcodeXBittensor()</h2>
       <p>
-        Import from <code>@bitcodex/sdk-react/bittensor</code>.
+        Import from <code>@adityaghgh/sdk-react/bittensor</code>.
       </p>
       <table>
         <tbody>

@@ -34,19 +34,19 @@ export default function Page() {
         lang="bash"
         code={`BASE=https://bitcodex-demo.vercel.app/downloads
 npm install \\
-  $BASE/bitcodex-sdk-react-0.1.0.tgz \\
-  $BASE/bitcodex-sdk-bittensor-0.1.0.tgz \\
-  $BASE/bitcodex-sdk-core-0.1.0.tgz
+  $BASE/adityaghgh-sdk-react-0.1.0.tgz \\
+  $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz \\
+  $BASE/adityaghgh-sdk-core-0.1.0.tgz
 
 # on your server only (verify users):
-npm install $BASE/bitcodex-server-0.1.0.tgz`}
+npm install $BASE/adityaghgh-server-0.1.0.tgz`}
       />
       <Callout>
-        These are the same packages as the <code>@bitcodex/sdk-react</code>,{" "}
-        <code>@bitcodex/sdk-bittensor</code>, <code>@bitcodex/sdk-core</code>{" "}
-        and <code>@bitcodex/server</code> names used below. When they are
-        published to the npm registry,{" "}
-        <code>npm install @bitcodex/sdk-react</code> will work too. Use
+        These are the same packages as the <code>@adityaghgh/sdk-react</code>,{" "}
+        <code>@adityaghgh/sdk-bittensor</code>,{" "}
+        <code>@adityaghgh/sdk-core</code> and <code>@adityaghgh/server</code>{" "}
+        names used below. When they are published to the npm registry,{" "}
+        <code>npm install @adityaghgh/sdk-react</code> will work too. Use
         TypeScript with <code>skipLibCheck: true</code>.
       </Callout>
 
@@ -54,7 +54,7 @@ npm install $BASE/bitcodex-server-0.1.0.tgz`}
       <CodeBlock
         title="app/providers.tsx"
         code={`"use client";
-import { BitcodeXProvider } from "@bitcodex/sdk-react";
+import { BitcodeXProvider } from "@adityaghgh/sdk-react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -75,8 +75,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <CodeBlock
         title="login.tsx"
         code={`"use client";
-import { useBitcodeX } from "@bitcodex/sdk-react";
-import { useBitcodeXBittensor } from "@bitcodex/sdk-react/bittensor";
+import { useBitcodeX } from "@adityaghgh/sdk-react";
+import { useBitcodeXBittensor } from "@adityaghgh/sdk-react/bittensor";
 
 export function Login() {
   const { isReady, isSignedIn, signIn, signOut } = useBitcodeX();
@@ -120,7 +120,7 @@ await fetch("/api/me", { headers: { Authorization: \`Bearer \${token}\` } });`}
       />
       <CodeBlock
         title="server"
-        code={`import { verifyAccessToken } from "@bitcodex/server";
+        code={`import { verifyAccessToken } from "@adityaghgh/server";
 
 const result = await verifyAccessToken(token, {
   appId: process.env.BITCODEX_APP_ID!,

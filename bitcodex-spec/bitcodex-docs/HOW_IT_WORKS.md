@@ -13,8 +13,8 @@ Live docs: the `/docs` section of the demo site. Honest feature status:
 ```
  your app (React)                       your servers
  ┌──────────────────────┐              ┌────────────────────────────┐
- │ @bitcodex/sdk-react   │   HTTPS      │ BitcodeX API               │
- │ @bitcodex/sdk-bittensor│────────────▶│  login, sessions, signing, │
+ │ @adityaghgh/sdk-react   │   HTTPS      │ BitcodeX API               │
+ │ @adityaghgh/sdk-bittensor│────────────▶│  login, sessions, signing, │
  │                      │              │  access tokens, dev apps   │
  │  ┌─────────────────┐ │              └──────┬─────────────────────┘
  │  │ wallet frame     │ │                     │ co-signing

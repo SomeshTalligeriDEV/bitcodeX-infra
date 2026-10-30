@@ -19,7 +19,7 @@ export default function Page() {
       </p>
       <CodeBlock
         title="Node / Next.js route"
-        code={`import { verifyAccessToken } from "@bitcodex/server";
+        code={`import { verifyAccessToken } from "@adityaghgh/server";
 
 export async function GET(req: Request) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "") ?? "";
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
 
       <h2>Read users and wallets</h2>
       <CodeBlock
-        code={`import { createServerClient } from "@bitcodex/server";
+        code={`import { createServerClient } from "@adityaghgh/server";
 
 const bitcodex = createServerClient({
   apiUrl: process.env.BITCODEX_API_URL!,

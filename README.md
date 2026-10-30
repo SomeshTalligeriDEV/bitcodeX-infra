@@ -53,14 +53,14 @@ Read the full story, architecture and feature matrix in **[BITCODEX.md](BITCODEX
 ```bash
 BASE=https://bitcodex-demo.vercel.app/downloads
 npm install \
-  $BASE/bitcodex-sdk-react-0.1.0.tgz \
-  $BASE/bitcodex-sdk-bittensor-0.1.0.tgz \
-  $BASE/bitcodex-sdk-core-0.1.0.tgz
+  $BASE/adityaghgh-sdk-react-0.1.0.tgz \
+  $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz \
+  $BASE/adityaghgh-sdk-core-0.1.0.tgz
 ```
 
 ```tsx
-import { BitcodeXProvider, useBitcodeX } from "@bitcodex/sdk-react";
-import { useBitcodeXBittensor } from "@bitcodex/sdk-react/bittensor";
+import { BitcodeXProvider, useBitcodeX } from "@adityaghgh/sdk-react";
+import { useBitcodeXBittensor } from "@adityaghgh/sdk-react/bittensor";
 
 // 1. Wrap your app
 <BitcodeXProvider
@@ -89,7 +89,7 @@ published to npm as `@bitcodex/*`.
 ```mermaid
 flowchart LR
   subgraph App["Your app (browser)"]
-    SDK["@bitcodex/sdk-react"]
+    SDK["@adityaghgh/sdk-react"]
     Frame["Wallet frame (iframe)<br/>holds the user's key share"]
     SDK <--> Frame
   end

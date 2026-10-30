@@ -1,4 +1,4 @@
-# @bitcodex/sdk-bittensor
+# @adityaghgh/sdk-bittensor
 
 Embedded Bittensor wallet for your app: users sign in with Google or GitHub and get a
 **coldkey** (SS58 prefix 42) held as a 2-of-2 threshold key (FROST Ed25519). No seed
@@ -6,11 +6,11 @@ phrase, no extension. Every signature is approved in the BitcodeX popup, which s
 decoded call, the fee and the requesting site.
 
 ```bash
-npm install @bitcodex/sdk-core @bitcodex/sdk-bittensor
+npm install @adityaghgh/sdk-core @adityaghgh/sdk-bittensor
 ```
 
 ```ts
-import { BitcodeXBittensorWallet } from "@bitcodex/sdk-bittensor";
+import { BitcodeXBittensorWallet } from "@adityaghgh/sdk-bittensor";
 
 const res = BitcodeXBittensorWallet.init({
   api_key: "YOUR_API_KEY",          // developer dashboard → Apps

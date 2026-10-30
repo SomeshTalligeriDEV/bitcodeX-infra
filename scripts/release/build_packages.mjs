@@ -25,6 +25,9 @@ const ROOT = path.resolve(
 );
 const OUT = path.join(ROOT, "release");
 const VERSION = "0.1.0";
+// npm scope the packages are published under. The @bitcodex scope belongs to another npm
+// account, so the default is the maintainer's own scope. Override: BITCODEX_NPM_SCOPE=@org.
+const SCOPE = process.env.BITCODEX_NPM_SCOPE || "@adityaghgh";
 // Apache-2.0, chosen by the owner (matches the upstream licence). LICENSE and NOTICE are
 // copied into every package.
 const LICENSE = process.env.BITCODEX_LICENSE || "Apache-2.0";
@@ -40,8 +43,8 @@ const POLKADOT = {
 
 // workspace name -> published name
 const SIBLINGS = {
-  "@bitcodex/bitcodex-sdk-core": "@bitcodex/sdk-core",
-  "@bitcodex/sdk-bittensor": "@bitcodex/sdk-bittensor",
+  "@bitcodex/bitcodex-sdk-core": `${SCOPE}/sdk-core`,
+  "@bitcodex/sdk-bittensor": `${SCOPE}/sdk-bittensor`,
 };
 
 // Chains that are not part of the Bittensor-only React package.
@@ -53,7 +56,7 @@ const DROPPED = [
 
 const PACKAGES = [
   {
-    name: "@bitcodex/sdk-core",
+    name: `${SCOPE}/sdk-core`,
     dir: "sdk/bitcodex_sdk_core",
     entries: { index: "dist/index.js" },
     types: { index: "dist/index.d.ts" },
@@ -68,12 +71,12 @@ const PACKAGES = [
       "BitcodeX core: embedded wallet iframe, login and events (chain-agnostic).",
   },
   {
-    name: "@bitcodex/sdk-bittensor",
+    name: `${SCOPE}/sdk-bittensor`,
     dir: "sdk/bitcodex_sdk_bittensor",
     entries: { index: "dist/index.js" },
     types: { index: "dist/index.d.ts" },
     deps: {
-      "@bitcodex/sdk-core": `^${VERSION}`,
+      [`${SCOPE}/sdk-core`]: `^${VERSION}`,
       "@polkadot/api": POLKADOT["@polkadot/api"],
       "@polkadot/extension-dapp": "0.64.1",
       "@polkadot/extension-inject": POLKADOT["@polkadot/extension-inject"],
@@ -87,20 +90,20 @@ const PACKAGES = [
       "BitcodeX for Bittensor: social-login coldkey, polkadot.js Signer, send/stake/register, Sign-In with Bittensor.",
   },
   {
-    name: "@bitcodex/sdk-react",
+    name: `${SCOPE}/sdk-react`,
     dir: "sdk/bitcodex_sdk_react",
     entries: { index: "dist/index.js", bittensor: "dist/bittensor/index.js" },
     types: { index: "dist/index.d.ts", bittensor: "dist/bittensor/index.d.ts" },
     deps: {
-      "@bitcodex/sdk-core": `^${VERSION}`,
-      "@bitcodex/sdk-bittensor": `^${VERSION}`,
+      [`${SCOPE}/sdk-core`]: `^${VERSION}`,
+      [`${SCOPE}/sdk-bittensor`]: `^${VERSION}`,
     },
     peer: { react: ">=18" },
     description:
       "BitcodeX React provider and hooks (useBitcodeX, useBitcodeXBittensor).",
   },
   {
-    name: "@bitcodex/server",
+    name: `${SCOPE}/server`,
     dir: "sdk/bitcodex_server",
     entries: { index: "dist/index.js" },
     types: { index: "dist/index.d.ts" },
@@ -158,7 +161,7 @@ function dropChains() {
       }
       const source = id.slice(ID.length + 1);
       return `throw new Error(${JSON.stringify(
-        `${source} is not part of @bitcodex/sdk-react: BitcodeX for npm is Bittensor only. Use the bittensor option.`,
+        `${source} is not part of ${SCOPE}/sdk-react: BitcodeX for npm is Bittensor only. Use the bittensor option.`,
       )});`;
     },
   };
@@ -329,7 +332,7 @@ function readme(pkg) {
   const release = path.join(
     ROOT,
     "scripts/release/readme",
-    `${pkg.name.replace("@bitcodex/", "")}.md`,
+    `${pkg.name.replace(/^@[^/]+\//, "")}.md`,
   );
   try {
     return readFileSync(release, "utf8");
@@ -348,7 +351,7 @@ rmSync(OUT, { recursive: true, force: true });
 mkdirSync(path.join(OUT, "tarballs"), { recursive: true });
 
 for (const pkg of PACKAGES) {
-  const pkgOut = path.join(OUT, "packages", pkg.name.replace("@bitcodex/", ""));
+  const pkgOut = path.join(OUT, "packages", pkg.name.replace(/^@[^/]+\//, ""));
   mkdirSync(pkgOut, { recursive: true });
   await bundleJs(pkg, pkgOut);
   await bundleTypes(pkg, pkgOut);

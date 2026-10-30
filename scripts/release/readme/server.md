@@ -1,9 +1,9 @@
-# @bitcodex/server
+# @adityaghgh/server
 
 BitcodeX for your backend (Node 22+).
 
 ```ts
-import { verifySiwb, actAs, getApi } from "@bitcodex/server";
+import { verifySiwb, actAs, getApi } from "@adityaghgh/server";
 
 // Sign-In with Bittensor: check what the browser sent.
 const r = verifySiwb(message, signature, { domain: "app.example.com", nonce, genesisHash });
@@ -18,7 +18,7 @@ if (api.success) {
 
 ```ts
 // Access tokens: your frontend calls `bitcodexWallet.getAccessToken()` and sends it to you.
-import { verifyAccessToken, createServerClient } from "@bitcodex/server";
+import { verifyAccessToken, createServerClient } from "@adityaghgh/server";
 const v = await verifyAccessToken(token, { appId: "YOUR_APP_ID", apiUrl: "https://api.example.com" });
 if (v.success) console.log(v.data.userId, v.data.address);
 

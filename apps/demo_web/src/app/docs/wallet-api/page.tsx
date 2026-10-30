@@ -125,7 +125,7 @@ const result = await bittensorWallet.stake({
       <p>
         If the user closes the popup, the call rejects with the{" "}
         <code>USER_CANCELLED</code> value exported by{" "}
-        <code>@bitcodex/sdk-bittensor</code>. Treat that as a normal outcome,
+        <code>@adityaghgh/sdk-bittensor</code>. Treat that as a normal outcome,
         not a failure.
       </p>
       <Callout>
