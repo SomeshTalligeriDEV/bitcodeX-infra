@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { MoonIcon } from "@bitcodex/bitcodex-common-ui/icons/moon_icon";
 import { SunIcon } from "@bitcodex/bitcodex-common-ui/icons/sun_icon";
