@@ -18,11 +18,11 @@ import { BittensorAgentPanel } from "./bittensor_agent_panel";
 import { BittensorHotkeysPanel } from "./bittensor_hotkeys_panel";
 import { BittensorStakePanel } from "./bittensor_stake_panel";
 import styles from "./bittensor_widget.module.scss";
+import { TestnetFunding } from "./testnet_funding";
 import {
   CHAIN_ID,
   IS_LOCALNET,
   NETWORK_NAME,
-  TESTNET_FUNDING_NOTE,
 } from "@bitcodex-demo-web/bittensor_network";
 import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 
@@ -274,9 +274,6 @@ export const BittensorWidget: FC = () => {
             <span className={styles.balance}>
               {balance === null ? "…" : formatTao(balance)}
             </span>
-            {!IS_LOCALNET && (
-              <span className={styles.note}>{TESTNET_FUNDING_NOTE}</span>
-            )}
           </div>
           <div className={styles.addressBlock}>
             <span className={styles.caption}>Coldkey address</span>
@@ -324,6 +321,13 @@ export const BittensorWidget: FC = () => {
           )}
         </div>
       </section>
+
+      {!IS_LOCALNET && address && (
+        <TestnetFunding
+          address={address}
+          balance={balance === null ? null : formatTao(balance)}
+        />
+      )}
 
       <div className={styles.grid}>
         <Card

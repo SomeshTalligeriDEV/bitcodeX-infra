@@ -1,4 +1,4 @@
-# BitcodeX status (honest, 2026-10-29)
+# BitcodeX status (honest, 2026-10-30)
 
 Rule: nothing simulated ships. **Real** = works against the live chain/API (tested chain-side or over HTTP). **Preview** = real data or real action, labelled. **Not built** = hidden or "Coming soon".
 Every Real item below still needs one browser run with a real Google login (`PENDING_BROWSER_CHECKS.md`); none has been clicked through yet.
@@ -26,6 +26,10 @@ Every Real item below still needs one browser run with a real Google login (`PEN
 | MFA before signing above a limit (X12) | Preview | TOTP (RFC 6238 vectors pass), secret encrypted at rest, per-user lockout after 5 wrong codes; HTTP end-to-end test. The signing popup requires a code when a call moves ≥ the limit (sums transfers and stakes, incl. batch/proxy; transferAll always). Settings only from the user dashboard. Server co-signing does not check MFA yet. |
 | npm packages `@bitcodex/sdk-core`, `sdk-bittensor`, `sdk-react`, `server` 0.1.0 | Real, packed, not published | `node scripts/release/build_packages.mjs` → `release/tarballs/`. Installed into a brand-new folder: imports work in Node, `@bitcodex/server` read live chain data, a sample React app typechecks. Licence is `UNLICENSED` until the owner picks one (no LICENSE file in the repo). With `skipLibCheck: false`, core types need optional peers viem / @keplr-wallet/types / @cosmjs/amino. |
 | `@bitcodex/server`: access tokens (EdDSA JWT + JWKS), getUser, getWallets | Real | HTTP end-to-end test: issue, verify, tamper/wrong-audience/wrong-secret/unknown-user rejected. Users are scoped per developer account, not per app. SDK `getAccessToken()` needs the browser check. |
-| Self-host compose, Playwright quickstart, demo instance | Not built | |
+| Self-host compose, Render blueprint | Real (images built on GitHub, all services running on Render free plan, bootstrap run) | API, 2 key share nodes, wallet frame answer 200; first app created on testnet. Free plan sleeps after 15 min; free database expires after 30 days. |
+| Hosted demo (Vercel) | Real, deployed | https://bitcodex-demo.vercel.app, wired to the Render backend on testnet. A full login on it is not yet confirmed in a browser. |
+| Docs section in the demo (`/docs`) | Real | 10 pages written from the real SDK signatures. |
+| Testnet funding card | Real (honest) | No automatic faucet exists in the official docs; the card shows the address, a copy button and the official docs link, and an "Open faucet" button when `NEXT_PUBLIC_TESTNET_FAUCET_URL` is set. |
+| Playwright quickstart test | Not built | needs the owner's OK on the test-login design |
 | Tensor Studio integration (X16) | Deferred | Studio not built |
 | Mainnet | Disabled by design | needs DKG + audit |

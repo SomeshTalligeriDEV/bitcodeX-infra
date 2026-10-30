@@ -182,14 +182,19 @@ export const BittensorHotkeysPanel: FC<Props> = ({
         Hotkeys
       </Typography>
       <Typography size="xs" color="tertiary">
-        Create hotkeys on your miner or validator machine, never here:{" "}
-        <code>btcli wallet new-hotkey -w my_coldkey -H my_hotkey</code>, then{" "}
-        <code>btcli wallet show</code> to copy its address.
+        Your wallet above is your <strong>coldkey</strong>: it holds the funds
+        and owns your stake. A <strong>hotkey</strong> is a separate key that
+        signs mining or validating work, so it lives on the machine that runs it
+        and is never created in this shared signing system. Create it there:{" "}
+        <code>btcli wallet new-hotkey -w my_coldkey -H my_hotkey</code>, copy
+        its address with <code>btcli wallet show</code>, add it below and
+        register it on a subnet.
       </Typography>
 
       {infos.length === 0 && (
         <Typography size="xs" color="tertiary">
-          No hotkeys yet.
+          No hotkeys linked to this coldkey yet. Hotkeys you add or register
+          appear here with their subnet and UID, read live from the chain.
         </Typography>
       )}
       {infos.map((h) => (

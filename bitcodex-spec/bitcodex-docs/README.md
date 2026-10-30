@@ -34,6 +34,7 @@ BitcodeX's hosted service shut down on **1 June 2026** (notice in `apps/user_das
 | `05-rebrand.md` | How to rename BitcodeX to BitcodeX safely, and what the licence requires. |
 | `06-build-order.md` | Phases with checks, and who does what. |
 | `07-security.md` | Threat model and hard safety rules. |
+| `HOW_IT_WORKS.md` | One-page explanation of the architecture, key model and flows. |
 | `08-demo.md` | The demo app (like demo.privy.io) and the 3-minute demo script. |
 | `features/X01…X16` | One spec per feature with research steps, build steps and acceptance checks. |
 

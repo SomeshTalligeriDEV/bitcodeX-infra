@@ -1,51 +1,24 @@
 "use client";
 
-import { GoogleIcon } from "@bitcodex/bitcodex-common-ui/icons/google_icon";
 import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
 import {
-  type ExtensionAccount,
   formatTaoAmount,
   getApi,
   getBalances,
   type WalletLoginResult,
 } from "@bitcodex/sdk-bittensor";
-import { type FC, useEffect, useMemo, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 
+import { type Custom, DEFAULT_CUSTOM } from "./custom";
 import styles from "./demo.module.scss";
+import { SignedOut } from "./signed_out";
 import { CHAIN_ID, NETWORK_NAME } from "@bitcodex-demo-web/bittensor_network";
 import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 import { ThemeButton } from "@bitcodex-demo-web/components/theme/theme_button";
 import { BittensorWidget } from "@bitcodex-demo-web/components/widgets/bittensor_widget/bittensor_widget";
 
 const REPO = "https://github.com/SomeshTalligeriDEV/bitcodeX-infra";
-// Shown only when a GitHub OAuth app is configured on the server.
-const GITHUB_ENABLED = process.env.NEXT_PUBLIC_GITHUB_ENABLED === "true";
-
-type Method = "google" | "github" | "wallet";
-const METHODS: { id: Method; label: string; hint: string }[] = [
-  { id: "google", label: "Google", hint: "Embedded coldkey on first login" },
-  {
-    id: "github",
-    label: "GitHub",
-    hint: "Needs a GitHub OAuth app on the server",
-  },
-  {
-    id: "wallet",
-    label: "Bittensor wallet",
-    hint: "Talisman, SubWallet or Polkadot.js via Sign-In with Bittensor",
-  },
-];
-// "mono" = black-and-white (the BitcodeX default); the rest preview an app's brand colour.
-const ACCENTS = ["mono", "#7F56D9", "#2E90FA", "#12B76A", "#ED6B25"];
-
-interface Custom {
-  methods: Method[];
-  accent: string;
-  theme: "light" | "dark" | "system";
-  logoUrl: string;
-}
-
 /** BitcodeX demo: an embedded Bittensor wallet in a normal web app. Bittensor only. */
 export const DemoPage: FC = () => {
   const { isSignedIn, isReady } = useBitcodeX();
@@ -53,18 +26,20 @@ export const DemoPage: FC = () => {
   const [walletSession, setWalletSession] = useState<WalletLoginResult | null>(
     null,
   );
-  const [custom, setCustom] = useState<Custom>({
-    methods: ["google", "wallet"],
-    accent: ACCENTS[0],
-    theme: "system",
-    logoUrl: "",
-  });
+  const [custom, setCustom] = useState<Custom>(DEFAULT_CUSTOM);
   const ready = isReady && isBittensorReady;
 
   return (
     <div
       className={styles.shell}
-      style={{ ["--accent" as string]: custom.accent }}
+      style={
+        custom.accent === "mono"
+          ? undefined
+          : {
+              ["--accent" as string]: custom.accent,
+              ["--accent-fg" as string]: "#fff",
+            }
+      }
     >
       <header className={styles.header}>
         <a href="/" className={styles.brand}>
@@ -77,6 +52,9 @@ export const DemoPage: FC = () => {
           Bittensor · {NETWORK_NAME}
         </span>
         <span className={styles.spacer} />
+        <a className={styles.navLink} href="/docs">
+          Docs
+        </a>
         <a
           className={styles.navLink}
           href={REPO}
@@ -107,276 +85,6 @@ export const DemoPage: FC = () => {
           />
         )}
       </main>
-    </div>
-  );
-};
-
-const SignedOut: FC<{
-  custom: Custom;
-  setCustom: (c: Custom) => void;
-  onWalletLogin: (s: WalletLoginResult) => void;
-}> = ({ custom, setCustom, onWalletLogin }) => {
-  const { openSignInModal, signIn } = useBitcodeX();
-  const { bittensorWallet } = useBitcodeXBittensor();
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<ExtensionAccount[] | null>(null);
-
-  const social = custom.methods.filter(
-    (m): m is "google" | "github" => m !== "wallet",
-  );
-
-  const run = async (label: string, fn: () => Promise<void>) => {
-    setBusy(label);
-    setError(null);
-    try {
-      await fn();
-    } catch (e) {
-      const m = e instanceof Error ? e.message : String(e);
-      if (m !== "Sign in cancelled") {
-        setError(m);
-      }
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const login = () =>
-    run("login", async () => {
-      await openSignInModal({
-        loginMethods: social.length > 0 ? social : ["google"],
-        accentColor: custom.accent === "mono" ? null : custom.accent,
-        logoUrl: custom.logoUrl.trim() || null,
-        theme: custom.theme,
-      });
-    });
-
-  const findWallets = () =>
-    run("wallets", async () => {
-      if (!bittensorWallet) {
-        throw new Error("BitcodeX is not ready");
-      }
-      const list = await bittensorWallet.listExtensionAccounts("BitcodeX demo");
-      if (list.length === 0) {
-        throw new Error(
-          "No Bittensor wallet extension found. Install Talisman, SubWallet or the Polkadot.js extension and allow this site.",
-        );
-      }
-      setAccounts(list);
-    });
-
-  const toggle = (m: Method) =>
-    setCustom({
-      ...custom,
-      methods: custom.methods.includes(m)
-        ? custom.methods.filter((x) => x !== m)
-        : [...custom.methods, m],
-    });
-
-  const code = useMemo(() => {
-    const lines = [
-      `<BitcodeXProvider`,
-      `  config={{`,
-      `    apiKey: process.env.NEXT_PUBLIC_BITCODEX_API_KEY,`,
-      `    sdkEndpoint: "https://wallet.your-domain.com",`,
-      `    bittensor: { chainId: "${CHAIN_ID}" },`,
-      `  }}`,
-      `>`,
-      `  <App />`,
-      `</BitcodeXProvider>`,
-      ``,
-      `// Login methods, theme, accent and logo are app settings`,
-      `// (developer dashboard → Apps). This page previews them:`,
-      `openSignInModal({`,
-      `  loginMethods: ${JSON.stringify(social)},`,
-      custom.accent === "mono"
-        ? "  // accent: black and white (default)"
-        : `  accentColor: "${custom.accent}",`,
-      `  theme: "${custom.theme}",${custom.logoUrl.trim() ? `\n  logoUrl: "${custom.logoUrl.trim()}",` : ""}`,
-      `});`,
-    ];
-    if (custom.methods.includes("wallet")) {
-      lines.push(
-        ``,
-        `// Bittensor wallet login (extension + Sign-In with Bittensor)`,
-        `const [account] = await bittensorWallet.listExtensionAccounts();`,
-        `const { accessToken } = await bittensorWallet.loginWithWallet(account);`,
-      );
-    }
-    return lines.join("\n");
-  }, [custom, social]);
-
-  return (
-    <div className={styles.stack}>
-      <section className={styles.previewCol}>
-        <div className={styles.loginCard}>
-          <span className={styles.eyebrow}>Embedded wallets for Bittensor</span>
-          <h1 className={styles.title}>
-            Your Bittensor wallet, one click away
-          </h1>
-          <p className={styles.lead}>
-            A coldkey is created on first login, split 2-of-2 between this
-            browser and the BitcodeX server. No extension, no seed phrase. Every
-            signature is approved in a readable popup.
-          </p>
-          <div className={styles.ctaCol}>
-            <button
-              type="button"
-              className={styles.providerBtn}
-              disabled={!!busy}
-              onClick={() => run("google", () => signIn("google"))}
-            >
-              <GoogleIcon width={18} height={18} />
-              {busy === "google" ? "Opening Google…" : "Continue with Google"}
-            </button>
-            {GITHUB_ENABLED && (
-              <button
-                type="button"
-                className={styles.providerBtn}
-                disabled={!!busy}
-                onClick={() => run("github", () => signIn("github"))}
-              >
-                <span className={styles.ghMark} aria-hidden="true">
-                  GH
-                </span>
-                {busy === "github" ? "Opening GitHub…" : "Continue with GitHub"}
-              </button>
-            )}
-            {!accounts && (
-              <button
-                type="button"
-                className={styles.providerBtn}
-                disabled={!!busy}
-                onClick={findWallets}
-              >
-                <span className={styles.ghMark} aria-hidden="true">
-                  τ
-                </span>
-                {busy === "wallets"
-                  ? "Looking for wallets…"
-                  : "Continue with a Bittensor wallet"}
-              </button>
-            )}
-            {accounts?.map((a) => (
-              <button
-                type="button"
-                key={`${a.source}:${a.address}`}
-                className={styles.accountBtn}
-                disabled={!!busy}
-                onClick={() =>
-                  run("wallet-login", async () => {
-                    if (!bittensorWallet) {
-                      throw new Error("BitcodeX is not ready");
-                    }
-                    onWalletLogin(await bittensorWallet.loginWithWallet(a));
-                  })
-                }
-              >
-                <strong>{a.name ?? "Account"}</strong>
-                <span className={styles.mono}>
-                  {a.address.slice(0, 10)}…{a.address.slice(-8)} · {a.source}
-                </span>
-              </button>
-            ))}
-            <button
-              type="button"
-              className={styles.linkBtn}
-              disabled={!!busy}
-              onClick={login}
-            >
-              Or open the BitcodeX login popup →
-            </button>
-          </div>
-          {error && <div className={styles.error}>{error}</div>}
-        </div>
-
-        <details className={styles.devPanel}>
-          <summary>Developer: customize the login popup</summary>
-          <div className={styles.devBody}>
-            <p className={styles.muted}>
-              These settings change only the BitcodeX login popup below (in a
-              real app they are your app settings in the developer dashboard).
-              The sign-in buttons above always stay.
-            </p>
-
-            <div className={styles.group}>
-              <span className={styles.groupLabel}>
-                Methods shown in the popup
-              </span>
-              {METHODS.map((m) => (
-                <label key={m.id} className={styles.toggleRow}>
-                  <input
-                    type="checkbox"
-                    checked={custom.methods.includes(m.id)}
-                    onChange={() => toggle(m.id)}
-                  />
-                  <span>
-                    <strong>{m.label}</strong>
-                    <span className={styles.hint}>{m.hint}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            <div className={styles.group}>
-              <span className={styles.groupLabel}>Accent colour</span>
-              <div className={styles.swatches}>
-                {ACCENTS.map((c) => (
-                  <button
-                    type="button"
-                    key={c}
-                    aria-label={c}
-                    className={styles.swatch}
-                    data-active={custom.accent === c}
-                    style={{
-                      background:
-                        c === "mono"
-                          ? "linear-gradient(135deg, #000 50%, #fff 50%)"
-                          : c,
-                    }}
-                    onClick={() => setCustom({ ...custom, accent: c })}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.group}>
-              <span className={styles.groupLabel}>Login modal theme</span>
-              <div className={styles.segmented}>
-                {(["system", "light", "dark"] as const).map((t) => (
-                  <button
-                    type="button"
-                    key={t}
-                    data-active={custom.theme === t}
-                    onClick={() => setCustom({ ...custom, theme: t })}
-                  >
-                    {t[0].toUpperCase() + t.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.group}>
-              <span className={styles.groupLabel}>Logo URL (optional)</span>
-              <input
-                className={styles.input}
-                placeholder="https://…/logo.png"
-                value={custom.logoUrl}
-                onChange={(e) =>
-                  setCustom({ ...custom, logoUrl: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        </details>
-
-        <div className={styles.codeCard}>
-          <div className={styles.codeHead}>
-            <i /> <i /> <i /> <span>app.tsx: updates as you customize</span>
-          </div>
-          <pre className={styles.codeBody}>{code}</pre>
-        </div>
-      </section>
     </div>
   );
 };
