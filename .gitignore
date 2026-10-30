@@ -453,3 +453,4 @@ crypto/*/*_addon/addon/index.d.ts
 /release/
 selfhost/.env
 selfhost/secrets/
+.env*
