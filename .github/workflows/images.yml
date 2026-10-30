@@ -26,6 +26,9 @@ on:
       allowed_origins:
         description: Comma-separated origins allowed to embed the wallet
         default: http://localhost:3200
+      github_client_id:
+        description: GitHub OAuth app Client ID (public). Empty = GitHub login off.
+        default: ""
 
 permissions:
   contents: read
@@ -95,7 +98,7 @@ jobs:
           build-args: |
             VITE_BITCODEX_API_ENDPOINT=${{ inputs.api_url || vars.BITCODEX_PUBLIC_API_URL }}
             VITE_GOOGLE_CLIENT_ID=${{ inputs.google_client_id || vars.BITCODEX_GOOGLE_CLIENT_ID }}
-            VITE_GITHUB_CLIENT_ID=${{ vars.BITCODEX_GITHUB_CLIENT_ID }}
+            VITE_GITHUB_CLIENT_ID=${{ inputs.github_client_id || vars.BITCODEX_GITHUB_CLIENT_ID }}
             VITE_BITTENSOR_ALLOWED_HOST_ORIGINS=${{ inputs.allowed_origins || vars.BITCODEX_ALLOWED_ORIGINS }}
             VITE_USER_DASHBOARD_ORIGINS=${{ vars.BITCODEX_DASHBOARD_ORIGIN }}
           tags: |
