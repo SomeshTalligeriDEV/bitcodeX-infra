@@ -24,7 +24,7 @@ const ROOT = path.resolve(
   "../..",
 );
 const OUT = path.join(ROOT, "release");
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 // npm scope the packages are published under. The @bitcodex scope belongs to another npm
 // account, so the default is the maintainer's own scope. Override: BITCODEX_NPM_SCOPE=@org.
 const SCOPE = process.env.BITCODEX_NPM_SCOPE || "@adityaghgh";

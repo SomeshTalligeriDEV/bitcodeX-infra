@@ -51,11 +51,7 @@ Read the full story, architecture and feature matrix in **[BITCODEX.md](BITCODEX
 ## Quickstart
 
 ```bash
-BASE=https://bitcodex-demo.vercel.app/downloads
-npm install \
-  $BASE/adityaghgh-sdk-react-0.1.0.tgz \
-  $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz \
-  $BASE/adityaghgh-sdk-core-0.1.0.tgz
+npm install @adityaghgh/sdk-react @adityaghgh/sdk-bittensor @adityaghgh/sdk-core
 ```
 
 ```tsx
@@ -80,9 +76,59 @@ await signIn("google");
 await bittensorWallet.sendTao("5F…destination", "0.1"); // the user approves in a popup
 ```
 
-Full guide: **[bitcodex-demo.vercel.app/docs](https://bitcodex-demo.vercel.app/docs)**. The
-packages are hosted on the demo site so anyone can install them with no account, and are being
-published to npm as `@bitcodex/*`.
+Full guide: **[bitcodex-demo.vercel.app/docs](https://bitcodex-demo.vercel.app/docs)**.
+
+## The four packages
+
+| Package | Runs in | Use it to |
+|---|---|---|
+| [`@adityaghgh/sdk-react`](scripts/release/readme/sdk-react.md) | Browser (React 18+) | Add the provider and hooks: login, address, wallet actions |
+| [`@adityaghgh/sdk-bittensor`](scripts/release/readme/sdk-bittensor.md) | Browser | Send TAO, stake, register hotkeys, grant permissions, sign messages |
+| [`@adityaghgh/sdk-core`](scripts/release/readme/sdk-core.md) | Browser | The foundation: loads the wallet frame and runs login. Used by the two above |
+| [`@adityaghgh/server`](scripts/release/readme/server.md) | Node 22+ (server only) | Verify logged-in users and read their wallets on your backend |
+
+**Which do I install?**
+- A React or Next.js app: `sdk-react`, `sdk-bittensor` and `sdk-core` together (the first two depend on the others).
+- A backend that needs to know who is logged in: `server`.
+- A non-React frontend: `sdk-bittensor` and `sdk-core`.
+
+**Install**
+
+```bash
+# From npm
+npm install @adityaghgh/sdk-react @adityaghgh/sdk-bittensor @adityaghgh/sdk-core   # frontend
+npm install @adityaghgh/server                                                     # backend
+
+# Or from the files hosted with the demo (no account needed)
+BASE=https://bitcodex-demo.vercel.app/downloads
+npm install $BASE/adityaghgh-sdk-react-0.1.1.tgz $BASE/adityaghgh-sdk-bittensor-0.1.1.tgz $BASE/adityaghgh-sdk-core-0.1.1.tgz
+npm install $BASE/adityaghgh-server-0.1.1.tgz
+```
+
+Set `skipLibCheck: true` in your `tsconfig.json`. You also need a BitcodeX deployment: an **API key** and the **wallet frame URL** (run your own with [the self-host guide](bitcodex-spec/bitcodex-docs/SELF_HOST.md)).
+
+**Use them together**
+
+```tsx
+// Frontend (React): log in, then hand a token to your backend
+const { wallet } = useBitcodeX();
+const token = await wallet?.getAccessToken();
+await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
+```
+
+```ts
+// Backend (Node): verify the token before you trust it
+import { verifyAccessToken } from "@adityaghgh/server";
+
+const result = await verifyAccessToken(token, {
+  appId: process.env.BITCODEX_APP_ID!,
+  apiUrl: process.env.BITCODEX_API_URL!,
+});
+if (!result.success) throw new Error(result.msg);
+console.log(result.data.userId, result.data.address);
+```
+
+Each package has its own README with the full API: click the package name in the table above.
 
 ## How it works
 

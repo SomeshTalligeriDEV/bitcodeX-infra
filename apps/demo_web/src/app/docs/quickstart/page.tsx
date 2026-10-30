@@ -34,12 +34,12 @@ export default function Page() {
         lang="bash"
         code={`BASE=https://bitcodex-demo.vercel.app/downloads
 npm install \\
-  $BASE/adityaghgh-sdk-react-0.1.0.tgz \\
-  $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz \\
-  $BASE/adityaghgh-sdk-core-0.1.0.tgz
+  $BASE/adityaghgh-sdk-react-0.1.1.tgz \\
+  $BASE/adityaghgh-sdk-bittensor-0.1.1.tgz \\
+  $BASE/adityaghgh-sdk-core-0.1.1.tgz
 
 # on your server only (verify users):
-npm install $BASE/adityaghgh-server-0.1.0.tgz`}
+npm install $BASE/adityaghgh-server-0.1.1.tgz`}
       />
       <Callout>
         These are the same packages as the <code>@adityaghgh/sdk-react</code>,{" "}

@@ -135,8 +135,12 @@ Everything shown by the demo is read live from the chain: no mock balances, no s
 ## Add it to your app
 
 ```bash
+npm install @adityaghgh/sdk-react @adityaghgh/sdk-bittensor @adityaghgh/sdk-core   # frontend
+npm install @adityaghgh/server                                                     # backend
+
+# or, without npm, from the files hosted with the demo:
 BASE=https://bitcodex-demo.vercel.app/downloads
-npm install $BASE/adityaghgh-sdk-react-0.1.0.tgz $BASE/adityaghgh-sdk-bittensor-0.1.0.tgz $BASE/adityaghgh-sdk-core-0.1.0.tgz
+npm install $BASE/adityaghgh-sdk-react-0.1.1.tgz $BASE/adityaghgh-sdk-bittensor-0.1.1.tgz $BASE/adityaghgh-sdk-core-0.1.1.tgz
 ```
 
 ```tsx
