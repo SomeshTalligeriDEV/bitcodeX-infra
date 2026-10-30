@@ -9,6 +9,7 @@ export const DOCS_NAV: { section: string; links: DocsLink[] }[] = [
     links: [
       { href: "/docs", title: "Introduction" },
       { href: "/docs/quickstart", title: "Quickstart" },
+      { href: "/docs/auth", title: "Add sign-in to your app" },
     ],
   },
   {
