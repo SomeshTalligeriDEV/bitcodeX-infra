@@ -220,6 +220,11 @@
   font-weight: 600;
 }
 
+.netName {
+  display: flex;
+  align-items: center;
+}
+
 .netDot {
   display: inline-block;
   width: 7px;

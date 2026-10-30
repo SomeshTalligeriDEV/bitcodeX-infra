@@ -196,8 +196,10 @@ export const SignedOut: FC<{
 
         <h3 className={styles.sectionTitle}>Network</h3>
         <div className={styles.network}>
-          <span className={styles.netDot} />
-          Bittensor · {NETWORK_NAME}
+          <span className={styles.netName}>
+            <span className={styles.netDot} />
+            Bittensor · {NETWORK_NAME}
+          </span>
           <span className={styles.hint}>Mainnet stays off until an audit.</span>
         </div>
       </aside>
