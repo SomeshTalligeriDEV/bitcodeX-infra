@@ -55,6 +55,11 @@ services:
         value: bitcodex
       - key: BITCODEX_SIGNUP_ENABLED
         value: "true"
+      # GitHub login: the client ID is public; the secret is entered in the dashboard.
+      - key: GITHUB_CLIENT_ID
+        value: Ov23liAILKwdOvopnbdt
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
 
   - type: web
     name: bitcodex-ksn1
@@ -86,6 +91,8 @@ services:
         value: /etc/secrets/ksn_encryption_secret.txt
       - key: ADMIN_PASSWORD
         generateValue: true
+      - key: GITHUB_CLIENT_ID
+        value: Ov23liAILKwdOvopnbdt
       - key: BITCODEX_API_BASE_URL
         sync: false
 
@@ -118,6 +125,8 @@ services:
         value: /etc/secrets/ksn_encryption_secret.txt
       - key: ADMIN_PASSWORD
         generateValue: true
+      - key: GITHUB_CLIENT_ID
+        value: Ov23liAILKwdOvopnbdt
       - key: BITCODEX_API_BASE_URL
         sync: false
 
