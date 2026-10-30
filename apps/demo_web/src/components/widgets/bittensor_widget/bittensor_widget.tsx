@@ -329,6 +329,7 @@ export const BittensorWidget: FC = () => {
         />
       )}
 
+      <h2 className={styles.sectionLabel}>Send and sign</h2>
       <div className={styles.grid}>
         <Card
           title="Send TAO"
@@ -362,7 +363,7 @@ export const BittensorWidget: FC = () => {
 
         <Card
           title="Sign and verify"
-          desc="Messages, Sign-In with Bittensor (CAIP-122) and a >256-byte transaction, all approved in the popup."
+          desc="Prove you own this wallet: sign a message, or sign in to a site with it. Each one is read out in the approval popup first."
           code={`const sig = await bittensorWallet.signMessage("hello");
 const { message, signature } =
   await bittensorWallet.signInWithBittensor({ nonce });
@@ -394,7 +395,7 @@ const { message, signature } =
               isLoading={busy === "Long payload"}
               onClick={signLongPayload}
             >
-              Sign long transaction
+              Sign a large transaction
             </Button>
             <Button
               variant="secondary"
@@ -403,60 +404,66 @@ const { message, signature } =
               isLoading={busy === "web3Enable"}
               onClick={web3EnableTest}
             >
-              Works with dApps (web3Enable)
+              Test with a dApp (web3Enable)
             </Button>
           </div>
         </Card>
       </div>
 
       {api && bittensorWallet && address && (
-        <div className={styles.grid}>
-          <BittensorStakePanel
-            api={api}
-            wallet={bittensorWallet}
-            address={address}
-            busy={busy}
-            run={run}
-          />
-          <BittensorHotkeysPanel
-            api={api}
-            wallet={bittensorWallet}
-            address={address}
-            busy={busy}
-            run={run}
-          />
-          <BittensorAgentPanel
-            api={api}
-            wallet={bittensorWallet}
-            address={address}
-            busy={busy}
-            run={run}
-          />
-          <section className={styles.subsection}>
-            <Typography size="md" weight="semibold" color="primary">
-              Activity
-            </Typography>
-            <Typography size="xs" color="tertiary">
-              Every call and its on-chain result. Never key material.
-            </Typography>
-            {log.length === 0 && (
-              <span className={styles.note}>
-                Nothing yet. Try an action above.
-              </span>
-            )}
-            <div className={styles.log}>
-              {log.map((line, i) => (
-                <span
-                  // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
-                  key={i}
-                  className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
-                >
-                  {line.text}
+        <>
+          <h2 className={styles.sectionLabel}>Stake and keys</h2>
+          <div className={styles.grid}>
+            <BittensorStakePanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+            <BittensorHotkeysPanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+          </div>
+          <h2 className={styles.sectionLabel}>Permissions and activity</h2>
+          <div className={styles.grid}>
+            <BittensorAgentPanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+            <section className={styles.subsection}>
+              <Typography size="md" weight="semibold" color="primary">
+                Activity
+              </Typography>
+              <Typography size="xs" color="tertiary">
+                Every call and its on-chain result. Never key material.
+              </Typography>
+              {log.length === 0 && (
+                <span className={styles.note}>
+                  Nothing yet. Try an action above.
                 </span>
-              ))}
-            </div>
-          </section>
-        </div>
+              )}
+              <div className={styles.log}>
+                {log.map((line, i) => (
+                  <span
+                    // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
+                    key={i}
+                    className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
+                  >
+                    {line.text}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </div>
+        </>
       )}
     </div>
   );

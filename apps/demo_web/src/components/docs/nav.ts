@@ -26,7 +26,6 @@ export const DOCS_NAV: { section: string; links: DocsLink[] }[] = [
       { href: "/docs/networks", title: "Networks & testnet TAO" },
       { href: "/docs/self-host", title: "Self-host & deploy" },
       { href: "/docs/security", title: "Security model" },
-      { href: "/docs/status", title: "Status: what is real" },
     ],
   },
 ];

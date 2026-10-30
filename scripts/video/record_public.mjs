@@ -124,7 +124,6 @@ const nav = async (name, text, down = 700) => {
 await nav("Quickstart", "Quickstart: install, wrap your app, add login, send a transaction", 700);
 await nav("Wallet API", "Wallet API: send, stake, hotkeys, permissions and signing", 900);
 await nav("Security model", "The key is split between your browser and servers: never in one place", 800);
-await nav("Status: what is real", "An honest status page: what is real, what is preview, what is not built", 700);
 await wait(1800);
 mark("END");
 

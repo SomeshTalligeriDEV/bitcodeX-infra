@@ -103,8 +103,8 @@ export default function Page() {
 
       <Callout kind="warn">
         BitcodeX runs on <strong>testnet and local chains only</strong> for now.
-        Check <a href="/docs/status">Status</a> for what is real, what is a
-        preview and what is not built.
+        Mainnet is turned off until the key system has an independent security
+        audit.
       </Callout>
     </>
   );

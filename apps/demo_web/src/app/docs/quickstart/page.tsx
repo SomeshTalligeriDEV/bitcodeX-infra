@@ -26,18 +26,28 @@ export default function Page() {
       </p>
 
       <h2>2. Install</h2>
+      <p>
+        The packages are hosted on this site, so anyone can install them with no
+        account. Install the four together (they depend on each other):
+      </p>
       <CodeBlock
         lang="bash"
-        code={`npm install @bitcodex/sdk-react @bitcodex/sdk-bittensor @bitcodex/sdk-core
-# on your server only:
-npm install @bitcodex/server`}
+        code={`BASE=https://bitcodex-demo.vercel.app/downloads
+npm install \\
+  $BASE/bitcodex-sdk-react-0.1.0.tgz \\
+  $BASE/bitcodex-sdk-bittensor-0.1.0.tgz \\
+  $BASE/bitcodex-sdk-core-0.1.0.tgz
+
+# on your server only (verify users):
+npm install $BASE/bitcodex-server-0.1.0.tgz`}
       />
-      <Callout kind="warn">
-        The npm packages are packed and tested but{" "}
-        <strong>not published yet</strong>. Until they are, build the tarballs
-        from the repository with{" "}
-        <code>node scripts/release/build_packages.mjs</code> and install the
-        files in <code>release/tarballs/</code>.
+      <Callout>
+        These are the same packages as the <code>@bitcodex/sdk-react</code>,{" "}
+        <code>@bitcodex/sdk-bittensor</code>, <code>@bitcodex/sdk-core</code>{" "}
+        and <code>@bitcodex/server</code> names used below. When they are
+        published to the npm registry,{" "}
+        <code>npm install @bitcodex/sdk-react</code> will work too. Use
+        TypeScript with <code>skipLibCheck: true</code>.
       </Callout>
 
       <h2>3. Wrap your app</h2>
