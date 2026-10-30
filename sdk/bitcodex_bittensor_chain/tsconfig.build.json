@@ -4,5 +4,8 @@
     "rootDir": "./src",
     "noEmit": false
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
 }

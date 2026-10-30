@@ -1,57 +1,20 @@
 import type { BittensorSignerPayloadJSON } from "@bitcodex/bitcodex-sdk-core";
-import { TAO_DECIMALS } from "@bitcodex/bittensor-chain";
+import {
+  type CallCard,
+  describeCall,
+  formatTaoAmount,
+  type PlainCall,
+  toPlainCall,
+} from "@bitcodex/bittensor-chain";
 import type { Result } from "@bitcodex/stdlib-js";
 import type { ApiPromise } from "@polkadot/api";
 import type { Call } from "@polkadot/types/interfaces";
 
-/** Pallets the confirm modal knows how to show. Anything else gets the red warning. */
-const KNOWN_SECTIONS = new Set([
-  "balances",
-  "subtensorModule",
-  "proxy",
-  "utility",
-  "system",
-]);
-
-export interface DecodedCall {
-  section: string;
-  method: string;
-  args: Record<string, unknown>;
-  known: boolean;
-  /** Calls nested in utility.batch*, proxy.proxy*, so nothing is hidden. */
-  inner: DecodedCall[];
-}
-
-function decodeCall(call: Call): DecodedCall {
-  const section = call.section;
-  const method = call.method;
-  const args: Record<string, unknown> = {};
-  const inner: DecodedCall[] = [];
-  call.meta.args.forEach((meta, i) => {
-    const value = call.args[i];
-    const name = meta.name.toString();
-    const typeName = meta.type.toString();
-    if (typeName === "RuntimeCall" || typeName === "Call") {
-      inner.push(decodeCall(value as Call));
-      args[name] = "(call shown below)";
-    } else if (
-      typeName.startsWith("Vec<RuntimeCall>") ||
-      typeName.startsWith("Vec<Call>")
-    ) {
-      for (const c of value as unknown as Call[]) {
-        inner.push(decodeCall(c));
-      }
-      args[name] = `(${inner.length} calls shown below)`;
-    } else {
-      args[name] = value.toHuman();
-    }
-  });
-  const known = KNOWN_SECTIONS.has(section) && inner.every((c) => c.known);
-  return { section, method, args, known, inner };
-}
-
 export interface DecodedExtrinsic {
-  call: DecodedCall;
+  /** Plain-English card; calls nested in batch/proxy are in `inner`, never hidden. */
+  card: CallCard;
+  /** Raw decoded call tree (JSON args), for live lookups such as registration cost. */
+  plain: PlainCall;
   callHex: string;
 }
 
@@ -93,7 +56,10 @@ export function decodeSignerPayload(
     const call = api.registry.createType("Call", payload.method) as Call;
     return {
       success: true,
-      data: { call: decodeCall(call), callHex: payload.method },
+      data: (() => {
+        const plain = toPlainCall(call);
+        return { card: describeCall(plain), plain, callHex: payload.method };
+      })(),
     };
   } catch (err) {
     return { success: false, err: `Cannot decode the call: ${String(err)}` };
@@ -101,12 +67,68 @@ export function decodeSignerPayload(
 }
 
 /** rao -> "1.5 TAO" with up to 9 decimals, trailing zeros trimmed. */
-export function formatTao(rao: bigint): string {
-  const base = BigInt(10) ** BigInt(TAO_DECIMALS);
-  const whole = rao / base;
-  const frac = (rao % base)
-    .toString()
-    .padStart(TAO_DECIMALS, "0")
-    .replace(/0+$/, "");
-  return `${whole}${frac ? `.${frac}` : ""} TAO`;
+export const formatTao = formatTaoAmount;
+
+const REGISTER_METHODS = new Set(["burnedRegister", "registerLimit"]);
+
+/** Subnets of every hotkey registration in the call tree (batch/proxy included). */
+export function registrationNetuids(call: PlainCall): number[] {
+  const own =
+    call.section === "subtensorModule" &&
+    REGISTER_METHODS.has(call.method) &&
+    typeof call.args.netuid === "number"
+      ? [call.args.netuid]
+      : [];
+  return [...own, ...call.inner.flatMap(registrationNetuids)];
+}
+
+/** Every `proxy.addProxy` in the call tree: who gets which permission. */
+export function permissionGrants(
+  call: PlainCall,
+): { delegate: unknown; proxyType: string }[] {
+  const own =
+    call.section === "proxy" && call.method === "addProxy"
+      ? [
+          {
+            delegate: call.args.delegate,
+            proxyType: String(call.args.proxyType),
+          },
+        ]
+      : [];
+  return [...own, ...call.inner.flatMap(permissionGrants)];
+}
+
+const toBig = (v: unknown): bigint =>
+  typeof v === "number" ||
+  (typeof v === "string" && /^(0x[0-9a-fA-F]+|\d+)$/.test(v))
+    ? BigInt(v)
+    : BigInt(0);
+
+/**
+ * TAO (rao) a call tree moves out of the wallet, for the MFA limit (X12): transfers and
+ * stakes, including inside batch/proxy. `all` is true for transferAll (always needs MFA).
+ */
+export function movedRao(call: PlainCall): { rao: bigint; all: boolean } {
+  let rao = BigInt(0);
+  let all = false;
+  const id = `${call.section}.${call.method}`;
+  if (
+    id === "balances.transferKeepAlive" ||
+    id === "balances.transferAllowDeath"
+  ) {
+    rao += toBig(call.args.value);
+  } else if (id === "balances.transferAll") {
+    all = true;
+  } else if (
+    id === "subtensorModule.addStake" ||
+    id === "subtensorModule.addStakeLimit"
+  ) {
+    rao += toBig(call.args.amountStaked);
+  }
+  for (const c of call.inner) {
+    const r = movedRao(c);
+    rao += r.rao;
+    all = all || r.all;
+  }
+  return { rao, all };
 }

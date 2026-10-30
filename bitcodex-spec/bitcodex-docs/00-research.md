@@ -157,3 +157,82 @@ Notes:
 - 3e matches X09's design: the chain enforces the Staking proxy (CallFiltered on transfer), the agent pays its own fees, and the user's shares are not used.
 
 **Phase 0 status:** probes 3a, 3b, 3b-long, 3c, 3d, 3e PASS on localnet. One open item (burn amount accounting) for X08.
+
+### X05 stake units (verified on localnet, 2026-10-28)
+- Runtime APIs present: `swapRuntimeApi.currentAlphaPrice(netuid)`, `currentAlphaPriceAll()`, `simSwapTaoForAlpha(netuid, tao)`, `simSwapAlphaForTao(netuid, alpha)`, `stakeInfoRuntimeApi.getStakeInfoForColdkey(coldkey)`, `getStakeInfoForHotkeyColdkeyNetuid`, `getStakeFee(...)`, `subnetInfoRuntimeApi.getDynamicInfo(netuid)` (`subnetName` comes back as bytes).
+- Price unit: rao of TAO per 1 alpha (`1000000000` = 1 TAO/alpha). `limitPrice` on `addStakeLimit` / `removeStakeLimit` uses the same unit.
+- `simSwapTaoForAlpha(50 TAO)` predicted 47596210440 alpha; the real `addStake` gave exactly 47596210440 (tx `0x05fe378a…990e4d`). A 50 TAO stake into a fresh 1000 TAO pool moved the price from 1.0 to about 1.10 TAO/alpha.
+- `addStakeLimit` with a limit below the current price fails with `swap.PriceLimitExceeded`; 2x the price succeeds (tx `0x6af9e95e…3815f0`). `removeStakeLimit` is the reverse: a limit above the price fails, half the price succeeds (tx `0xb4a3440c…b766e2`).
+- `StakeAdded` / `StakeRemoved` event data: (coldkey, hotkey, tao rao, alpha, netuid, fee).
+- Plan for X05: limit price = current price × (1 + slippage) for stake, × (1 − slippage) for unstake (default 1%), with price impact shown from the simulation. Sign-in-with-Bittensor is waiting until its message format is verified.
+
+### Limit price and localnet stability (verified 2026-10-29)
+- `addStakeLimit` checks `limitPrice` against the price AFTER the swap: a limit between the average fill price and the end price failed with `subtensorModule.SlippageTooHigh`; above the end price it succeeded. End price = average² / spot.
+- Quote vs fill: emissions change the pool every block; a 50 TAO stake on a fresh subnet filled 0.13% below the quote one or two blocks later.
+- The localnet image runs 3 validator nodes in one container. After about 8 h on a 4-CPU / 8 GB Colima VM they used about 6.7 GB and reorged by up to 26 blocks. Transactions then failed as "bad signature" or never landed. A container restart fixed it (fresh chain; reseed with `seed_localnet.mjs`). Parallel test files sending from //Alice collide on the nonce ("temporarily banned"), so `test:localnet` runs with `--runInBand`.
+
+### Sign-In with Bittensor (researched 2026-10-29)
+- CAIP-122 (standards.chainagnostic.org/CAIPs/caip-122) defines the message template and data model, and requires each namespace to define a profile (signing algorithm, `type`, signing input). **The Polkadot namespace has no CAIP-122 profile** (`namespaces.chainagnostic.org/polkadot/caip122` returns 404).
+- CAIP-2 Polkadot chain id: `polkadot:` + the first 32 hex characters of the genesis hash, lowercase (namespaces.chainagnostic.org/polkadot/caip2). For the current localnet genesis that is `polkadot:da4f6b75d463bc28dc6d833bb07dbe35`.
+- CAIP-10 Polkadot account address: SS58 with the chain's own prefix (42 here).
+- BitcodeX profile (`sdk/bitcodex_bittensor_chain/src/siwb.ts`):
+  - message: the CAIP-122 template with blockchain name "Bittensor" and `Chain ID: polkadot:<ref>`;
+  - signing input: `<Bytes>message</Bytes>`;
+  - verification: `signatureVerify`, plus domain, nonce, chain and expiry / not-before checks.
+- A real FROST 2-of-2 ed25519 signature over a SIWB message verified against the live localnet genesis: `{"ok":true,"crypto":"ed25519"}`.
+- The iframe refuses to sign a SIWB message whose domain is not the requesting site's host (phishing), or whose address or chain differs from the wallet's.
+- Packaging fix found on the way: `@bitcodex/bittensor-chain` `dist` used extensionless relative imports, which plain Node ESM cannot load. `tsc-alias resolveFullPaths` now adds `.js`.
+
+### X08 registration cost (verified to the rao, localnet 2026-10-29)
+- **Cause of the 0.19% gap from probe 3d:** `on_initialize` decays every subnet's `Burn` once per block, before extrinsics run (subtensor `subnets/registration.rs` `update_registration_prices_for_networks`). So a registration is charged the *next* block's decayed price, not the stored `Burn`. `BurnHalfLife` = 360 blocks gives f = 0.5^(1/360) = 0.998076 per block, which is the 0.1924% gap.
+- **Exact formula,** ported from `utils/misc.rs`:
+  - `decay_factor_q32(360)` = 4286705684 (Q32);
+  - next burn = clamp((burn × f) >> 32, `MinBurn`, `MaxBurn`).
+- 8 of 8 block-to-block predictions were exact. A registration's actual charge equalled the prediction: 3050502 rao, plus the 1070891 rao tx fee.
+- Total charge = burned share + collateral top-up = the full decayed price for a fresh hotkey (`subnets/collateral.rs` `pay_registration`). `CollateralLockShare` is 0 on localnet, so nothing is kept as collateral there.
+- `MaxRegistrationsPerBlock` = 1. `registerLimit(netuid, hotkey, limitPrice)` exists and fails with `RegistrationPriceLimitExceeded` when the price is above the limit.
+- **"Shown = charged":** the shown price is exact only for inclusion in the next block; each later block makes it 0.19% cheaper. So the popup and demo show the next-block cost live (recomputed every block). The SDK submits `registerLimit` capped at the shown cost, so it never charges more, and reports the exact `charged` from chain state after inclusion. Test example: shown 1542910, landed 2 blocks later, charged 1536979 = the parent's burn decayed one block.
+- Storage: `Owner(hotkey)` (Default; the all-zero account means unowned), `OwnedHotkeys(coldkey)`, `Uids(netuid, hotkey)` (Optional), `IsNetworkMember(hotkey, netuid)`.
+- Hotkey creation (bittensor.com/docs/concepts/wallets): `btcli wallet new-hotkey -w my_coldkey -H my_hotkey`, "on a trusted workstation"; `btcli wallet show` prints public keys.
+- Localnet stability: with the demo compiling at the same time, the 3-node localnet hit 800% CPU and logged 195 fork/reorg events in 15 min. Two tests timed out; a rerun passed 55/55.
+
+### X07 export and key swaps (verified 2026-10-29)
+- The iframe stores only the client's **share** of the ed25519 seed (2-of-2 SSS point, x = SEED_ID_CLIENT). Normal login rebuilds that share from the KSNs, not the seed. The full seed is rebuilt only in `export_private_key.ts`, after re-auth, by combining with the server's seed share, inside the iframe. That is the one allowed exception.
+- Portability: for 5 of 5 random seeds, polkadot.js `Keyring({ type: "ed25519" }).addFromSeed(seed)` gives the same SS58 address as the FROST group key from `cli_keygen_seed_ed25519(seed)`.
+- `scripts/local/check_export_portability.mjs` (same WASM as the iframe): seed SSS split → combine → `addFromSeed` = coldkey address PASS; keystore JSON (`toJson(password)`, encoding pkcs8/ed25519) → `addFromJson` + unlock = same address PASS; wrong password rejected PASS; the imported key signed a localnet transfer, tx `0x1fe9692461b2cb65320beb2184c06b27866e207f56ee0b898e5fb90c9ae5def0`.
+- Hotkey swap: `swapHotkey(hotkey, newHotkey, netuid: Option<u16>)`. All subnets charged exactly `KeySwapCost` = 100000000 rao (0.1 TAO); one subnet exactly `KeySwapOnSubnetCost` = 1000000 rao. Events `HotkeySwapped` / `HotkeySwappedOnSubnet`; the UID moves to the new hotkey.
+- Coldkey swap: `announceColdkeySwap(newColdkeyHash: H256)`, then `swapColdkeyAnnounced(newColdkey)` after `ColdkeySwapAnnouncementDelay` (50 blocks on localnet); `disputeColdkeySwap`, `clearColdkeySwapAnnouncement`. `scheduleSwapColdkey` is marked deprecated in metadata. The mainnet delay is not verified here.
+- Dev machine limit: this Mac has 8 GB RAM and the Colima VM was allowed all 8 GB. The 3-node localnet grew to 4.5 GB, swap filled (8.4 / 9.2 GB), the Mac hung and the typecheck was OOM-killed (exit 137). Mitigations: restart the localnet container (back to about 340 MB), stop the frontends when not testing in the browser, and `BITCODEX_CI_CONCURRENCY=2 yarn ci typecheck`.
+
+### X09 permissions and connection robustness (verified 2026-10-29)
+- What each ProxyType allows comes from the chain: `api.call.proxyFilterRuntimeApi.getProxyFilters(null)`. Names are hex-encoded bytes, and the mode is allow/deny with optional `paramLessThan` constraints.
+  - **SmallTransfer** allows `transfer_keep_alive` / `transfer_allow_death` with `value < 500000000` (0.5 TAO), and `transfer_stake` / `transfer_stake_and_hotkey` with `alpha_amount < 500000000`.
+  - **Staking** allows add/remove/move/swap stake (and the limit variants) plus `unstake_all*`.
+  - **Registration** allows `register`, `register_limit`, `burned_register`, `pow_register`.
+- Deposit for one delegation = `proxyDepositBase + proxyDepositFactor`; each further delegation adds `proxyDepositFactor`.
+- X09 acceptance passed on localnet (`tests/permissions.localnet.test.ts`, agent = its own sr25519 key, via `actAs` = `proxy.proxy` + `ProxyExecuted` check):
+  - Staking: the agent staked 1 TAO for the user; the agent's transfer was rejected with `CallFiltered`.
+  - SmallTransfer: 0.4 TAO OK, 0.6 TAO `CallFiltered`.
+  - Revoke: the deposit came back exactly; the next agent action gave `NotProxy`.
+- Demo agent route (`apps/demo_web/src/app/api/agent`, key `//BitcodeXDemoAgent` from env), tested with curl and a test user:
+  - 403 before the grant;
+  - after the Staking grant, staked 1 TAO with no user popup, tx `0x6425465f80bc55548dd405f807799a9216ea524653a2f06d91b1e0d2de73e894`;
+  - the second 1 TAO against a 1.5 TAO daily limit was refused (429, Preview policy enforced by the agent server, not the chain);
+  - 403 after the revoke.
+- **Bug found and fixed:** after a localnet restart (new genesis), long-running servers using the cached `getApi` connection hung forever (the faucet stopped answering). `getApi` now re-checks `chain_getBlockHash(0)` against the cached genesis with a 10 s timeout, reconnects once if it changed or does not answer, and times out the chainType call. Verified: localnet restarted under the running API, and the next faucet drip succeeded in 1 s with no API restart.
+
+### Testnet (verified 2026-10-29)
+- Official endpoints (bittensor.com/docs/concepts/network): testnet `wss://test.finney.opentensor.ai:443`, mainnet `wss://entrypoint-finney.opentensor.ai:443`, local `ws://127.0.0.1:9944`. The page lists **no testnet faucet**. Older community guides disagree (`btcli wallet faucet` vs "faucet is disabled on testnet"), so BitcodeX links none.
+- Live testnet, read-only probe:
+  - `system_chain` "Bittensor", **chainType `Development`**;
+  - genesis `0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105`;
+  - spec 486 (`node-subtensor`), txVersion 1, SS58 42, 9 decimals, symbol `testTAO`, ED 500;
+  - the same 13 signed extensions as localnet; `proxyFilterRuntimeApi`, `swapRuntimeApi`, `stakeInfoRuntimeApi` and `registerLimit` present; 600 subnets.
+- Mainnet, read-only (genesis + chainType only): genesis `0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03`, chainType `Live`. Now used to refuse it by name ("this endpoint is Bittensor MAINNET").
+- **FROST signatures are valid on testnet** (nothing spent): a FROST 2-of-2 signed `transferKeepAlive` from an unfunded account was rejected with `1010 Inability to pay some fees`, the same as an unfunded normal key. The control with a corrupted signature was rejected with `1010 Transaction has a bad signature`. Substrate checks the signature before fees, so the payload format and signature are accepted. A funded testnet transfer is still to do (needs testnet TAO).
+- Because testnet reports `Development`, the localnet rule's endpoint check matters. Verified: `getApi("bittensor:localnet", { rpcUrl: testnet })` → "endpoint … is not local".
+
+### Subtensor EVM address mapping (verified 2026-10-29)
+- Runtime: `type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>` (subtensor `runtime/src/lib.rs`), i.e. account = blake2_256("evm:" ++ h160).
+- Live check: `eth_call` to the address-mapping precompile `0x000000000000000000000000000000000000080c`, `addressMapping(address)` (selector 0x0494cd9a), on testnet for h160 `0xabab…cdcd` returned `0x8b1509c1…678279a0`, equal to the local blake2 result. SS58 mirror `5FD4mCAikVBFkQ7ND9FJcrSmNf6THmRWA5SqexmQGyczU8n1`.
+- BitcodeX: the EVM address comes from the user's existing Cait-Sith secp256k1 key (EIP-55 via `ethereumEncode`). Funding the EVM address = a Subtensor transfer to its mirror. EVM-side signing is not wired (Preview).

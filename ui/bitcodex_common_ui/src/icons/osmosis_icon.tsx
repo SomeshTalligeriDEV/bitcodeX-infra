@@ -1,19 +1,12 @@
 import type { FC } from "react";
 
-import { s3BucketURL } from "./paths";
+import { LetterBadge } from "./letter_badge";
 
 export const OsmosisIcon: FC<OsmosisIconProps> = ({
   width = 16,
   height = 16,
 }) => {
-  return (
-    <img
-      src={`${s3BucketURL}/osmosis.png`}
-      alt="osmosis_icon"
-      width={width}
-      height={height}
-    />
-  );
+  return <LetterBadge label="Osmosis" width={width} height={height} />;
 };
 
 export interface OsmosisIconProps {

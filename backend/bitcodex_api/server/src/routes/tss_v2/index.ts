@@ -35,9 +35,12 @@ import {
 import { oauthMiddleware } from "@bitcodex-api/middleware/auth/oauth";
 import { tssActivateMiddleware } from "@bitcodex-api/middleware/auth/tss_activate";
 import { commitRevealMiddleware } from "@bitcodex-api/middleware/commit_reveal";
+import { rateLimitMiddleware } from "@bitcodex-api/middleware/rate_limit";
 
 export function makeTSSRouterV2() {
   const router = Router();
+  // Per-IP limit for the signing/keygen API: one ceremony is several calls; generous for real users, a cap for abuse.
+  router.use(rateLimitMiddleware({ windowSeconds: 60, maxRequests: 600 }));
 
   router.post("/commit", commitRevealCommit);
 

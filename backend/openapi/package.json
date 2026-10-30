@@ -12,7 +12,8 @@
     "./bitcodex": "./src/bitcodex/index.ts",
     "./user_dashboard": "./src/user_dashboard/index.ts",
     "./social_login": "./src/social_login/index.ts",
-    "./log": "./src/log/index.ts"
+    "./log": "./src/log/index.ts",
+    "./faucet": "./src/faucet/index.ts"
   },
   "type": "module",
   "dependencies": {

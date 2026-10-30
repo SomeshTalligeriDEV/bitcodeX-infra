@@ -5,11 +5,14 @@ import {
   type ServerState,
 } from "@bitcodex/bitcodex-api-server-state";
 import knexConfig from "@bitcodex/bitcodex-pg-interface/knexfile";
+import { LOCALNET_RPC_URL } from "@bitcodex/bittensor-chain";
 import { loadEnv, verifyEnv } from "@bitcodex/dotenv";
 import knex from "knex";
 
+import { initAccessTokenKey } from "@bitcodex-api/access_token/keys";
 import { makeApp } from "@bitcodex-api/app";
 import { ENV_FILE_NAME, envSchema } from "@bitcodex-api/envs";
+import { Faucet, setFaucet } from "@bitcodex-api/faucet";
 import { getCommitHash } from "@bitcodex-api/git";
 import { startKSNodeHealthCheckRuntime } from "@bitcodex-api/runtime/health_check_node";
 import { startInactiveCustomerUserReminderRuntime } from "@bitcodex-api/runtime/inactive_customer_user_reminders";
@@ -89,6 +92,22 @@ async function main() {
     dapp_dashboard_url: envs.DAPP_DASHBOARD_URL!,
     signup_enabled: envs.BITCODEX_SIGNUP_ENABLED === "true",
   });
+
+  if (envs.BITCODEX_FAUCET_SURI) {
+    setFaucet(
+      await Faucet.create({
+        suri: envs.BITCODEX_FAUCET_SURI,
+        rpcUrl: envs.BITCODEX_FAUCET_RPC_URL || LOCALNET_RPC_URL,
+        amountTao: Number(envs.BITCODEX_FAUCET_AMOUNT_TAO || "1000"),
+        cooldownSeconds: 60,
+      }),
+    );
+    console.log("Faucet enabled (localnet only)");
+  }
+
+  await initAccessTokenKey(envs.BITCODEX_ACCESS_TOKEN_KEY, (m) =>
+    state.logger.warn(m),
+  );
 
   const app = makeApp(state);
 

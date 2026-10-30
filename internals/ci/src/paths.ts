@@ -36,6 +36,7 @@ export const paths = (function () {
     __dirname,
     "../../../sdk/bitcodex_sdk_bittensor/",
   );
+  const sdk_server = path.join(__dirname, "../../../sdk/bitcodex_server/");
 
   const bittensor_chain = path.join(
     __dirname,
@@ -178,6 +179,7 @@ export const paths = (function () {
     sdk_core,
     bittensor_chain,
     sdk_bittensor,
+    sdk_server,
     sdk_core_react_native,
     sdk_eth,
     sdk_cosmos,

@@ -1,19 +1,12 @@
 import type { FC } from "react";
 
-import { s3BucketURL } from "./paths";
+import { LetterBadge } from "./letter_badge";
 
 export const ZigchainIcon: FC<ZigchainIconProps> = ({
   width = 16,
   height = 16,
 }) => {
-  return (
-    <img
-      src={`${s3BucketURL}/zigchain.png`}
-      alt="zigchain_icon"
-      width={width}
-      height={height}
-    />
-  );
+  return <LetterBadge label="ZigChain" width={width} height={height} />;
 };
 
 export interface ZigchainIconProps {

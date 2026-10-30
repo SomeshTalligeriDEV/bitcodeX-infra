@@ -1,0 +1,10 @@
+# Captions for the no-login part, generated from the recording's logged step times.
+# start-end | text
+00:05.6-00:10.8 | BitcodeX: embedded wallets for Bittensor
+00:11.1-00:26.0 | Customize the login window: background, accent colour and sign-in methods
+00:26.3-00:31.5 | Turn sign-in methods on or off: the real login window updates instantly
+00:31.8-00:36.0 | Developers: copy the exact provider and login code for these settings
+00:36.3-00:42.2 | Built-in documentation: quickstart, SDK, server and self-host guides
+00:42.5-00:48.5 | Quickstart: install, wrap your app, add login, send a transaction
+00:48.8-00:55.0 | Wallet API: send, stake, hotkeys, permissions and signing
+00:55.3-01:02.5 | The key is split between your browser and servers: never in one place

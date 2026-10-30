@@ -37,6 +37,7 @@ import {
   setUserId,
   setUserProperties,
 } from "@bitcodex-attached/analytics/amplitude";
+import { describeFetchError } from "@bitcodex-attached/requests/types";
 import { useAppState } from "@bitcodex-attached/store/app";
 import { useMemoryState } from "@bitcodex-attached/store/memory";
 import {
@@ -104,7 +105,7 @@ export async function handleOAuthInfoPass(
     if (!userExistsRes.success) {
       await bail(message, {
         type: "check_user_request_fail",
-        error: userExistsRes.err.toString(),
+        error: describeFetchError(userExistsRes.err),
       });
       return;
     }
@@ -327,7 +328,7 @@ export async function handleOAuthInfoPassV2(
     if (!userExistsRes.success) {
       await bail(message, {
         type: "check_user_request_fail",
-        error: userExistsRes.err.toString(),
+        error: describeFetchError(userExistsRes.err),
       });
       return;
     }

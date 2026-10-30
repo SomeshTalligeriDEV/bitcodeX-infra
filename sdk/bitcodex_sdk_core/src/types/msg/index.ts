@@ -29,6 +29,77 @@ export type BitcodeXWalletMsgGetPublicKeyAck = {
   payload: Result<string, string>;
 };
 
+/** App settings from the developer dashboard (X11), as the iframe sees them. */
+export interface BitcodeXAppConfig {
+  app_id: string;
+  label: string;
+  allowed_origins: string[];
+  /** Enabled login methods in display order, e.g. ["google", "github"]. */
+  login_methods: string[];
+  accent_color: string | null;
+  theme_mode: "light" | "dark" | "system";
+  logo_url: string | null;
+  network: string;
+  /** Whether the requesting page's origin may use this app. */
+  origin_allowed: boolean;
+}
+
+/** MFA settings (X12), only from the user dashboard's origins. */
+export type BitcodeXWalletMsgMfa = {
+  target: "bitcodex_attached";
+  msg_type: "mfa";
+  payload: {
+    action: "status" | "enroll" | "confirm" | "threshold" | "disable";
+    body: Record<string, unknown>;
+  };
+};
+
+export type BitcodeXWalletMsgMfaAck = {
+  target: "bitcodex_sdk";
+  msg_type: "mfa_ack";
+  payload: Result<Record<string, unknown>, string>;
+};
+
+/** Wallet login (X04) calls, forwarded by the iframe to the API with the app key. */
+export type BitcodeXWalletMsgWalletLogin = {
+  target: "bitcodex_attached";
+  msg_type: "wallet_login";
+  payload: {
+    action: "nonce" | "verify" | "link";
+    body: Record<string, unknown>;
+  };
+};
+
+export type BitcodeXWalletMsgWalletLoginAck = {
+  target: "bitcodex_sdk";
+  msg_type: "wallet_login_ack";
+  payload: Result<Record<string, unknown>, string>;
+};
+
+export type BitcodeXWalletMsgGetAccessToken = {
+  target: "bitcodex_attached";
+  msg_type: "get_access_token";
+  payload: null;
+};
+
+export type BitcodeXWalletMsgGetAccessTokenAck = {
+  target: "bitcodex_sdk";
+  msg_type: "get_access_token_ack";
+  payload: Result<{ access_token: string; expires_in: number }, string>;
+};
+
+export type BitcodeXWalletMsgGetAppConfig = {
+  target: "bitcodex_attached";
+  msg_type: "get_app_config";
+  payload: null;
+};
+
+export type BitcodeXWalletMsgGetAppConfigAck = {
+  target: "bitcodex_sdk";
+  msg_type: "get_app_config_ack";
+  payload: Result<BitcodeXAppConfig, string>;
+};
+
 export type BitcodeXWalletMsgGetPublicKeyEd25519 = {
   target: "bitcodex_attached";
   msg_type: "get_public_key_ed25519";
@@ -268,6 +339,14 @@ export type BitcodeXWalletMsg =
   | BitcodeXWalletMsgGetPublicKey
   | BitcodeXWalletMsgGetPublicKeyAck
   | BitcodeXWalletMsgGetPublicKeyEd25519
+  | BitcodeXWalletMsgMfa
+  | BitcodeXWalletMsgMfaAck
+  | BitcodeXWalletMsgWalletLogin
+  | BitcodeXWalletMsgWalletLoginAck
+  | BitcodeXWalletMsgGetAccessToken
+  | BitcodeXWalletMsgGetAccessTokenAck
+  | BitcodeXWalletMsgGetAppConfig
+  | BitcodeXWalletMsgGetAppConfigAck
   | BitcodeXWalletMsgGetPublicKeyEd25519Ack
   | BitcodeXWalletMsgSetOAuthNonce
   | BitcodeXWalletMsgSetOAuthNonceAck

@@ -158,6 +158,7 @@ export function useBittensorSignature(args: UseBittensorSignatureArgs) {
     : chainId;
 
   return {
+    authToken,
     apiState,
     networkName,
     walletAddress,

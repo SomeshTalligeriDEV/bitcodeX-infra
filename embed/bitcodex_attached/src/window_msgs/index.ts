@@ -4,8 +4,10 @@ import type {
   BitcodeXWalletMsgGetConnectedApps,
 } from "@bitcodex/bitcodex-sdk-core";
 
+import { handleGetAppConfig } from "./app_config";
 import { handleExportPrivateKey } from "./export_private_key";
 import { handleGenerateOAuthUrl } from "./generate_oauth_url";
+import { handleGetAccessToken } from "./get_access_token";
 import { handleGetAuthType } from "./get_auth_type";
 import { handleGetConnectedApps } from "./get_connected_apps";
 import { handleGetCosmosChain } from "./get_cosmos_chain_info";
@@ -15,6 +17,7 @@ import { handleGetName } from "./get_name";
 import { handleGetPublicKey } from "./get_public_key";
 import { handleGetPublicKeyEd25519 } from "./get_public_key_ed25519";
 import { handleGetWalletInfo } from "./get_wallet_info";
+import { handleMfa } from "./mfa";
 import { handleOAuthInfoPassV2 } from "./oauth_info_pass";
 import { handleOpenModal } from "./open_modal";
 import { handleSetCodeVerifier } from "./set_code_verifier";
@@ -22,6 +25,7 @@ import { handleSetOAuthNonce } from "./set_oauth_nonce";
 import { handleSignOut } from "./sign_out";
 import { BITCODEX_SDK_TARGET } from "./target";
 import type { MsgEventContext } from "./types";
+import { handleWalletLogin } from "./wallet_login";
 import { setColorScheme } from "@bitcodex-attached/components/attached_initialized/color_scheme";
 import { MOBILE_NATIVE_ORIGIN } from "@bitcodex-attached/requests/endpoints";
 import { useAppState } from "@bitcodex-attached/store/app";
@@ -188,6 +192,26 @@ export function makeMsgHandler() {
 
       case "get_public_key": {
         await handleGetPublicKey(ctx);
+        break;
+      }
+
+      case "mfa": {
+        await handleMfa(ctx, message);
+        break;
+      }
+
+      case "wallet_login": {
+        await handleWalletLogin(ctx, message);
+        break;
+      }
+
+      case "get_access_token": {
+        await handleGetAccessToken(ctx);
+        break;
+      }
+
+      case "get_app_config": {
+        await handleGetAppConfig(ctx);
         break;
       }
 

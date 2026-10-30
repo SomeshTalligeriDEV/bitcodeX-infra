@@ -5,7 +5,11 @@ import { u8aToHex } from "@polkadot/util";
 import { blake2AsU8a, cryptoWaitReady } from "@polkadot/util-crypto";
 
 import { fromAddress, toAddress } from "@bitcodex-bittensor-chain/address";
-import { checkNetwork } from "@bitcodex-bittensor-chain/networks";
+import {
+  checkNetwork,
+  MAINNET_GENESIS,
+  TESTNET_GENESIS,
+} from "@bitcodex-bittensor-chain/networks";
 import {
   MAX_RAW_PAYLOAD,
   signingBytes,
@@ -118,7 +122,7 @@ describe("checkNetwork", () => {
     ).toBe(false);
   });
 
-  it("refuses mainnet while disabled, and testnet until its genesis is verified", () => {
+  it("refuses mainnet while disabled, and testnet with an unknown genesis", () => {
     const live = {
       genesisHash: "0x2f05",
       chainType: "Live",
@@ -130,6 +134,43 @@ describe("checkNetwork", () => {
       expect(mainnet.err).toMatch(/disabled/);
     }
     expect(checkNetwork("bittensor:testnet", live).success).toBe(false);
+  });
+
+  // Facts read from the live chains on 2026-10-29 (00-research.md "Testnet").
+  const testnetFacts = {
+    genesisHash: TESTNET_GENESIS,
+    chainType: "Development",
+    endpoint: "wss://test.finney.opentensor.ai:443",
+  };
+  const mainnetFacts = {
+    genesisHash: MAINNET_GENESIS,
+    chainType: "Live",
+    endpoint: "wss://entrypoint-finney.opentensor.ai:443",
+  };
+
+  it("accepts testnet only by its genesis hash", () => {
+    expect(checkNetwork("bittensor:testnet", testnetFacts).success).toBe(true);
+    expect(
+      checkNetwork("bittensor:testnet", {
+        ...testnetFacts,
+        genesisHash: `0x${"ab".repeat(32)}`,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("testnet reports Development, but is never accepted as localnet (remote endpoint)", () => {
+    const res = checkNetwork("bittensor:localnet", testnetFacts);
+    expect(res.success ? "" : res.err).toMatch(/not local/);
+  });
+
+  it("names mainnet explicitly whatever network was requested", () => {
+    for (const id of ["bittensor:testnet", "bittensor:localnet"] as const) {
+      const res = checkNetwork(id, {
+        ...mainnetFacts,
+        endpoint: "ws://127.0.0.1:9944",
+      });
+      expect(res.success ? "" : res.err).toMatch(/MAINNET/);
+    }
   });
 });
 

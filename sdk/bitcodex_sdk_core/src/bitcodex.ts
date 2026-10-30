@@ -1,6 +1,7 @@
 import pJson from "../package.json";
 import { BitcodeXWallet } from "./constructor";
 import { closeModal } from "./methods/close_modal";
+import { getAccessToken } from "./methods/get_access_token";
 import { getAuthType } from "./methods/get_auth_type";
 import { getEmail } from "./methods/get_email";
 import { getName } from "./methods/get_name";
@@ -31,6 +32,7 @@ ptype.signIn = signIn;
 ptype.signOut = signOut;
 ptype.getPublicKey = getPublicKey;
 ptype.getPublicKeyEd25519 = getPublicKeyEd25519;
+ptype.getAccessToken = getAccessToken;
 ptype.getEmail = getEmail;
 ptype.getName = getName;
 ptype.getAuthType = getAuthType;

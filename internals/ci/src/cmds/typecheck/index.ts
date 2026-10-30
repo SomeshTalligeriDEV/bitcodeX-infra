@@ -12,6 +12,7 @@ export async function typeCheck(..._args: any[]) {
     paths.sdk_core,
     paths.bittensor_chain,
     paths.sdk_bittensor,
+    paths.sdk_server,
     paths.sdk_core_react_native,
     paths.sdk_cosmos,
     paths.sdk_eth,
@@ -40,7 +41,10 @@ export async function typeCheck(..._args: any[]) {
     paths.example_svm_nextjs,
   ];
 
-  const concurrency = DEFAULT_CONCURRENCY;
+  // Low-memory machines (8 GB with the localnet VM): BITCODEX_CI_CONCURRENCY=2.
+  const fromEnv = Number(process.env.BITCODEX_CI_CONCURRENCY);
+  const concurrency =
+    Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : DEFAULT_CONCURRENCY;
 
   console.log(
     "Type checking, total (%s), concurrency (%s)",

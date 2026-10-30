@@ -1,0 +1,104 @@
+# Build the BitcodeX service images on GitHub's runners and push them to GHCR, so
+# deployment targets (CreateOS, any Docker host) pull ready images. Linux/amd64.
+name: images
+
+on:
+  push:
+    branches: ["bittensor/phase-0"]
+    paths:
+      - "selfhost/Dockerfile"
+      - ".github/workflows/images.yml"
+      - "backend/**"
+      - "key_share_node/**"
+      - "crypto/**"
+      - "lib/**"
+      - "common/**"
+      - "sdk/**"
+      - "embed/bitcodex_attached/**"
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Public API URL baked into the wallet iframe
+        default: https://bitcodex-api.onrender.com
+      google_client_id:
+        description: Google OAuth client ID (public)
+        default: 364536284636-r2befgs4lcmqmli2jrj2bh5u17ce077t.apps.googleusercontent.com
+      allowed_origins:
+        description: Comma-separated origins allowed to embed the wallet
+        default: http://localhost:3200
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      # The monorepo install, Rust targets and Docker layers exceed the runner's free disk.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force >/dev/null
+          df -h / | tail -1
+
+      - uses: actions/checkout@v4
+
+      - name: Image names
+        id: names
+        run: echo "prefix=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/bitcodex" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: api
+          push: true
+          tags: |
+            ${{ steps.names.outputs.prefix }}-api:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Key share node image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: ksn
+          push: true
+          tags: |
+            ${{ steps.names.outputs.prefix }}-ksn:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-ksn:latest
+          cache-from: type=gha
+
+      # The iframe bakes its public settings in at build time. Run the workflow by hand
+      # (inputs above) or set repository variables BITCODEX_* (needs admin).
+      - name: Wallet iframe image
+        if: ${{ inputs.api_url != '' || (vars.BITCODEX_PUBLIC_API_URL != '' && vars.BITCODEX_GOOGLE_CLIENT_ID != '') }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: selfhost/Dockerfile
+          target: iframe
+          push: true
+          build-args: |
+            VITE_BITCODEX_API_ENDPOINT=${{ inputs.api_url || vars.BITCODEX_PUBLIC_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ inputs.google_client_id || vars.BITCODEX_GOOGLE_CLIENT_ID }}
+            VITE_GITHUB_CLIENT_ID=${{ vars.BITCODEX_GITHUB_CLIENT_ID }}
+            VITE_BITTENSOR_ALLOWED_HOST_ORIGINS=${{ inputs.allowed_origins || vars.BITCODEX_ALLOWED_ORIGINS }}
+            VITE_USER_DASHBOARD_ORIGINS=${{ vars.BITCODEX_DASHBOARD_ORIGIN }}
+          tags: |
+            ${{ steps.names.outputs.prefix }}-iframe:${{ github.sha }}
+            ${{ steps.names.outputs.prefix }}-iframe:latest
+          cache-from: type=gha

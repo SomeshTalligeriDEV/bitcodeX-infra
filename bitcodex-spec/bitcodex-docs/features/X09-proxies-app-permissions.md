@@ -18,7 +18,7 @@ A user lets an app or AI agent act for them within limits the chain enforces, wi
 5. PREVIEW: off-chain rules in the iframe (daily limit, allowed netuids) shown as "coming with policies".
 
 ## Acceptance checks
-- [ ] Grant Staking proxy → demo agent stakes 1 TAO for the user with no user popup → stake visible on the user.
-- [ ] Same agent tries a transfer → chain rejects (`CallFiltered` or equivalent).
-- [ ] SmallTransfer: 0.4 TAO works, 0.6 TAO fails.
-- [ ] Revoke → next agent action fails; deposit refunded.
+- [ ] Grant Staking proxy → demo agent stakes 1 TAO for the user with no user popup → stake visible on the user. (Chain side + agent route passed 2026-10-29, tx `0x6425465f…`; grant from a BitcodeX login via the popup: pending.)
+- [x] Same agent tries a transfer → chain rejects (`CallFiltered`). (`tests/permissions.localnet.test.ts`)
+- [x] SmallTransfer: 0.4 TAO works, 0.6 TAO fails (`CallFiltered`; the limit is `value < 0.5 TAO`, read from the chain).
+- [x] Revoke → next agent action fails (`NotProxy`); deposit refunded exactly. (Revoke button in the demo/dashboard: pending browser check.)

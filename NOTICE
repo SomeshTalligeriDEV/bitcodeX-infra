@@ -4,3 +4,7 @@ Third-party components retain their own copyright notices and licenses.
 In particular, the vendored Cait-Sith and FROST components retain the license
 files distributed in their respective directories. This notice does not
 relicense those components or claim exclusive authorship of their code.
+
+This product is derived from an open-source embedded wallet stack released under the
+Apache License 2.0. Original copyright notices in the source files are retained.
+The licence for this repository is in the LICENSE file (Apache License 2.0).

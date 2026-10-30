@@ -2,6 +2,7 @@ import type {
   BitcodeXWalletInterface,
   BitcodeXWalletState,
   BitcodeXWalletTheme,
+  SignInModalOverrides,
   SignInType,
 } from "@bitcodex/bitcodex-sdk-core";
 import type { AuthType } from "@bitcodex/bitcodex-types/auth";
@@ -59,7 +60,7 @@ export interface UseBitcodeXReturn {
   publicKey: string | null;
   signIn: (type: SignInType) => Promise<void>;
   signOut: () => Promise<void>;
-  openSignInModal: () => Promise<void>;
+  openSignInModal: (options?: SignInModalOverrides) => Promise<void>;
   setTheme: (theme: BitcodeXWalletTheme) => Promise<void>;
 }
 

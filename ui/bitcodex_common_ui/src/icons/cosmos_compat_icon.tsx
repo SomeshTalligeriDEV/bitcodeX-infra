@@ -1,17 +1,12 @@
-import { s3BucketURL } from "./paths";
+import type { FC } from "react";
+
+import { LetterBadge } from "./letter_badge";
 
 export const CosmosCompatIcon: FC<CosmosCompatIconProps> = ({
   width = 20,
   height = 20,
 }) => {
-  return (
-    <img
-      src={`${s3BucketURL}/keplr.png`}
-      alt="Keplr"
-      width={width}
-      height={height}
-    />
-  );
+  return <LetterBadge label="Keplr" width={width} height={height} />;
 };
 
 export interface CosmosCompatIconProps {

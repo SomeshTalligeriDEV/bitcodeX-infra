@@ -1,3 +1,4 @@
+import { internalKsnUrl } from "@bitcodex/admin-api/ks_node_internal_url";
 import type { BitcodeXApiResponse } from "@bitcodex/bitcodex-types/api_response";
 import type { AuthType } from "@bitcodex/bitcodex-types/auth";
 import type { CurveType } from "@bitcodex/bitcodex-types/crypto";
@@ -17,7 +18,7 @@ export async function requestCheckKeyShare(
   auth_type: AuthType,
   curve_type: CurveType,
 ) {
-  const res = await fetch(`${ksNodeURI}/keyshare/v1/check`, {
+  const res = await fetch(`${internalKsnUrl(ksNodeURI)}/keyshare/v1/check`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -49,7 +50,7 @@ export async function requestCheckKeyShareV2(
     walletsPayload.ed25519 = wallets.ed25519.toHex();
   }
 
-  const res = await fetch(`${ksNodeURI}/keyshare/v2/check`, {
+  const res = await fetch(`${internalKsnUrl(ksNodeURI)}/keyshare/v2/check`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

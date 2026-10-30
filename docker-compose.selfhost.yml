@@ -1,0 +1,192 @@
+# BitcodeX self-host: Postgres, API, 2 key share nodes, wallet iframe.
+# Use selfhost/setup.sh (generates selfhost/.env, builds, starts, bootstraps).
+#   docker compose --env-file selfhost/.env -f docker-compose.selfhost.yml up -d
+name: bitcodex
+
+x-node-common: &node-common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-api-ksn-shared: &api-ksn-shared
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: postgres
+  DB_PASSWORD: ${POSTGRES_PASSWORD:?run selfhost/setup.sh}
+  DB_SSL: "false"
+  KS_NODE_REPORT_PASSWORD: ${KS_NODE_REPORT_PASSWORD:?}
+  TELEGRAM_BOT_TOKEN: ""
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?}
+  GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+  X_CLIENT_ID: ""
+  DISCORD_CLIENT_ID: ""
+  AUTH0_CLIENT_ID: ""
+  AUTH0_DOMAIN: ""
+  TELEGRAM_CLIENT_ID: ""
+
+services:
+  postgres:
+    <<: *node-common
+    image: postgres:17.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: bitcodex
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./selfhost/init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitcodex"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    <<: *node-common
+    build: { context: ., dockerfile: selfhost/Dockerfile, target: api }
+    image: bitcodex/api:selfhost
+    depends_on:
+      postgres: { condition: service_healthy }
+    ports: ["${API_PORT:-4200}:4200"]
+    environment:
+      <<: *api-ksn-shared
+      SERVER_PORT: "4200"
+      DB_NAME: bitcodex
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?}
+      JWT_EXPIRES_IN: 1h
+      ENCRYPTION_SECRET: ${API_ENCRYPTION_SECRET:?}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # No mail server in the default self-host: email login stays off.
+      SMTP_HOST: ""
+      SMTP_PORT: "587"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      FROM_EMAIL: ""
+      EMAIL_VERIFICATION_EXPIRATION_MINUTES: "10"
+      S3_REGION: ""
+      S3_BUCKET: ""
+      S3_ACCESS_KEY_ID: ""
+      S3_SECRET_ACCESS_KEY: ""
+      TYPEFORM_WEBHOOK_SECRET: ""
+      SLACK_WEBHOOK_URL: ""
+      DAPP_DASHBOARD_URL: ${PUBLIC_DASHBOARD_URL:-}
+      BITCODEX_SIGNUP_ENABLED: "true"
+      BITCODEX_ACCESS_TOKEN_KEY: ${ACCESS_TOKEN_KEY:?}
+      BITCODEX_ACCESS_TOKEN_ISSUER: bitcodex
+      # Faucet only on localnet; empty = off.
+      BITCODEX_FAUCET_SURI: ${FAUCET_SURI:-}
+      BITCODEX_FAUCET_RPC_URL: ${FAUCET_RPC_URL:-}
+      # The browser and this server both use the stored key share node URLs; inside
+      # the network the server reaches them by service name.
+      BITCODEX_KSN_INTERNAL_URLS: ${PUBLIC_KSN1_URL:?}=http://ksn1:4201,${PUBLIC_KSN2_URL:?}=http://ksn2:4202
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4200/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  ksn1:
+    <<: *node-common
+    build: { context: ., dockerfile: selfhost/Dockerfile, target: ksn }
+    image: bitcodex/ksn:selfhost
+    command: ["corepack", "yarn", "start"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    ports: ["${KSN1_PORT:-4201}:4201"]
+    environment:
+      <<: *api-ksn-shared
+      PORT: "4201"
+      DB_NAME: bitcodex_ksn1
+      ENCRYPTION_SECRET_PATH: /run/secrets/ksn_encryption_secret
+      ADMIN_PASSWORD: ${KSN_ADMIN_PASSWORD:?}
+      DUMP_DIR: /dumps
+      BITCODEX_API_BASE_URL: http://api:4200
+    secrets: [ksn_encryption_secret]
+    volumes: [ksn1dumps:/dumps]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4201/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  ksn2:
+    <<: *node-common
+    image: bitcodex/ksn:selfhost
+    pull_policy: never
+    command: ["corepack", "yarn", "start_2"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      ksn1: { condition: service_started }
+    ports: ["${KSN2_PORT:-4202}:4202"]
+    environment:
+      <<: *api-ksn-shared
+      PORT: "4202"
+      DB_NAME: bitcodex_ksn2
+      ENCRYPTION_SECRET_PATH: /run/secrets/ksn_encryption_secret
+      ADMIN_PASSWORD: ${KSN_ADMIN_PASSWORD:?}
+      DUMP_DIR: /dumps
+      BITCODEX_API_BASE_URL: http://api:4200
+    secrets: [ksn_encryption_secret]
+    volumes: [ksn2dumps:/dumps]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4202/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  iframe:
+    <<: *node-common
+    build:
+      context: .
+      dockerfile: selfhost/Dockerfile
+      target: iframe
+      args:
+        VITE_BITCODEX_API_ENDPOINT: ${PUBLIC_API_URL:?}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?}
+        VITE_GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+        VITE_BITTENSOR_ALLOWED_HOST_ORIGINS: ${APP_ORIGINS:-}
+        VITE_USER_DASHBOARD_ORIGINS: ${PUBLIC_DASHBOARD_URL:-}
+    image: bitcodex/iframe:selfhost
+    ports: ["${IFRAME_PORT:-3201}:80"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: registers the key share nodes and creates the first app (idempotent).
+  bootstrap:
+    image: bitcodex/api:selfhost
+    pull_policy: never
+    depends_on:
+      api: { condition: service_healthy }
+    restart: "no"
+    working_dir: /app/backend/bitcodex_api/server
+    command: ["corepack", "yarn", "tsx", "src/bin/bootstrap_selfhost.ts"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      DB_NAME: bitcodex
+      DB_SSL: "false"
+      BITCODEX_KSN_PUBLIC_URLS: ${PUBLIC_KSN1_URL:?},${PUBLIC_KSN2_URL:?}
+      BITCODEX_APP_LABEL: ${APP_LABEL:-My BitcodeX app}
+      BITCODEX_APP_ORIGINS: ${APP_ORIGINS:-}
+      BITCODEX_NETWORK: ${BITCODEX_NETWORK:-bittensor:testnet}
+      BITCODEX_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@bitcodex.local}
+
+secrets:
+  ksn_encryption_secret:
+    file: ./selfhost/secrets/ksn_encryption_secret.txt
+
+volumes:
+  pgdata:
+  ksn1dumps:
+  ksn2dumps:

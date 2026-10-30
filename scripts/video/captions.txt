@@ -1,0 +1,17 @@
+# One caption per line:  start-end | text      (times are in the RAW recording, mm:ss)
+# Edit the times after you watch your raw clip, then run scripts/video/build_video.sh.
+00:00-00:07 | BitcodeX: embedded wallets for Bittensor
+00:07-00:15 | Customize the login window: theme, colour, logo and sign-in methods
+00:15-00:24 | The window you see is the real one, and it follows your settings
+00:24-00:36 | Sign in with Google: no extension, no seed phrase
+00:36-00:48 | A real Bittensor wallet is created. The key is split between your browser and the servers
+00:48-01:02 | Fund it: the local chain has a built-in faucet, and the balance updates live
+01:02-01:20 | Send TAO: the popup shows the amount, destination and fee before anything is signed
+01:20-01:32 | Approved: the transaction lands on chain and appears in activity
+01:32-01:48 | Sign a message and verify the signature
+01:48-02:08 | Stake: see the exact price and slippage first, then stake
+02:08-02:24 | Your stake and balances are read live from the chain
+02:24-02:44 | Hotkeys stay on your miner. Add one by address and register it at the exact on-chain cost
+02:44-03:02 | Let an app or AI agent act for you with an on-chain permission you can revoke
+03:02-03:14 | Developers: copy the exact code for your settings
+03:14-03:30 | Full documentation, quickstart and API reference are built in

@@ -1,0 +1,4 @@
+{
+  "installCommand": "true",
+  "buildCommand": "npx next build --webpack"
+}

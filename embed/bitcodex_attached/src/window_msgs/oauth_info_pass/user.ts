@@ -30,6 +30,7 @@ import {
   requestSplitShares,
 } from "@bitcodex-attached/requests/ks_node";
 import type { FetchError } from "@bitcodex-attached/requests/types";
+import { describeFetchError } from "@bitcodex-attached/requests/types";
 import type { ReferralInfo } from "@bitcodex-attached/store/memory/types";
 import type { UserSignInResult } from "@bitcodex-attached/window_msgs/types";
 
@@ -55,7 +56,10 @@ export async function handleExistingUser(
 
     return {
       success: false,
-      err: { type: "sign_in_request_fail", error: signInRes.err.toString() },
+      err: {
+        type: "sign_in_request_fail",
+        error: describeFetchError(signInRes.err),
+      },
     };
   }
 
@@ -352,7 +356,10 @@ export async function handleReshare(
     console.error("[attached] sign in failed, err: %s", signInRes.err);
     return {
       success: false,
-      err: { type: "sign_in_request_fail", error: signInRes.err.toString() },
+      err: {
+        type: "sign_in_request_fail",
+        error: describeFetchError(signInRes.err),
+      },
     };
   }
 

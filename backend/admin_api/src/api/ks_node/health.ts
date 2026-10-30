@@ -8,6 +8,7 @@ import type { Result } from "@bitcodex/stdlib-js";
 import type { Pool, PoolClient } from "pg";
 import { v4 as uuidv4 } from "uuid";
 
+import { internalKsnUrl } from "./internal_url";
 import type { BitcodeXApiResponse } from "@bitcodex-types/api_response";
 import type { WithPagination, WithTime } from "@bitcodex-types/aux_types";
 
@@ -57,7 +58,7 @@ export async function healthCheckKSNode(
 
 async function requestKSNodeHealthCheck(cvEndpoint: string): Promise<boolean> {
   try {
-    const response = await fetch(`${cvEndpoint}/`);
+    const response = await fetch(`${internalKsnUrl(cvEndpoint)}/`);
     if (response.status !== 200) {
       return false;
     }

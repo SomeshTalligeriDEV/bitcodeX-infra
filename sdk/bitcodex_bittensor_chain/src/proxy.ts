@@ -199,3 +199,38 @@ export function checkProxyExecuted(
   }
   return { success: true, data: undefined };
 }
+
+export interface ProxyDelegation {
+  delegate: string;
+  proxyType: string;
+  delay: number;
+}
+
+export interface ProxyState {
+  delegations: ProxyDelegation[];
+  /** Total reserved for these delegations (rao); returned when they are removed. */
+  deposit: bigint;
+}
+
+/** Active delegations of `real` (`proxy.proxies`), straight from chain storage. */
+export async function getProxies(
+  api: ApiPromise,
+  real: string,
+): Promise<ProxyState> {
+  const [list, deposit] = (await api.query.proxy.proxies(real)) as unknown as [
+    {
+      delegate: { toString(): string };
+      proxyType: { toString(): string };
+      delay: { toNumber(): number };
+    }[],
+    { toString(): string },
+  ];
+  return {
+    delegations: list.map((p) => ({
+      delegate: p.delegate.toString(),
+      proxyType: p.proxyType.toString(),
+      delay: p.delay.toNumber(),
+    })),
+    deposit: BigInt(deposit.toString()),
+  };
+}

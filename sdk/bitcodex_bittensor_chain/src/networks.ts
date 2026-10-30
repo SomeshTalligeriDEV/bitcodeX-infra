@@ -24,10 +24,16 @@ export const TAO_DECIMALS = 9;
 export const LOCALNET_RPC_URL = "ws://127.0.0.1:9944";
 
 /**
- * Testnet endpoint and genesis hash are NOT verified yet (bitcodex-docs/00-research.md).
- * Until a probe records them, testnet has no rpcUrl and no accepted genesis, so every
- * testnet connection is refused.
+ * Verified 2026-10-29 (00-research.md "Testnet"): endpoints from
+ * bittensor.com/docs/concepts/network; genesis hashes read from the live chains.
+ * Testnet reports chainType "Development"; mainnet reports "Live".
  */
+export const TESTNET_RPC_URL = "wss://test.finney.opentensor.ai:443";
+export const TESTNET_GENESIS =
+  "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
+export const MAINNET_GENESIS =
+  "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03";
+
 export const NETWORKS: Record<BittensorChainId, BittensorNetwork> = {
   "bittensor:localnet": {
     chainId: "bittensor:localnet",
@@ -39,15 +45,16 @@ export const NETWORKS: Record<BittensorChainId, BittensorNetwork> = {
   "bittensor:testnet": {
     chainId: "bittensor:testnet",
     name: "Testnet",
-    rpcUrl: null,
-    genesisHashes: [],
+    rpcUrl: TESTNET_RPC_URL,
+    genesisHashes: [TESTNET_GENESIS],
     disabled: false,
   },
   "bittensor:mainnet": {
     chainId: "bittensor:mainnet",
     name: "Mainnet",
+    // No default endpoint: mainnet stays disabled until an external security audit.
     rpcUrl: null,
-    genesisHashes: [],
+    genesisHashes: [MAINNET_GENESIS],
     disabled: true,
   },
 };
@@ -88,6 +95,17 @@ export function checkNetwork(
   }
   if (network.disabled && !options.enableMainnet) {
     return { success: false, err: `${network.name} is disabled` };
+  }
+
+  // Whatever was asked for: if the chain IS mainnet, say so explicitly.
+  if (
+    chainId !== "bittensor:mainnet" &&
+    facts.genesisHash.toLowerCase() === MAINNET_GENESIS
+  ) {
+    return {
+      success: false,
+      err: "refusing: this endpoint is Bittensor MAINNET (real TAO); mainnet is disabled",
+    };
   }
 
   if (chainId === "bittensor:localnet") {

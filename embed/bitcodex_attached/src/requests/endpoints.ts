@@ -8,6 +8,17 @@ export const DEMO_WEB_ORIGIN = import.meta.env.VITE_DEMO_WEB_ORIGIN;
 export const MOBILE_NATIVE_ORIGIN = import.meta.env.VITE_MOBILE_NATIVE_ORIGIN;
 
 /**
+ * Sites allowed to request Bittensor signatures (comma-separated origins). Requests from
+ * any other origin are refused before the modal opens. Empty allows every origin.
+ */
+export const BITTENSOR_ALLOWED_HOST_ORIGINS: string[] = (
+  import.meta.env.VITE_BITTENSOR_ALLOWED_HOST_ORIGINS ?? ""
+)
+  .split(",")
+  .map((o: string) => o.trim())
+  .filter(Boolean);
+
+/**
  * Check if the origin is a demo or sandbox context.
  * - Matches the configured DEMO_WEB_ORIGIN
  * - Treats non-http(s) origins (e.g. native app custom schemes like `myapp://`)

@@ -17,7 +17,7 @@ Users can always leave with their key (Privy "export wallet"), recover on a new 
 4. Swap screens (PREVIEW): hotkey swap form (`swap_hotkey`, cost shown), coldkey swap explainer with the 5-day announce flow; execute only on localnet.
 
 ## Acceptance checks
-- [ ] Export → import into polkadot.js keyring or extension → same address → can sign a transfer.
+- [ ] Export → import into polkadot.js keyring or extension → same address → can sign a transfer. (Chain side passed with the iframe's own WASM: `scripts/local/check_export_portability.mjs`, seed and keystore JSON both open the coldkey address; imported key signed tx `0x1fe96924…`. From the dashboard with a real login: pending.)
 - [ ] Network tab shows no seed during export.
 - [ ] Clear browser storage → log in → same address.
-- [ ] Hotkey swap works on localnet (preview label shown).
+- [ ] Hotkey swap works on localnet (preview label shown). (Chain side passed: exact cost, UID moved, `tests/hotkeys.localnet.test.ts`; SDK `swapHotkey`. Screen with the Preview label comes with X06.)

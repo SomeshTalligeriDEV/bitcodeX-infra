@@ -8,15 +8,19 @@
     "dev": "tsx src/bin/launch.ts",
     "build": "next build",
     "start": "NODE_ENV=production tsx src/bin/launch.ts",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build_env": "tsx src/bin/build.ts"
   },
   "dependencies": {
+    "@bitcodex/bittensor-chain": "workspace:*",
     "@bitcodex/sdk-bittensor": "workspace:*",
     "@polkadot/api": "17.0.2",
     "@polkadot/extension-dapp": "0.64.1",
+    "@polkadot/keyring": "14.0.3",
     "@polkadot/util": "14.0.3",
     "@polkadot/util-crypto": "14.0.3",
     "next": "^16.1.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1"
   },

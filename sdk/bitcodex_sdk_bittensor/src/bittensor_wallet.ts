@@ -3,9 +3,45 @@ import {
   type BitcodeXWalletInterface,
   type BittensorSignerPayloadJSON,
 } from "@bitcodex/bitcodex-sdk-core";
-import { type EventRecordLike, toAddress } from "@bitcodex/bittensor-chain";
+import {
+  type Balances,
+  buildAddProxy,
+  buildRemoveProxy,
+  caip2ChainId,
+  checkRegistration,
+  createSiwbMessage,
+  DEFAULT_SLIPPAGE_BPS,
+  decayedBurn,
+  describeCall,
+  type EventRecordLike,
+  evmAddressFromSecp256k1,
+  evmMirrorAddress,
+  getApi,
+  getBalances,
+  getHotkeyInfo,
+  getOwnedHotkeys,
+  getProxies,
+  getStakes,
+  type HotkeyInfo,
+  hotkeySwapCost,
+  listSubnets,
+  type ProxyState,
+  parseUnits,
+  quoteRegistration,
+  quoteStake,
+  quoteUnstake,
+  type RegistrationQuote,
+  type SiwbFields,
+  type StakePosition,
+  type SubnetSummary,
+  type SwapQuote,
+  toAddress,
+  toPlainCall,
+} from "@bitcodex/bittensor-chain";
 import type { Result } from "@bitcodex/stdlib-js";
+import type { ApiPromise } from "@polkadot/api";
 import type { SubmittableExtrinsic } from "@polkadot/api/types";
+import type { Call } from "@polkadot/types/interfaces";
 import type {
   Signer,
   SignerPayloadJSON,
@@ -13,8 +49,16 @@ import type {
   SignerResult,
 } from "@polkadot/types/types";
 import { isHex, stringToHex, u8aToHex } from "@polkadot/util";
+import { checkAddress } from "@polkadot/util-crypto";
 
 import { BittensorWalletEventEmitter } from "./emitter";
+import {
+  addEntry,
+  defaultHistoryStore,
+  type HistoryEntry,
+  type HistoryStore,
+  historyKey,
+} from "./history";
 import { requestSignature } from "./make_signature";
 import { extrinsicOutcome } from "./outcome";
 import type {
@@ -23,8 +67,21 @@ import type {
   BitcodeXBittensorState,
   BittensorWalletEvent,
   BittensorWalletEventHandler,
+  RegisterHotkeyResult,
   SendResult,
+  SignInWithBittensorArgs,
+  SignInWithBittensorResult,
+  StakeArgs,
+  StakeResult,
+  UnstakeArgs,
 } from "./types";
+import {
+  type ExtensionAccount,
+  linkExtensionWallet,
+  listExtensionAccounts,
+  loginWithWallet,
+  type WalletLoginResult,
+} from "./wallet_login";
 
 export class BitcodeXBittensorWallet {
   readonly bitcodexWallet: BitcodeXWalletInterface;
@@ -35,6 +92,8 @@ export class BitcodeXBittensorWallet {
   connecting = false;
 
   private readonly emitter = new BittensorWalletEventEmitter();
+  private readonly history: HistoryStore;
+  private readonly rpcUrl: string | undefined;
   private signId = 0;
 
   static init(
@@ -52,15 +111,21 @@ export class BitcodeXBittensorWallet {
     }
     return {
       success: true,
-      data: new BitcodeXBittensorWallet(coreRes.data, args.chain_id),
+      data: new BitcodeXBittensorWallet(coreRes.data, args.chain_id, {
+        rpcUrl: args.rpc_url,
+        history: args.history_store,
+      }),
     };
   }
 
   constructor(
     bitcodexWallet: BitcodeXWalletInterface,
     chainId: BitcodeXBittensorState["chainId"],
+    options: { rpcUrl?: string; history?: HistoryStore } = {},
   ) {
     this.bitcodexWallet = bitcodexWallet;
+    this.rpcUrl = options.rpcUrl;
+    this.history = options.history ?? defaultHistoryStore();
     this.state = { address: null, publicKeyRaw: null, chainId };
     this.signer = {
       signPayload: (payload) => this.signPayload(payload),
@@ -148,16 +213,24 @@ export class BitcodeXBittensorWallet {
             dispatchError,
             events as unknown as EventRecordLike[],
           );
-          if (!outcome.success) {
-            reject(new Error(`${outcome.err} (tx ${txHash.toHex()})`));
-            return;
-          }
-          resolve({
+          const result = {
             txHash: txHash.toHex(),
             blockHash: (status.isInBlock
               ? status.asInBlock
               : status.asFinalized
             ).toHex(),
+          };
+          this.record(
+            address,
+            tx,
+            result,
+            outcome.success ? null : outcome.err,
+          ).finally(() => {
+            if (!outcome.success) {
+              reject(new Error(`${outcome.err} (tx ${result.txHash})`));
+            } else {
+              resolve(result);
+            }
           });
         },
       )
@@ -166,6 +239,358 @@ export class BitcodeXBittensorWallet {
         })
         .catch(reject);
     });
+  }
+
+  /** Network-checked connection for this wallet's chain (same cache as `getApi`). */
+  async api(): Promise<ApiPromise> {
+    const res = await getApi(this.state.chainId, { rpcUrl: this.rpcUrl });
+    if (!res.success) {
+      throw new Error(res.err);
+    }
+    return res.data;
+  }
+
+  async getBalances(): Promise<Balances> {
+    return getBalances(await this.api(), await this.connect());
+  }
+
+  /** Stake per (hotkey, subnet), valued at what unstaking would return now. */
+  async getStakes(): Promise<StakePosition[]> {
+    return getStakes(await this.api(), await this.connect());
+  }
+
+  /** Live subnets with name, symbol, owner hotkey and spot price. */
+  async listSubnets(): Promise<SubnetSummary[]> {
+    return listSubnets(await this.api());
+  }
+
+  /** Expected alpha, fee, price impact and limit price; nothing is signed. */
+  async quoteStake(args: Omit<StakeArgs, "hotkey">): Promise<SwapQuote> {
+    const amount = mustParse(args.amountTao);
+    return quoteStake(
+      await this.api(),
+      args.netuid,
+      amount,
+      args.slippageBps ?? DEFAULT_SLIPPAGE_BPS,
+    );
+  }
+
+  async quoteUnstake(args: Omit<UnstakeArgs, "hotkey">): Promise<SwapQuote> {
+    const amount = mustParse(args.amountAlpha);
+    return quoteUnstake(
+      await this.api(),
+      args.netuid,
+      amount,
+      args.slippageBps ?? DEFAULT_SLIPPAGE_BPS,
+    );
+  }
+
+  /** `balances.transferKeepAlive`: never closes the sending account. */
+  async sendTao(to: string, amountTao: string): Promise<SendResult> {
+    const [valid, reason] = checkAddress(to, 42);
+    if (!valid) {
+      throw new Error(`not a Bittensor address: ${reason ?? to}`);
+    }
+    const api = await this.api();
+    return this.signAndSend(
+      api.tx.balances.transferKeepAlive(to, mustParse(amountTao)),
+    );
+  }
+
+  /**
+   * `subtensorModule.addStakeLimit` at the quoted price plus slippage. With
+   * `allowPartial` false (default) the chain rejects it if the price moves too far.
+   */
+  async stake(args: StakeArgs): Promise<StakeResult> {
+    const api = await this.api();
+    const quote = await this.quoteStake(args);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.addStakeLimit(
+        args.hotkey,
+        args.netuid,
+        quote.tao,
+        quote.limitPrice,
+        args.allowPartial ?? false,
+      ),
+    );
+    return { ...res, quote };
+  }
+
+  /** `subtensorModule.removeStakeLimit` at the quoted price minus slippage. */
+  async unstake(args: UnstakeArgs): Promise<StakeResult> {
+    const api = await this.api();
+    const quote = await this.quoteUnstake(args);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.removeStakeLimit(
+        args.hotkey,
+        args.netuid,
+        quote.alpha,
+        quote.limitPrice,
+        args.allowPartial ?? false,
+      ),
+    );
+    return { ...res, quote };
+  }
+
+  /** Hotkeys the chain records as owned by this coldkey, with subnets and UIDs. */
+  async getHotkeys(): Promise<HotkeyInfo[]> {
+    const api = await this.api();
+    const owned = await getOwnedHotkeys(api, await this.connect());
+    return Promise.all(owned.map((h) => getHotkeyInfo(api, h)));
+  }
+
+  async getHotkeyInfo(hotkey: string): Promise<HotkeyInfo> {
+    return getHotkeyInfo(await this.api(), hotkey);
+  }
+
+  /** Exact cost of a registration included in the next block (rao, excl. tx fee). */
+  async quoteRegistration(netuid: number): Promise<RegistrationQuote> {
+    return quoteRegistration(await this.api(), netuid);
+  }
+
+  /**
+   * Register a hotkey (public address only; created on the miner machine) on a subnet,
+   * signed by this coldkey. Uses `registerLimit` capped at the quoted cost, so it never
+   * charges more than quoted; `charged` is read from chain state after inclusion.
+   */
+  async registerHotkey(args: {
+    netuid: number;
+    hotkey: string;
+  }): Promise<RegisterHotkeyResult> {
+    const api = await this.api();
+    const coldkey = await this.connect();
+    const check = await checkRegistration(
+      api,
+      coldkey,
+      args.netuid,
+      args.hotkey,
+    );
+    if (!check.success) {
+      throw new Error(check.err);
+    }
+    const quote = check.data;
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.registerLimit(
+        args.netuid,
+        args.hotkey,
+        quote.cost,
+      ),
+    );
+    // Charged = the parent block's burn decayed one block (verified to the rao).
+    const header = await api.rpc.chain.getHeader(res.blockHash);
+    const parent = await api.at(header.parentHash);
+    const parentBurn = BigInt(
+      (await parent.query.subtensorModule.burn(args.netuid)).toString(),
+    );
+    return {
+      ...res,
+      quotedMax: quote.cost,
+      charged: decayedBurn(parentBurn, quote.params),
+    };
+  }
+
+  /**
+   * Replace a hotkey (public addresses only) on one subnet or on all subnets
+   * (`netuid` null). Cost from chain constants; registrations and stake move over.
+   */
+  async swapHotkey(args: {
+    hotkey: string;
+    newHotkey: string;
+    netuid: number | null;
+  }): Promise<SendResult & { cost: bigint }> {
+    const api = await this.api();
+    const coldkey = await this.connect();
+    const [valid, reason] = checkAddress(args.newHotkey, 42);
+    if (!valid) {
+      throw new Error(
+        `not a Bittensor hotkey address: ${reason ?? args.newHotkey}`,
+      );
+    }
+    if (args.newHotkey === args.hotkey) {
+      throw new Error("the new hotkey must differ from the old one");
+    }
+    const owner = (await getHotkeyInfo(api, args.hotkey)).owner;
+    if (owner !== coldkey) {
+      throw new Error("this wallet does not own the old hotkey");
+    }
+    const cost = hotkeySwapCost(api, args.netuid);
+    const res = await this.signAndSend(
+      api.tx.subtensorModule.swapHotkey(
+        args.hotkey,
+        args.newHotkey,
+        args.netuid,
+      ),
+    );
+    return { ...res, cost };
+  }
+
+  /** Active on-chain delegations (proxies) of this coldkey, with the reserved deposit. */
+  async getProxies(): Promise<ProxyState> {
+    return getProxies(await this.api(), await this.connect());
+  }
+
+  /**
+   * Let `delegate` (an app or agent key) act for this coldkey with one ProxyType
+   * (validated against chain metadata, e.g. "Staking", "SmallTransfer").
+   */
+  async grantProxy(args: {
+    delegate: string;
+    proxyType: string;
+    delayBlocks?: number;
+  }): Promise<SendResult> {
+    const api = await this.api();
+    const [valid, reason] = checkAddress(args.delegate, 42);
+    if (!valid) {
+      throw new Error(`not a Bittensor address: ${reason ?? args.delegate}`);
+    }
+    const tx = buildAddProxy(
+      api,
+      args.delegate,
+      args.proxyType,
+      args.delayBlocks ?? 0,
+    );
+    if (!tx.success) {
+      throw new Error(tx.err);
+    }
+    return this.signAndSend(tx.data);
+  }
+
+  /** Remove one delegation; its deposit is returned. */
+  async revokeProxy(args: {
+    delegate: string;
+    proxyType: string;
+    delayBlocks?: number;
+  }): Promise<SendResult> {
+    const api = await this.api();
+    const tx = buildRemoveProxy(
+      api,
+      args.delegate,
+      args.proxyType,
+      args.delayBlocks ?? 0,
+    );
+    if (!tx.success) {
+      throw new Error(tx.err);
+    }
+    return this.signAndSend(tx.data);
+  }
+
+  /**
+   * Subtensor EVM (X13, Preview): the EVM address of this user's BitcodeX secp256k1 key,
+   * the Subtensor account that holds its TAO (h160 mirror, verified against the chain's
+   * address-mapping precompile), and that balance. EVM-side signing is not wired yet.
+   */
+  async getEvmAccount(): Promise<{
+    evmAddress: string;
+    mirror: string;
+    balances: Balances;
+  } | null> {
+    const pub = await this.bitcodexWallet.getPublicKey();
+    if (!pub) {
+      return null;
+    }
+    const evmAddress = evmAddressFromSecp256k1(pub);
+    const mirror = evmMirrorAddress(evmAddress);
+    return {
+      evmAddress,
+      mirror,
+      balances: await getBalances(await this.api(), mirror),
+    };
+  }
+
+  /** Substrate extension accounts in this browser (not BitcodeX itself). */
+  listExtensionAccounts(
+    appName = window.location.host,
+  ): Promise<ExtensionAccount[]> {
+    return listExtensionAccounts(appName);
+  }
+
+  /** Login with an extension wallet (Sign-In with Bittensor + server nonce). */
+  loginWithWallet(account: ExtensionAccount): Promise<WalletLoginResult> {
+    return loginWithWallet(this.bitcodexWallet, account);
+  }
+
+  /** Link an extension wallet to the signed-in BitcodeX user. */
+  linkWallet(
+    account: ExtensionAccount,
+  ): Promise<{ address: string; status: string }> {
+    return linkExtensionWallet(this.bitcodexWallet, account);
+  }
+
+  /** Transactions sent from this browser through BitcodeX, newest first. */
+  async getHistory(): Promise<HistoryEntry[]> {
+    const address = await this.connect();
+    return this.history.load(historyKey(this.state.chainId, address));
+  }
+
+  private async record(
+    address: string,
+    tx: SubmittableExtrinsic<"promise">,
+    result: SendResult,
+    error: string | null,
+  ) {
+    try {
+      const card = describeCall(toPlainCall(tx.method as unknown as Call));
+      let blockNumber: number | null = null;
+      try {
+        const api = await this.api();
+        blockNumber = (
+          await api.rpc.chain.getHeader(result.blockHash)
+        ).number.toNumber();
+      } catch {
+        // keep the entry without a block number
+      }
+      const key = historyKey(this.state.chainId, address);
+      const entry: HistoryEntry = {
+        chainId: this.state.chainId,
+        txHash: result.txHash,
+        blockHash: result.blockHash,
+        blockNumber,
+        status: error ? "failed" : "success",
+        error,
+        section: card.section,
+        method: card.method,
+        title: card.title,
+        rows: card.rows,
+        timestamp: Date.now(),
+      };
+      this.history.save(key, addEntry(this.history.load(key), entry));
+      this.emitter.emit("historyChanged", entry);
+    } catch (err) {
+      console.warn("[bittensor sdk] failed to record history:", err);
+    }
+  }
+
+  /**
+   * Sign-In with Bittensor (CAIP-122 profile, see `@bitcodex/bittensor-chain` siwb.ts).
+   * The app's server issues `nonce` and checks the result with `verifySiwb`.
+   */
+  async signInWithBittensor(
+    args: SignInWithBittensorArgs,
+  ): Promise<SignInWithBittensorResult> {
+    const address = await this.connect();
+    const api = await this.api();
+    const issued = new Date();
+    const fields: SiwbFields = {
+      domain: args.domain ?? window.location.host,
+      address,
+      statement: args.statement,
+      uri: args.uri ?? window.location.origin,
+      version: "1",
+      chainId: caip2ChainId(api.genesisHash.toHex()),
+      nonce: args.nonce,
+      issuedAt: issued.toISOString(),
+      expirationTime: new Date(
+        issued.getTime() + (args.expirationMinutes ?? 10) * 60_000,
+      ).toISOString(),
+      requestId: args.requestId,
+      resources: args.resources,
+    };
+    const message = createSiwbMessage(fields);
+    if (!message.success) {
+      throw new Error(message.err);
+    }
+    const signature = await this.signMessage(message.data);
+    return { message: message.data, signature, address, fields };
   }
 
   /** Sign a message (wrapped in <Bytes> by the iframe); returns the 64-byte signature hex. */
@@ -276,4 +701,15 @@ export class BitcodeXBittensorWallet {
       console.warn("[bittensor sdk] failed to load ed25519 key:", err);
     }
   };
+}
+
+function mustParse(amount: string): bigint {
+  const res = parseUnits(amount);
+  if (!res.success) {
+    throw new Error(res.err);
+  }
+  if (res.data <= BigInt(0)) {
+    throw new Error("amount must be greater than 0");
+  }
+  return res.data;
 }

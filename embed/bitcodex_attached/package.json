@@ -16,7 +16,8 @@
     "typecheck": "tsc",
     "format": "yarn exec biome format --write",
     "lint": "yarn exec biome lint --write",
-    "check": "yarn exec biome check --write"
+    "check": "yarn exec biome check --write",
+    "serve_built": "tsx ./src/bin/serve_built.ts"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.18.1",
@@ -49,6 +50,7 @@
     "@keplr-wallet/types": "0.12.297",
     "@keplr-wallet/unit": "0.12.297",
     "@polkadot/api": "17.0.2",
+    "@polkadot/keyring": "14.0.3",
     "@polkadot/types": "17.0.2",
     "@polkadot/util": "14.0.3",
     "@polkadot/util-crypto": "14.0.3",

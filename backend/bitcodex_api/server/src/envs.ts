@@ -51,4 +51,14 @@ export const envSchema = z.object({
 
   // "true" allows new wallet signups (keygen). Unset or any other value blocks them.
   BITCODEX_SIGNUP_ENABLED: z.string().optional(),
+
+  // Localnet test-TAO faucet (X14). Unset BITCODEX_FAUCET_SURI turns it off.
+  // Only a public dev URI such as //Alice; the faucet refuses any non-localnet chain.
+  BITCODEX_FAUCET_SURI: z.string().optional(),
+  BITCODEX_FAUCET_RPC_URL: z.string().optional(),
+  BITCODEX_FAUCET_AMOUNT_TAO: z.string().optional(),
+
+  // X10 access tokens: Ed25519 PKCS8 PEM (or base64 of it), issuer claim.
+  BITCODEX_ACCESS_TOKEN_KEY: z.string().optional(),
+  BITCODEX_ACCESS_TOKEN_ISSUER: z.string().optional(),
 });

@@ -21,8 +21,12 @@ Every signature request shows a clear, Privy-quality modal: what the call does i
 5. Raw message signing modal: show message text (or hex), and for Sign-in-with-Bittensor show domain, address, nonce, issued-at.
 
 ## Acceptance checks
-- [ ] Transfer, stake, register, proxy-wrapped stake, and batch each show the right card with correct numbers.
-- [ ] A transfer hidden inside `utility.batch` is shown as a transfer (not hidden).
-- [ ] Fee shown matches the actual fee within rounding.
-- [ ] Request from a non-allowed origin is rejected before the modal opens.
-- [ ] Mainnet payload is refused with a clear message while the flag is off.
+- [x] Transfer, stake, register, proxy-wrapped stake, and batch each show the right card with correct numbers. (2026-10-28: `tests/describe.localnet.test.ts`, cards decoded from call hex built with live localnet metadata.)
+- [x] A transfer hidden inside `utility.batch` is shown as a transfer (not hidden). (Same test: batch(remark, transfer 3 TAO) → inner "Send TAO", 3 TAO.)
+- [x] Fee shown matches the actual fee within rounding. (2026-10-28 localnet: `paymentInfo` 83124 rao = `TransactionFeePaid` 83124 rao.)
+- [ ] Request from a non-allowed origin is rejected before the modal opens. (Built: `VITE_BITTENSOR_ALLOWED_HOST_ORIGINS` check in `window_msgs/open_modal.ts` answers `origin_not_allowed`; browser check pending. Per-app origins from the developer dashboard come with X11.)
+- [ ] Mainnet payload is refused with a clear message while the flag is off. (Built: the iframe connects only through `getApi`, which refuses mainnet, and rejects a payload whose genesis differs from its connection; unit-tested in `@bitcodex/bittensor-chain`; browser check pending.)
+
+## Not built yet
+- USD values: no price source yet; amounts are shown in TAO/alpha only (no made-up prices).
+- Sign-in-with-Bittensor fields in the raw message modal: comes with X05 `signInWithBittensor` once its message format is verified.

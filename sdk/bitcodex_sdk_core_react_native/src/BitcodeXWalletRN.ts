@@ -264,6 +264,13 @@ export class BitcodeXWalletRN implements BitcodeXWalletInterface {
     await this._resetPersistedSession();
   }
 
+  // Not built for React Native yet: the token is minted in the iframe and the RN SDK
+  // reaches it only through the OS-browser RPC page. Throws instead of returning null,
+  // which would read as "signed out".
+  async getAccessToken(): Promise<string | null> {
+    throw new Error("getAccessToken is not supported on React Native yet");
+  }
+
   async getPublicKey(): Promise<string | null> {
     await this.waitUntilInitialized;
     return this.state.publicKey;

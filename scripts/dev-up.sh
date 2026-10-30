@@ -5,6 +5,8 @@
 # Logs: ~/.bitcodex/logs/<service>.log   PIDs: ~/.bitcodex/pids/<service>.pid
 # Prereqs: Docker running (colima start), `yarn install`, the build order in AGENTS.md, scripts/dev-env.sh.
 set -euo pipefail
+FAST=0
+for a in "$@"; do [[ "$a" == "--fast" ]] && FAST=1; done
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CFG="$HOME/.bitcodex"
@@ -67,9 +69,18 @@ wait_http ksn_1 http://localhost:4201/ 120
 wait_http ksn_2 http://localhost:4202/ 120
 
 echo "== frontends"
-start bitcodex_attached embed/bitcodex_attached dev
-start demo_web apps/demo_web dev
-wait_http bitcodex_attached http://localhost:3201/ 180
+if [[ "${FAST:-0}" == 1 ]]; then
+  # --fast: production builds (no on-demand compiling). Rebuild by running dev-up again.
+  echo "== building demo_web for production (a few minutes)"
+  (cd "$ROOT/apps/demo_web" && corepack yarn run build_env > "$LOGS/demo_web_build.log" 2>&1) \
+    || { echo "FAILED demo build; see $LOGS/demo_web_build.log"; exit 1; }
+  start bitcodex_attached embed/bitcodex_attached serve_built
+  start demo_web apps/demo_web start
+else
+  start bitcodex_attached embed/bitcodex_attached dev
+  start demo_web apps/demo_web dev
+fi
+wait_http bitcodex_attached http://localhost:3201/ 600
 wait_http demo_web http://localhost:3200/ 240
 
 echo "== localnet"

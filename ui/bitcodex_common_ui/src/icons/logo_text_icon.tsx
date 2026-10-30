@@ -1,6 +1,5 @@
 import type React from "react";
-
-import { s3BucketURL } from "./paths";
+import type { FC } from "react";
 
 export const LogoTextIcon: FC<LogoTextIconProps> = ({
   width = 54.231,
@@ -8,17 +7,19 @@ export const LogoTextIcon: FC<LogoTextIconProps> = ({
   style,
 }) => {
   return (
-    <img
-      src={`${s3BucketURL}/logo_text.png`}
-      alt="logo_text_icon"
-      width={width}
-      height={height}
-      style={
-        style ?? {
-          paddingTop: "6px",
-        }
-      }
-    />
+    <span
+      style={{
+        fontWeight: 700,
+        fontSize: 14,
+        letterSpacing: "-0.01em",
+        color: "var(--fg-primary, #101828)",
+        width,
+        height,
+        ...(style ?? { paddingTop: "6px" }),
+      }}
+    >
+      BitcodeX
+    </span>
   );
 };
 

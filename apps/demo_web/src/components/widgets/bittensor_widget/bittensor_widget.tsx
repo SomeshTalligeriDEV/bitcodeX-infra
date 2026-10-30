@@ -1,26 +1,51 @@
 "use client";
 
-import { Button } from "@bitcodex/bitcodex-common-ui/button";
 import { Typography } from "@bitcodex/bitcodex-common-ui/typography";
+import { useBitcodeX } from "@bitcodex/bitcodex-sdk-react";
 import { useBitcodeXBittensor } from "@bitcodex/bitcodex-sdk-react/bittensor";
-import { getApi, INJECTED_NAME, injectWeb3 } from "@bitcodex/sdk-bittensor";
+import {
+  getApi,
+  INJECTED_NAME,
+  injectWeb3,
+  verifySiwb,
+} from "@bitcodex/sdk-bittensor";
 import type { ApiPromise } from "@polkadot/api";
 import { signatureVerify } from "@polkadot/util-crypto";
-import { type FC, useEffect, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
 
+import { BittensorAgentPanel } from "./bittensor_agent_panel";
+import { BittensorHotkeysPanel } from "./bittensor_hotkeys_panel";
+import { BittensorStakePanel } from "./bittensor_stake_panel";
 import styles from "./bittensor_widget.module.scss";
-import { Widget } from "@bitcodex-demo-web/components/widgets/widget_components";
+import { TestnetFunding } from "./testnet_funding";
+import {
+  CHAIN_ID,
+  IS_LOCALNET,
+  NETWORK_NAME,
+} from "@bitcodex-demo-web/bittensor_network";
+import { Btn as Button } from "@bitcodex-demo-web/components/bt_demo/btn";
 
 const TAO = BigInt(1_000_000_000);
+const API_ENDPOINT = process.env.NEXT_PUBLIC_BITCODEX_API_ENDPOINT;
+
+interface FaucetStatus {
+  amountTao: number;
+  faucetBalanceRao: string;
+}
+
+async function faucetRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_ENDPOINT}/faucet/v1${path}`, init);
+  const body = await res.json();
+  if (!body.success) {
+    throw new Error(body.msg ?? `faucet error ${res.status}`);
+  }
+  return body.data as T;
+}
 
 function formatTao(rao: bigint): string {
   const frac = (rao % TAO).toString().padStart(9, "0").replace(/0+$/, "");
   return `${rao / TAO}${frac ? `.${frac}` : ""} TAO`;
-}
-
-function parseTao(input: string): bigint {
-  const [whole, frac = ""] = input.trim().split(".");
-  return BigInt(whole || "0") * TAO + BigInt(frac.padEnd(9, "0").slice(0, 9));
 }
 
 interface LogLine {
@@ -30,12 +55,15 @@ interface LogLine {
 
 export const BittensorWidget: FC = () => {
   const { bittensorWallet, address } = useBitcodeXBittensor();
+  const { email, signOut } = useBitcodeX();
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [balance, setBalance] = useState<bigint | null>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("1");
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<LogLine[]>([]);
+  const [faucet, setFaucet] = useState<FaucetStatus | null>(null);
+  const [showQr, setShowQr] = useState(false);
   const injectedRef = useRef(false);
 
   const push = (ok: boolean, text: string) => {
@@ -45,13 +73,23 @@ export const BittensorWidget: FC = () => {
   };
 
   useEffect(() => {
-    getApi("bittensor:localnet").then((res) => {
+    getApi(CHAIN_ID).then((res) => {
       if (res.success) {
         setApi(res.data);
       } else {
         push(false, `localnet: ${res.err}`);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    // Only shown on localnet, when the API's faucet is running and checks out as localnet.
+    if (!API_ENDPOINT || !IS_LOCALNET) {
+      return;
+    }
+    faucetRequest<FaucetStatus>("/status")
+      .then(setFaucet)
+      .catch(() => setFaucet(null));
   }, []);
 
   useEffect(() => {
@@ -84,14 +122,28 @@ export const BittensorWidget: FC = () => {
     }
   }
 
+  const getTestTao = () =>
+    run("Get test TAO", async () => {
+      if (!address) {
+        throw new Error("not signed in");
+      }
+      const data = await faucetRequest<{ amountRao: string; txHash: string }>(
+        "/drip",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
+        },
+      );
+      return `${formatTao(BigInt(data.amountRao))} from the localnet faucet tx=${data.txHash}`;
+    });
+
   const sendTao = () =>
     run("Send TAO", async () => {
       if (!api || !bittensorWallet) {
         throw new Error("not ready");
       }
-      const res = await bittensorWallet.signAndSend(
-        api.tx.balances.transferKeepAlive(to.trim(), parseTao(amount)),
-      );
+      const res = await bittensorWallet.sendTao(to.trim(), amount);
       return `${amount} TAO to ${to.trim()} tx=${res.txHash} block=${res.blockHash}`;
     });
 
@@ -121,6 +173,30 @@ export const BittensorWidget: FC = () => {
       const signature = await bittensorWallet.signMessage(message);
       const verified = signatureVerify(message, signature, address);
       return `verified=${verified.isValid} crypto=${verified.crypto} sig=${signature.slice(0, 18)}…`;
+    });
+
+  const signInWithBittensor = () =>
+    run("Sign in with Bittensor", async () => {
+      if (!api || !bittensorWallet) {
+        throw new Error("not ready");
+      }
+      // A real app gets the nonce from its server and runs verifySiwb there.
+      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      const res = await bittensorWallet.signInWithBittensor({
+        nonce,
+        statement: "Sign in to the BitcodeX demo.",
+      });
+      const check = verifySiwb(res.message, res.signature, {
+        domain: window.location.host,
+        nonce,
+        genesisHash: api.genesisHash.toHex(),
+      });
+      if (!check.success) {
+        throw new Error(`verifySiwb failed: ${check.err}`);
+      }
+      return `verified=true crypto=${check.data.crypto} chain=${res.fields.chainId} nonce=${nonce}`;
     });
 
   const web3EnableTest = () =>
@@ -171,104 +247,253 @@ export const BittensorWidget: FC = () => {
     });
 
   return (
-    <Widget>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <Typography size="md" weight="semibold" color="primary">
-            Bittensor wallet
-          </Typography>
-          <span className={styles.badge}>Localnet</span>
-        </div>
-
-        <div>
-          <Typography size="xs" color="tertiary">
-            Coldkey address
-          </Typography>
-          <div className={styles.row}>
-            <span className={styles.mono}>{address ?? "…"}</span>
-            {address && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigator.clipboard.writeText(address)}
-              >
-                Copy
-              </Button>
-            )}
+    <div className={styles.page}>
+      <section className={styles.accountCard}>
+        <div className={styles.accountTop}>
+          <div className={styles.avatar} aria-hidden="true">
+            {(email ?? "B").slice(0, 1).toUpperCase()}
           </div>
-          <Typography size="sm" color="secondary">
-            Balance: {balance === null ? "…" : formatTao(balance)}
-          </Typography>
+          <div className={styles.accountWho}>
+            <Typography size="lg" weight="semibold" color="primary">
+              Your Bittensor wallet
+            </Typography>
+            <Typography size="sm" color="tertiary">
+              {email ? `Signed in as ${email}` : "Signed in"} · coldkey secured
+              by a 2-of-2 threshold key
+            </Typography>
+          </div>
+          <span className={styles.networkPill}>
+            <span className={styles.dot} />
+            {NETWORK_NAME}
+          </span>
         </div>
 
-        <div className={styles.row}>
+        <div className={styles.accountBody}>
+          <div className={styles.balanceBlock}>
+            <span className={styles.caption}>Balance</span>
+            <span className={styles.balance}>
+              {balance === null ? "…" : formatTao(balance)}
+            </span>
+          </div>
+          <div className={styles.addressBlock}>
+            <span className={styles.caption}>Coldkey address</span>
+            <span className={styles.address} title={address ?? ""}>
+              {address ?? "…"}
+            </span>
+            <div className={styles.row}>
+              {address && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(address)}
+                  >
+                    Copy
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowQr((v) => !v)}
+                  >
+                    {showQr ? "Hide QR" : "Receive"}
+                  </Button>
+                </>
+              )}
+              {faucet && address && (
+                <Button
+                  size="sm"
+                  disabled={!!busy}
+                  isLoading={busy === "Get test TAO"}
+                  onClick={getTestTao}
+                >
+                  Get {faucet.amountTao} test TAO
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                Sign out
+              </Button>
+            </div>
+          </div>
+          {address && showQr && (
+            <div className={styles.qr}>
+              <QRCodeSVG value={address} size={148} />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {!IS_LOCALNET && address && (
+        <TestnetFunding
+          address={address}
+          balance={balance === null ? null : formatTao(balance)}
+        />
+      )}
+
+      <h2 className={styles.sectionLabel}>Send and sign</h2>
+      <div className={styles.grid}>
+        <Card
+          title="Send TAO"
+          desc="A transfer signed by the user's coldkey. The BitcodeX popup shows the amount, destination and fee before anything is signed."
+          code={`await bittensorWallet.sendTao("${to.trim() || "5F…"}", "${amount}");`}
+        >
           <input
             className={styles.input}
-            placeholder="Destination (5…)"
+            placeholder="Destination address (5…)"
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />
-          <input
-            className={styles.input}
-            style={{ maxWidth: 110 }}
-            placeholder="TAO"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <Button
-            size="sm"
-            disabled={!api || !to || !!busy}
-            isLoading={busy === "Send TAO"}
-            onClick={sendTao}
-          >
-            Send TAO
-          </Button>
-        </div>
-
-        <div className={styles.actions}>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!api || !!busy}
-            isLoading={busy === "Long payload"}
-            onClick={signLongPayload}
-          >
-            Sign long payload
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!!busy}
-            isLoading={busy === "Sign message"}
-            onClick={signMessage}
-          >
-            Sign message
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!api || !!busy}
-            isLoading={busy === "web3Enable"}
-            onClick={web3EnableTest}
-          >
-            web3Enable test
-          </Button>
-        </div>
-
-        {log.length > 0 && (
-          <div className={styles.log}>
-            {log.map((line, i) => (
-              <span
-                // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
-                key={i}
-                className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
-              >
-                {line.text}
-              </span>
-            ))}
+          <div className={styles.row}>
+            <input
+              className={styles.input}
+              style={{ maxWidth: 120 }}
+              placeholder="TAO"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={!api || !to || !!busy}
+              isLoading={busy === "Send TAO"}
+              onClick={sendTao}
+            >
+              Send TAO
+            </Button>
           </div>
-        )}
+        </Card>
+
+        <Card
+          title="Sign and verify"
+          desc="Prove you own this wallet: sign a message, or sign in to a site with it. Each one is read out in the approval popup first."
+          code={`const sig = await bittensorWallet.signMessage("hello");
+const { message, signature } =
+  await bittensorWallet.signInWithBittensor({ nonce });
+// server: verifySiwb(message, signature, { domain, nonce, genesisHash })`}
+        >
+          <div className={styles.actions}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!!busy}
+              isLoading={busy === "Sign message"}
+              onClick={signMessage}
+            >
+              Sign message
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "Sign in with Bittensor"}
+              onClick={signInWithBittensor}
+            >
+              Sign in with Bittensor
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "Long payload"}
+              onClick={signLongPayload}
+            >
+              Sign a large transaction
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!api || !!busy}
+              isLoading={busy === "web3Enable"}
+              onClick={web3EnableTest}
+            >
+              Test with a dApp (web3Enable)
+            </Button>
+          </div>
+        </Card>
       </div>
-    </Widget>
+
+      {api && bittensorWallet && address && (
+        <>
+          <h2 className={styles.sectionLabel}>Stake and keys</h2>
+          <div className={styles.grid}>
+            <BittensorStakePanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+            <BittensorHotkeysPanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+          </div>
+          <h2 className={styles.sectionLabel}>Permissions and activity</h2>
+          <div className={styles.grid}>
+            <BittensorAgentPanel
+              api={api}
+              wallet={bittensorWallet}
+              address={address}
+              busy={busy}
+              run={run}
+            />
+            <section className={styles.subsection}>
+              <Typography size="md" weight="semibold" color="primary">
+                Activity
+              </Typography>
+              <Typography size="xs" color="tertiary">
+                Every call and its on-chain result. Never key material.
+              </Typography>
+              {log.length === 0 && (
+                <span className={styles.note}>
+                  Nothing yet. Try an action above.
+                </span>
+              )}
+              <div className={styles.log}>
+                {log.map((line, i) => (
+                  <span
+                    // biome-ignore lint/suspicious/noArrayIndexKey: append-only log
+                    key={i}
+                    className={`${styles.mono} ${line.ok ? styles.logOk : styles.logErr}`}
+                  >
+                    {line.text}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const Card: FC<{
+  title: string;
+  desc: string;
+  code: string;
+  children: ReactNode;
+}> = ({ title, desc, code, children }) => {
+  const [showCode, setShowCode] = useState(false);
+  return (
+    <section className={styles.subsection}>
+      <div className={styles.cardHead}>
+        <Typography size="md" weight="semibold" color="primary">
+          {title}
+        </Typography>
+        <button
+          type="button"
+          className={styles.codeToggle}
+          onClick={() => setShowCode((v) => !v)}
+        >
+          {showCode ? "Hide code" : "Show code"}
+        </button>
+      </div>
+      <Typography size="xs" color="tertiary">
+        {desc}
+      </Typography>
+      {showCode ? <pre className={styles.code}>{code}</pre> : children}
+    </section>
   );
 };

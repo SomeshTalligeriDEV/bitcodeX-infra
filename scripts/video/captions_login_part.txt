@@ -1,0 +1,13 @@
+# Captions for YOUR recording of the logged-in part. Time 00:00 = the moment you start
+# recording, just before you click Continue with Google. Adjust times to your take.
+# start-end | text
+00:00-00:09 | Sign in with Google: no extension, no seed phrase
+00:10-00:21 | A real Bittensor wallet is created. The key is split between your browser and the servers
+00:22-00:35 | Fund it: the local test chain has a built-in faucet, and the balance updates live
+00:36-00:53 | Send TAO: the popup shows the amount, destination and fee before anything is signed
+00:54-01:05 | Approved: the transaction lands on chain and appears in activity
+01:06-01:21 | Sign a message and verify the signature
+01:22-01:41 | Stake: see the exact price and slippage first, then stake
+01:42-01:57 | Your stake and balances are read live from the chain
+01:58-02:17 | Hotkeys stay on your miner. Add one by address and register it at the exact on-chain cost
+02:18-02:38 | Let an app or AI agent act for you with an on-chain permission you can revoke

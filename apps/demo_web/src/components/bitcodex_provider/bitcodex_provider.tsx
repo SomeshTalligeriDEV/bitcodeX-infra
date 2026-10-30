@@ -3,15 +3,18 @@
 import { BitcodeXProvider as BitcodeXSDKProvider } from "@bitcodex/bitcodex-sdk-react";
 import type { FC, PropsWithChildren } from "react";
 
+import { CHAIN_ID } from "@bitcodex-demo-web/bittensor_network";
 import { useThemeSync } from "@bitcodex-demo-web/hooks/use_theme_sync";
 
 const bitcodexConfig = {
-  apiKey: "72bd2afd04374f86d563a40b814b7098e5ad6c7f52d3b8f84ab0c3d05f73ac6c",
+  // Set NEXT_PUBLIC_BITCODEX_API_KEY for any real deployment. The fallback is the public
+  // key of the local dev seed and works only against a local API.
+  apiKey:
+    process.env.NEXT_PUBLIC_BITCODEX_API_KEY ||
+    "72bd2afd04374f86d563a40b814b7098e5ad6c7f52d3b8f84ab0c3d05f73ac6c",
   sdkEndpoint: process.env.NEXT_PUBLIC_BITCODEX_SDK_ENDPOINT,
-  eth: true as const,
-  cosmos: true as const,
-  svm: { chainId: "solana:devnet" },
-  bittensor: { chainId: "bittensor:localnet" as const },
+  // Bittensor only: the EVM, Cosmos and Solana SDKs are not loaded in this demo.
+  bittensor: { chainId: CHAIN_ID },
 };
 
 const InnerProvider: FC<PropsWithChildren> = ({ children }) => {

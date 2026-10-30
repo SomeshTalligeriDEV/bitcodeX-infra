@@ -52,13 +52,19 @@ export interface BitcodeXWalletInterface {
   openModal: (
     msg: BitcodeXWalletMsgOpenModal,
   ) => Promise<Result<OpenModalAckPayload, OpenModalError>>;
-  openSignInModal: () => Promise<void>;
+  /**
+   * Open the BitcodeX login modal. `options` override how it looks on this page only
+   * (e.g. a demo's live customization); the app's dashboard settings are the default.
+   */
+  openSignInModal: (options?: SignInModalOverrides) => Promise<void>;
   closeModal: () => void;
   sendMsgToIframe: (msg: BitcodeXWalletMsg) => Promise<BitcodeXWalletMsg>;
   signIn: (type: SignInType) => Promise<void>;
   signOut: () => Promise<void>;
   getPublicKey: () => Promise<string | null>;
   getPublicKeyEd25519: () => Promise<string | null>;
+  /** Access token for your backend (verify with @bitcodex/server). Null when signed out. */
+  getAccessToken: () => Promise<string | null>;
   getEmail: () => Promise<string | null>;
   getName: () => Promise<string | null>;
   getWalletInfo: () => Promise<WalletInfo | null>;
@@ -92,4 +98,13 @@ export interface BitcodeXWalletState {
   email: string | null;
   publicKey: string | null;
   name: string | null;
+}
+
+export interface SignInModalOverrides {
+  /** Providers to show, in order, e.g. ["google", "github"]. */
+  loginMethods?: string[];
+  /** #rrggbb */
+  accentColor?: string | null;
+  logoUrl?: string | null;
+  theme?: "light" | "dark" | "system";
 }

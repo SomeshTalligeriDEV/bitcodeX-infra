@@ -81,4 +81,5 @@ export type MakeBittensorSigError =
   | { type: "unknown_error"; error: any }
   | { type: "network_refused"; error: string }
   | { type: "signer_mismatch"; error: string }
+  | { type: "origin_not_allowed"; error: string }
   | MakeSigError;
