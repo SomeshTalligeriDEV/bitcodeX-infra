@@ -52,7 +52,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0 0 12px;
 
@@ -61,6 +61,16 @@
     border: 1px solid var(--m-border);
     border-radius: 10px;
     background: var(--m-bg2);
+    min-width: 0;
+  }
+
+  // The block number is the headline: it gets the full first row.
+  div:first-child {
+    grid-column: 1 / -1;
+
+    dd {
+      font-size: 26px;
+    }
   }
 
   dt {

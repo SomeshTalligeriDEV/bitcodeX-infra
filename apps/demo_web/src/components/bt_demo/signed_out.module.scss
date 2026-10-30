@@ -359,7 +359,7 @@
     cursor: default;
   }
 
-  > span:not(.badge):not(.accountText) {
+  > span:not(.badge):not(.accountText):not(.soonTag) {
     flex: 1;
   }
 }
@@ -430,7 +430,12 @@
 }
 
 .infoCard {
-  flex: 1 1 260px;
+  flex: 0 0 auto;
+
+  @media (max-width: 1080px) {
+    flex: 1 1 260px;
+  }
+
   padding: 20px;
   border: 1px solid var(--m-border);
   border-radius: 16px;
