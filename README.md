@@ -10,6 +10,8 @@ No extension. No seed phrase. No single party that can move your funds.
 [![Live demo](https://img.shields.io/badge/live%20demo-bitcodex--demo.vercel.app-000000?style=for-the-badge)](https://bitcodex-demo.vercel.app)
 [![Docs](https://img.shields.io/badge/docs-read%20now-000000?style=for-the-badge)](https://bitcodex-demo.vercel.app/docs)
 
+[▶ Watch the narrated 3-minute system tour](assets/bitcodex-overview.mp4) · [Architecture and usage guide](BITCODEX.md)
+
 ![Bittensor](https://img.shields.io/badge/Bittensor-testnet%20%2B%20local-111827)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-FROST%20%E2%86%92%20WASM-DEA584?logo=rust&logoColor=black)
@@ -19,8 +21,108 @@ No extension. No seed phrase. No single party that can move your funds.
 
 </div>
 
+> The video is a narrated architecture and feature overview. The live demo link opens the
+> current application; authenticated wallet actions require signing in with a user account.
+
 > **Early release.** BitcodeX runs on the **local test chain and Bittensor testnet only**.
 > Mainnet is disabled until an independent security audit. Do not use it with real funds.
+
+<p align="center"><b>Explore by role</b><br>
+<a href="#for-users">Users</a> · <a href="#for-builders">Builders</a> · <a href="#system-design">System design</a> · <a href="#run-it-yourself">Run locally</a> · <a href="#repository">Project map</a>
+</p>
+
+## At a glance
+
+BitcodeX is an open-source embedded wallet stack for Bittensor. It gives applications a wallet
+onboarding flow, a Bittensor wallet interface, and backend services for threshold signing.
+Users review and approve wallet actions in the embedded frame. Signing keys are split so no
+single party holds the complete private key during signing.
+
+| Audience | What BitcodeX provides |
+|---|---|
+| **Users** | Sign in, receive a Bittensor address, review actions, and manage TAO and hotkeys. |
+| **Builders** | Integrate React hooks, verify user tokens on a server, and configure apps and allowed origins. |
+| **Operators** | Run the API, key share nodes, databases, wallet frame, and local Bittensor chain. |
+
+## For users
+
+The wallet frame supports Google or existing-wallet sign-in, account recovery, balances and
+activity, TAO transfers, staking, hotkey registration, message signing, and proxy permissions.
+Signing requests are presented for approval with transaction details. Hotkeys remain on the
+user's miner or validator machine; BitcodeX works with their public addresses.
+
+## For builders
+
+The browser SDK connects an app to the wallet frame. After sign-in, the app can request wallet
+actions and obtain an access token for its backend. The Node server package verifies that token
+against the BitcodeX API before the application trusts the user identity.
+
+```text
+React app → BitcodeX SDK → wallet frame → BitcodeX API → Bittensor
+                                  ↕             ↕
+                           browser share   key share nodes
+```
+
+## System design
+
+```mermaid
+flowchart LR
+  subgraph Client[User device]
+    App[Partner app]
+    SDK[React and Bittensor SDKs]
+    Frame[Wallet iframe<br/>approval UI · WASM · user key share]
+    App --> SDK --> Frame
+  end
+  subgraph Services[BitcodeX services]
+    API[API<br/>identity · sessions · signing coordination]
+    KSN1[Key share node 1]
+    KSN2[Key share node 2]
+    DB[(PostgreSQL databases)]
+    API --> KSN1
+    API --> KSN2
+    KSN1 --> DB
+    KSN2 --> DB
+    API --> DB
+  end
+  Frame <-->|HTTPS · origin-checked messages| API
+  Frame -->|approved signed extrinsic| Chain[(Bittensor local chain or testnet)]
+  Backend[Partner backend] -->|verifyAccessToken| API
+```
+
+The Bittensor coldkey uses FROST threshold Ed25519 signing. During signing, the browser and
+server contribute shares; the complete private key is not reconstructed. The wallet frame
+mediates user approval and chain interaction. The API coordinates sessions and signing rounds,
+while the key share nodes store and use separate server-side shares. Key export is a distinct,
+user-authorized flow described in the [security and architecture guide](BITCODEX.md).
+
+### Repository layers
+
+The monorepo is organized from shared foundations to product surfaces:
+
+```mermaid
+flowchart TB
+  Apps[Apps · demo · dashboards · docs · wallet frame]
+  SDK[SDKs · core · React · Bittensor · EVM · Cosmos · Solana]
+  Backend[Backend · API · dashboards · OpenAPI · migrations]
+  KSN[Key share nodes · auth · signing participation]
+  Crypto[Crypto · FROST · tECDSA · WASM · Node addons]
+  Common[Shared types · utilities · database libraries · UI]
+  Apps --> SDK
+  Apps --> Backend
+  SDK --> Common
+  Backend --> KSN
+  Backend --> Crypto
+  KSN --> Crypto
+  SDK --> Crypto
+  SDK --> Common
+  Backend --> Common
+  KSN --> Common
+```
+
+`apps/` and `embed/` contain product surfaces; `sdk/` is the integration layer; `backend/` and
+`key_share_node/` provide server-side services; `crypto/` implements threshold primitives;
+`common/`, `lib/`, and `ui/` hold shared foundations. Arrows show the main conceptual flow;
+individual packages can have additional build-time dependencies.
 
 ---
 
@@ -183,16 +285,15 @@ yarn ci typecheck
 
 ## Repository
 
-```
-sdk/              SDKs: core, bittensor, react, server, chain helpers
-embed/            wallet frame (iframe)
-backend/          API, OpenAPI schemas, database migrations
-key_share_node/   the two key share nodes
-crypto/           Rust threshold signatures (WASM and Node addon)
-apps/             demo and docs, user dashboard, developer dashboard
-selfhost/         Docker setup          render.yaml   Render blueprint
-scripts/          dev, release, video and check scripts
-```
+| Path | Responsibility |
+|---|---|
+| `lib/`, `common/`, `ui/` | Runtime utilities, shared types, database helpers, and UI components |
+| `crypto/` | Rust threshold signatures and WASM / Node interfaces |
+| `sdk/` | Chain-agnostic core, React integration, chain SDKs, and server token verification |
+| `backend/`, `key_share_node/` | API services, schemas, persistence, and signing participation |
+| `embed/bitcodex_attached/` | Embedded wallet frame and confirmation interface |
+| `apps/` | Demo, dashboards, documentation, and mobile host app |
+| `selfhost/`, `internals/`, `scripts/` | Deployment, build tooling, development, release, and video workflows |
 
 ## Security
 
